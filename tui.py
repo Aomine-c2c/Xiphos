@@ -122,12 +122,30 @@ class StatusPanel(Static):
         self.query_one("#status-content", Label).update(text)
 
 
-class SignalFeedPanel(Static):
-    DEFAULT_CSS = "SignalFeedPanel { border: round $primary; padding: 1 2; height: 100%; width: 3fr; overflow-y: auto; }"
+def generate_sparkline(history: list[float]) -> str:
+    if not history:
+        return ""
+    if len(history) == 1:
+        return "▄"
+    bars = " ▂▃▄▅▆▇█"
+    min_val = min(history)
+    max_val = max(history)
+    rng = max_val - min_val
+    if rng == 0:
+        return "▄" * len(history)
+    return "".join(bars[int(7 * (v - min_val) / rng)] for v in history)
+
+class MarketWatchTable(Static):
+    DEFAULT_CSS = "MarketWatchTable { border: round $primary; padding: 0 1; height: 100%; width: 3fr; overflow-y: auto; }"
     def compose(self) -> ComposeResult:
-        yield Label("[dim]Fetching signals...[/dim]", id="signal-content")
-    def update_display(self, text: str) -> None:
-        self.query_one("#signal-content", Label).update(text)
+        t = DataTable(id="mw-table", zebra_stripes=True, cursor_type="none")
+        t.add_columns("Symbol", "Price", "Trend", "Signal")
+        yield t
+    def update_rows(self, rows: list) -> None:
+        t = self.query_one("#mw-table", DataTable)
+        t.clear()
+        for row in rows:
+            t.add_row(*row)
 
 
 class PositionsTable(Static):
@@ -199,7 +217,7 @@ class XiphosApp(App):
             with TabPane("Live Trading", id="tab-live"):
                 with Horizontal(id="top-row"):
                     yield StatusPanel(id="status-panel")
-                    yield SignalFeedPanel(id="signal-panel")
+                    yield MarketWatchTable(id="mw-panel")
                 yield Label("  ▸ OPEN POSITIONS", classes="section-lbl")
                 yield PositionsTable(id="positions-panel")
                 yield Label("  ▸ LIVE LOG", classes="section-lbl")
@@ -238,6 +256,11 @@ class XiphosApp(App):
 
     def on_mount(self) -> None:
         logger.add(self._loguru_sink, format="{time:HH:mm:ss} | {level:<8} | {message}", colorize=False)
+        self.market_watch_data = {}
+        for _group, symbols in settings.correlation_groups.items():
+            for sym in symbols:
+                self.market_watch_data[sym] = {"price": 0.0, "history": [], "signal": "NONE"}
+                
         self._connect_mt5()
         self.set_interval(5,  self._refresh_fast)
         self.set_interval(30, self._refresh_signals)
@@ -325,28 +348,49 @@ class XiphosApp(App):
             ))
         self.call_from_thread(self.query_one("#positions-panel", PositionsTable).update_rows, rows)
 
+        # Market watch
+        mw_rows = []
+        for sym, data in self.market_watch_data.items():
+            info = mt5.symbol_info_tick(sym)
+            if info:
+                new_price = info.bid
+                old_price = data["price"]
+                data["price"] = new_price
+                data["history"].append(new_price)
+                if len(data["history"]) > 15:
+                    data["history"].pop(0)
+                
+                price_c = "white"
+                if old_price > 0:
+                    if new_price > old_price:
+                        price_c = "green"
+                    elif new_price < old_price:
+                        price_c = "red"
+                
+                spark = generate_sparkline(data["history"])
+                
+                sig = data["signal"]
+                if sig == "BUY":
+                    sig_str = "[bold green]↑ BUY[/bold green]"
+                elif sig == "SELL":
+                    sig_str = "[bold red]↓ SELL[/bold red]"
+                else:
+                    sig_str = "[dim]─ NONE[/dim]"
+                    
+                mw_rows.append((sym, f"[bold {price_c}]{new_price:.5f}[/bold {price_c}]", f"[cyan]{spark}[/cyan]", sig_str))
+                
+        self.call_from_thread(self.query_one("#mw-panel", MarketWatchTable).update_rows, mw_rows)
+
     @work(thread=True)
     def _refresh_signals(self) -> None:
-        lines = []
-        for _group, symbols in settings.correlation_groups.items():
-            for sym in symbols:
-                info = mt5.symbol_info(sym)
-                if not info or info.volume_min > 0.01:
-                    continue
-                ind = get_m30_indicators(sym)
-                if not ind:
-                    lines.append(f"  [dim]─ {sym:<28} NO DATA[/dim]")
-                    continue
+        for sym, data in self.market_watch_data.items():
+            info = mt5.symbol_info(sym)
+            if not info or info.volume_min > 0.01:
+                continue
+            ind = get_m30_indicators(sym)
+            if ind:
                 sig = evaluate_signal(ind)
-                if sig == "BUY":
-                    lines.append(f"  [bold green]↑ {sym:<28} BUY[/bold green]")
-                elif sig == "SELL":
-                    lines.append(f"  [bold red]↓ {sym:<28} SELL[/bold red]")
-                else:
-                    lines.append(f"  [dim]─ {sym:<28} NONE[/dim]")
-
-        text = "\n".join(lines) if lines else "[dim]No symbols available[/dim]"
-        self.call_from_thread(self.query_one("#signal-panel", SignalFeedPanel).update_display, text)
+                data["signal"] = sig
         
     @work(thread=True)
     def _refresh_performance(self) -> None:
