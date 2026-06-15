@@ -6,8 +6,11 @@ Run with: python tui.py
 import threading
 import time
 import yaml
+import requests
 from datetime import datetime, timedelta
 from loguru import logger
+
+CURRENT_VERSION = "v1.2.3"
 
 from textual import work, on
 from textual.app import App, ComposeResult
@@ -239,6 +242,25 @@ class XiphosApp(App):
         self.set_interval(5,  self._refresh_fast)
         self.set_interval(30, self._refresh_signals)
         self.set_interval(10, self._refresh_performance) # Refresh perf every 10s
+        self.set_interval(3600, self._check_for_updates) # Hourly check
+        self._check_for_updates() # Check once on startup
+
+    # ── Release check worker ──────────────────────────────────────────────────
+
+    @work(thread=True)
+    def _check_for_updates(self) -> None:
+        try:
+            resp = requests.get("https://api.github.com/repos/Aomine-c2c/Xiphos/releases/latest", timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                latest = data.get("tag_name", "")
+                if latest and latest != CURRENT_VERSION:
+                    self.call_from_thread(
+                        self.log_msg, 
+                        f"[bold magenta]🔔 NEW UPDATE AVAILABLE: {latest}![/bold magenta] (Current: {CURRENT_VERSION})\nRun Xiphos installation script to update."
+                    )
+        except Exception:
+            pass
 
     # ── MT5 connect worker ────────────────────────────────────────────────────
 
