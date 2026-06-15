@@ -1,9 +1,10 @@
 import json
 import os
 from logger_setup import setup_logger
+from core.paths import get_base_dir
 
 logger = setup_logger()
-STATE_FILE = "state.json"
+STATE_FILE = os.path.join(get_base_dir(), "state.json")
 
 class StateManager:
     def __init__(self):

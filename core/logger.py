@@ -2,6 +2,7 @@ import sys
 import os
 from loguru import logger
 from core.config import settings
+from core.paths import get_base_dir
 
 def setup_logger():
     # Remove default handler
@@ -15,8 +16,7 @@ def setup_logger():
         level=settings.logging.level
     )
     
-    # Ensure logs directory exists relative to project root
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    base_dir = get_base_dir()
     log_dir = os.path.join(base_dir, "logs")
     os.makedirs(log_dir, exist_ok=True)
     

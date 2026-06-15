@@ -2,6 +2,7 @@ import yaml
 import os
 from pydantic import BaseModel
 from typing import List, Dict
+from core.paths import get_base_dir, ensure_config_exists
 
 class TradingConfig(BaseModel):
     timeframe: str
@@ -34,9 +35,11 @@ class Settings(BaseModel):
     database: DatabaseConfig
 
 def load_settings(path: str = "config/settings.yaml") -> Settings:
-    # Get absolute path relative to project root (assuming core/ is 1 level deep)
+    ensure_config_exists()
+    
+    # Get absolute path relative to project root or AppData
     if not os.path.isabs(path):
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        base_dir = get_base_dir()
         path = os.path.join(base_dir, path)
         
     with open(path, "r") as f:

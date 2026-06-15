@@ -3,12 +3,12 @@ import os
 from contextlib import contextmanager
 from core.config import settings
 from core.logger import log
+from core.paths import get_base_dir
 
 class Database:
     def __init__(self, db_path: str = None):
         if db_path is None:
-            # Resolve relative to project root
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            base_dir = get_base_dir()
             self.db_path = os.path.join(base_dir, settings.database.path)
         else:
             self.db_path = db_path
