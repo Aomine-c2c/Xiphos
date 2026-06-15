@@ -109,7 +109,7 @@ class LiveBot:
         
         positions = self.executor.get_open_positions()
         self.state.reconcile(positions)
-        open_trades = self.state.state["open_trades"]
+        open_trades = self.state.get_open_trades()
         
         active_risk_count = sum(1 for t in open_trades.values() if self.has_active_risk(t))
         available_slots = max(0, MAX_ACTIVE_RISK_TRADES - active_risk_count)
@@ -193,11 +193,11 @@ class LiveBot:
             
             res_a = self.executor.execute_market_order(sym, signal, lot_size, sl_price, MAGIC_SCALPER)
             if res_a:
-                self.state.add_trade(res_a.order, sym, signal, res_a.price, sl_price, MAGIC_SCALPER)
+                self.state.add_trade(res_a.order, sym, signal, res_a.price, sl_price, MAGIC_SCALPER, lot_size)
                 
             res_b = self.executor.execute_market_order(sym, signal, lot_size, sl_price, MAGIC_RUNNER)
             if res_b:
-                self.state.add_trade(res_b.order, sym, signal, res_b.price, sl_price, MAGIC_RUNNER)
+                self.state.add_trade(res_b.order, sym, signal, res_b.price, sl_price, MAGIC_RUNNER, lot_size)
                 
             available_slots -= 2
 
