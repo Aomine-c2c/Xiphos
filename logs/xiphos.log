@@ -2274,3 +2274,15 @@
 2026-06-15 16:46:01 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
 2026-06-15 16:46:11 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
 2026-06-15 16:46:21 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
+2026-06-15 16:46:31 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
+2026-06-15 16:46:41 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
+2026-06-15 16:46:51 | INFO     | execution.trailing:trail_positions:53 - Trailing SL for EURUSD BUY (Magic 135002) upward to 1.1563
+2026-06-15 16:46:51 | WARNING  | execution.orders:_retry_wrapper:19 - MT5 order failed with retcode 10025 (No changes). Attempt 1/3
+2026-06-15 16:46:51 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
+2026-06-15 16:46:52 | WARNING  | execution.orders:_retry_wrapper:19 - MT5 order failed with retcode 10025 (No changes). Attempt 2/3
+2026-06-15 16:46:54 | WARNING  | execution.orders:_retry_wrapper:19 - MT5 order failed with retcode 10025 (No changes). Attempt 3/3
+2026-06-15 16:46:58 | CRITICAL | execution.orders:_retry_wrapper:26 - MT5 Operation failed permanently after 3 attempts.
+2026-06-15 16:47:01 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
+2026-06-15 16:47:11 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
+2026-06-15 16:47:21 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
+2026-06-15 16:47:31 | ERROR    | __main__:_refresh_performance:359 - Failed to fetch performance: closing tag '[/bold]' does not match any open tag
