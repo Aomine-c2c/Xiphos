@@ -1,3 +1,8 @@
+execution:
+  mode: "DIRECT" # Use "BRIDGE" when running on Linux/Termux, "DIRECT" on Windows
+  bridge_host: "127.0.0.1"
+  bridge_port: 8000
+
 trading:
   timeframe: "M30"
   max_risk_trades: 4

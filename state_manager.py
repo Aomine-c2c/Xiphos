@@ -1,4 +1,4 @@
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
 from datetime import datetime, timedelta
 from logger_setup import setup_logger
 from storage.database import db

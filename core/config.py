@@ -4,6 +4,11 @@ from pydantic import BaseModel
 from typing import List, Dict
 from core.paths import get_base_dir, ensure_config_exists
 
+class ExecutionConfig(BaseModel):
+    mode: str = "DIRECT"
+    bridge_host: str = "127.0.0.1"
+    bridge_port: int = 8000
+
 class TradingConfig(BaseModel):
     timeframe: str
     max_risk_trades: int
@@ -27,6 +32,7 @@ class DatabaseConfig(BaseModel):
     path: str
 
 class Settings(BaseModel):
+    execution: ExecutionConfig
     trading: TradingConfig
     magic_numbers: MagicNumbersConfig
     indicators: IndicatorsConfig

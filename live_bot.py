@@ -2,7 +2,7 @@ import time
 import math
 from datetime import datetime, timedelta
 import pandas as pd
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
 
 from logger_setup import setup_logger
 from mt5_executor import MT5Executor
