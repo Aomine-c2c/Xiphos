@@ -68,12 +68,25 @@ if not exist "config\settings.yaml" (
     echo   group_5_indices: ["Volatility 75 Index"] >> config\settings.yaml
 )
 
+:: 6. Create Launch Command
+echo [*] Setting up 'Xiphos' launch command...
+echo @echo off > xiphos.bat
+echo cd /d "%CD%" >> xiphos.bat
+echo call venv\Scripts\activate.bat >> xiphos.bat
+echo python tui.py >> xiphos.bat
+
+if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
+copy xiphos.bat "%USERPROFILE%\.local\bin\xiphos.bat" >nul
+copy xiphos.bat "%USERPROFILE%\.local\bin\Xiphos.bat" >nul
+del xiphos.bat
+
 echo ==========================================
 echo          INSTALLATION COMPLETE!          
 echo ==========================================
 echo.
-echo To run Xiphos on Windows:
-echo 1. venv\Scripts\activate
-echo 2. python tui.py
+echo You can now launch the dashboard from anywhere by typing:
+echo Xiphos
+echo.
+echo (If the command is not found, ensure %USERPROFILE%\.local\bin is in your PATH)
 echo ==========================================
 pause

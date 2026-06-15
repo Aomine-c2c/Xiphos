@@ -116,20 +116,35 @@ correlation_groups:
 EOL
 fi
 
+# 6. Create Launch Command
+echo "[*] Setting up 'Xiphos' launch command..."
+cat > xiphos_launcher.sh << EOL
+#!/bin/bash
+cd "$(pwd)"
+source venv/bin/activate
+python tui.py
+EOL
+
+chmod +x xiphos_launcher.sh
+
+if [ "$OS_TYPE" == "TERMUX" ]; then
+    cp xiphos_launcher.sh $PREFIX/bin/xiphos
+    cp xiphos_launcher.sh $PREFIX/bin/Xiphos
+elif [ "$OS_TYPE" == "MACOS" ] || [ "$OS_TYPE" == "DEBIAN" ] || [ "$OS_TYPE" == "FEDORA" ] || [ "$OS_TYPE" == "ARCH" ]; then
+    mkdir -p ~/.local/bin
+    cp xiphos_launcher.sh ~/.local/bin/xiphos
+    cp xiphos_launcher.sh ~/.local/bin/Xiphos
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+        echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc 2>/dev/null || true
+    fi
+fi
+rm xiphos_launcher.sh
+
 echo "=========================================="
 echo "          INSTALLATION COMPLETE!          "
 echo "=========================================="
 echo ""
-echo "To run Xiphos on this device:"
-if [ "$IS_WINDOWS" = true ]; then
-    echo "1. Activate venv: venv\Scripts\activate"
-    echo "2. Run bot: python main.py"
-    echo "   Or TUI:  python tui.py"
-else
-    echo "1. cd Xiphos (if not already inside)"
-    echo "2. source venv/bin/activate"
-    echo "3. python tui.py"
-    echo ""
-    echo "Note: You are in BRIDGE mode. Ensure the Windows Bridge Server is running!"
-fi
+echo "You can now launch the dashboard from anywhere by typing:"
+echo "Xiphos"
 echo "=========================================="
