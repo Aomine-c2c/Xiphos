@@ -48,6 +48,30 @@ jobs:
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
+          name: Xiphos Release ${{ github.ref_name }}
+          body: |
+            ## Xiphos Algorithmic Trading Framework 🚀
+            
+            Welcome to the newest release of Xiphos!
+            
+            ![Xiphos Banner](https://raw.githubusercontent.com/Aomine-c2c/Xiphos/main/assets/banner.png)
+            
+            ### ✨ What's New
+            - Advanced Textual UI Dashboard with Analytics.
+            - Termux and Linux Bridge Support.
+            - Universal Installation Scripts.
+            
+            ### 📥 Installation
+            
+            **For Termux / Linux / macOS (Bridge Mode):**
+            ```bash
+            curl -sL https://raw.githubusercontent.com/Aomine-c2c/Xiphos/main/install.sh | bash
+            ```
+            
+            **For Windows (Direct Mode):**
+            Download the repository and run `install.bat`, or use the `Xiphos_Setup.exe` installer attached below!
+            
+          generate_release_notes: true
           files: |
             dist/Xiphos.exe
             dist/Xiphos
