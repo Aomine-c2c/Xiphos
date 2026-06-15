@@ -16,7 +16,10 @@ class MT5Executor:
         
     def _retry_wrapper(self, func, *args, **kwargs):
         for attempt in range(MAX_RETRIES):
-            result = func(*args, **kwargs)
+            if func == mt5.order_send:
+                result = mt5.order_send(args[0])
+            else:
+                result = func(*args, **kwargs)
             if result is not None and getattr(result, "retcode", mt5.TRADE_RETCODE_DONE) == mt5.TRADE_RETCODE_DONE:
                 return result
             elif result is not None:
@@ -36,16 +39,14 @@ class MT5Executor:
         
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
-            "volume": volume,
-            "type": type_mt5,
-            "price": price,
-            "sl": sl_price,
+            "symbol": str(symbol),
+            "volume": float(volume),
+            "type": int(type_mt5),
+            "price": float(price),
+            "sl": float(sl_price),
             "deviation": 20,
-            "magic": magic,
+            "magic": int(magic),
             "comment": "M30 Framework Bot",
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
         }
         
         return self._retry_wrapper(mt5.order_send, request)
@@ -58,10 +59,10 @@ class MT5Executor:
             
         request = {
             "action": mt5.TRADE_ACTION_SLTP,
-            "symbol": symbol,
+            "symbol": str(symbol),
             "sl": float(new_sl),
             "tp": float(position.tp) if position.tp else 0.0,
-            "position": ticket
+            "position": int(ticket)
         }
         
         return self._retry_wrapper(mt5.order_send, request)
