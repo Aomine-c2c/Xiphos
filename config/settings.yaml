@@ -1,0 +1,58 @@
+trading:
+  timeframe: "M30"
+  max_risk_trades: 4
+  lot_size: 0.01
+
+magic_numbers:
+  scalper: 135001
+  runner: 135002
+
+indicators:
+  fast_ema: 13
+  medium_ema: 50
+  slow_sma: 200
+
+correlation_groups:
+  group_1_majors:
+    - EURUSD
+    - GBPUSD
+    - AUDUSD
+    - USDJPY
+  group_2_metals:
+    - XAUUSD
+    - XAGUSD
+  group_3_exotics:
+    - EURJPY
+    - GBPJPY
+    - USDCAD
+    - USDCHF
+  group_4_crypto:
+    - BTCUSD
+    - ETHUSD
+    - LTCUSD
+  group_5_volatility:
+    - Volatility 10 Index
+    - Volatility 25 Index
+    - Volatility 50 Index
+    - Volatility 75 Index
+    - Volatility 100 Index
+  group_6_crash_boom:
+    - Crash 1000 Index
+    - Boom 1000 Index
+    - Crash 500 Index
+    - Boom 500 Index
+  group_7_jump_step:
+    - Step Index
+    - Jump 10 Index
+    - Jump 25 Index
+    - Jump 50 Index
+    - Jump 75 Index
+    - Jump 100 Index
+
+logging:
+  level: "INFO"
+  rotation: "10 MB"
+  retention: "10 days"
+
+database:
+  path: "storage/xiphos.sqlite"

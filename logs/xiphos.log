@@ -1,0 +1,407 @@
+2026-06-14 07:24:06 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:25:44 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:27:54 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:27:55 | INFO     | __main__:main:93 - Initializing Xiphos Trading Framework...
+2026-06-14 07:28:07 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 07:28:07 | INFO     | monitoring.scheduler:add_m30_job:11 - Scheduled M30 evaluation job.
+2026-06-14 07:28:07 | INFO     | monitoring.scheduler:add_trailing_job:16 - Scheduled trailing job.
+2026-06-14 07:28:07 | INFO     | monitoring.scheduler:start:20 - APScheduler started.
+2026-06-14 07:30:00 | INFO     | __main__:process_m30_cycle:19 - M30 Candle Close Detected. Initiating Evaluation Cycle...
+2026-06-14 07:30:45 | INFO     | __main__:process_m30_cycle:81 - Executing BUY for USDCAD based on priority ranking.
+2026-06-14 07:30:45 | INFO     | execution.orders:open_trade:54 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769
+2026-06-14 07:30:45 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:30:46 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:30:48 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:30:52 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:30:52 | INFO     | execution.orders:open_trade:54 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769
+2026-06-14 07:30:52 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:30:53 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:30:55 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:30:59 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:30:59 | INFO     | __main__:process_m30_cycle:81 - Executing BUY for XAGUSD based on priority ranking.
+2026-06-14 07:30:59 | INFO     | execution.orders:open_trade:54 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987
+2026-06-14 07:30:59 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:00 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:02 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:06 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:06 | INFO     | execution.orders:open_trade:54 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987
+2026-06-14 07:31:06 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:07 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:09 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:13 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:13 | INFO     | __main__:process_m30_cycle:81 - Executing BUY for Jump 75 Index based on priority ranking.
+2026-06-14 07:31:13 | INFO     | execution.orders:open_trade:54 - Sending BUY order for Jump 75 Index | Vol: 0.01 | SL: 8122.55169
+2026-06-14 07:31:13 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:14 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:16 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:20 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:20 | INFO     | execution.orders:open_trade:54 - Sending BUY order for Jump 75 Index | Vol: 0.01 | SL: 8122.55169
+2026-06-14 07:31:20 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:21 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:23 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:27 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:27 | INFO     | __main__:process_m30_cycle:81 - Executing SELL for Jump 10 Index based on priority ranking.
+2026-06-14 07:31:27 | INFO     | execution.orders:open_trade:54 - Sending SELL order for Jump 10 Index | Vol: 0.01 | SL: 94570.69302
+2026-06-14 07:31:27 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:28 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:30 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:34 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:34 | INFO     | execution.orders:open_trade:54 - Sending SELL order for Jump 10 Index | Vol: 0.01 | SL: 94570.69302
+2026-06-14 07:31:34 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:35 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:37 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:41 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:41 | INFO     | __main__:process_m30_cycle:81 - Executing BUY for Volatility 75 Index based on priority ranking.
+2026-06-14 07:31:41 | INFO     | execution.orders:open_trade:54 - Sending BUY order for Volatility 75 Index | Vol: 0.01 | SL: 37506.35533
+2026-06-14 07:31:41 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:42 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:44 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:48 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:48 | INFO     | execution.orders:open_trade:54 - Sending BUY order for Volatility 75 Index | Vol: 0.01 | SL: 37506.35533
+2026-06-14 07:31:48 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:49 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:51 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:31:55 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:31:55 | INFO     | __main__:process_m30_cycle:81 - Executing BUY for Jump 50 Index based on priority ranking.
+2026-06-14 07:31:55 | INFO     | execution.orders:open_trade:54 - Sending BUY order for Jump 50 Index | Vol: 0.01 | SL: 56502.16003
+2026-06-14 07:31:55 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:31:56 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:31:58 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:32:02 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:32:02 | INFO     | execution.orders:open_trade:54 - Sending BUY order for Jump 50 Index | Vol: 0.01 | SL: 56502.16003
+2026-06-14 07:32:02 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:32:03 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:32:05 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:32:09 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:32:09 | INFO     | __main__:process_m30_cycle:81 - Executing SELL for Jump 25 Index based on priority ranking.
+2026-06-14 07:32:09 | INFO     | execution.orders:open_trade:54 - Sending SELL order for Jump 25 Index | Vol: 0.01 | SL: 113710.86519
+2026-06-14 07:32:09 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:32:10 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:32:12 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:32:16 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:32:16 | INFO     | execution.orders:open_trade:54 - Sending SELL order for Jump 25 Index | Vol: 0.01 | SL: 113710.86519
+2026-06-14 07:32:16 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 07:32:17 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 07:32:19 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 07:32:23 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 07:33:49 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:33:51 | INFO     | __main__:main:93 - Initializing Xiphos Trading Framework...
+2026-06-14 07:33:51 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 07:33:51 | INFO     | monitoring.scheduler:add_m30_job:11 - Scheduled M30 evaluation job.
+2026-06-14 07:33:51 | INFO     | monitoring.scheduler:add_trailing_job:16 - Scheduled trailing job.
+2026-06-14 07:33:51 | INFO     | monitoring.scheduler:start:20 - APScheduler started.
+2026-06-14 07:40:38 | INFO     | __main__:main:113 - Keyboard interrupt received. Shutting down...
+2026-06-14 07:40:38 | INFO     | execution.connection:disconnect:35 - Disconnected from MT5 terminal.
+2026-06-14 07:40:38 | INFO     | __main__:main:117 - Xiphos Framework offline.
+2026-06-14 07:40:43 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:40:44 | INFO     | __main__:main:93 - Initializing Xiphos Trading Framework...
+2026-06-14 07:40:48 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 07:40:48 | INFO     | monitoring.scheduler:add_m30_job:11 - Scheduled M30 evaluation job.
+2026-06-14 07:40:48 | INFO     | monitoring.scheduler:add_trailing_job:16 - Scheduled trailing job.
+2026-06-14 07:40:48 | INFO     | monitoring.scheduler:start:20 - APScheduler started.
+2026-06-14 07:45:48 | INFO     | __main__:main:113 - Keyboard interrupt received. Shutting down...
+2026-06-14 07:45:48 | INFO     | execution.connection:disconnect:35 - Disconnected from MT5 terminal.
+2026-06-14 07:45:48 | INFO     | __main__:main:117 - Xiphos Framework offline.
+2026-06-14 07:49:52 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:50:49 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:50:51 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 07:52:21 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:53:28 | ERROR    | execution.connection:connect:17 - MT5 Initialization failed. Error code: (-10005, 'IPC timeout'). Attempt 1/5
+2026-06-14 07:54:39 | ERROR    | execution.connection:connect:17 - MT5 Initialization failed. Error code: (-10005, 'IPC timeout'). Attempt 2/5
+2026-06-14 07:55:51 | ERROR    | execution.connection:connect:17 - MT5 Initialization failed. Error code: (-10005, 'IPC timeout'). Attempt 3/5
+2026-06-14 07:56:03 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 07:57:39 | INFO     | monitoring.scheduler:add_m30_job:11 - Scheduled M30 evaluation job.
+2026-06-14 07:57:39 | INFO     | monitoring.scheduler:add_trailing_job:16 - Scheduled trailing job.
+2026-06-14 07:57:39 | INFO     | monitoring.scheduler:start:20 - APScheduler started.
+2026-06-14 07:58:41 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 07:58:42 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 07:59:57 | INFO     | execution.connection:disconnect:35 - Disconnected from MT5 terminal.
+2026-06-14 08:00:45 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 08:00:46 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 08:01:02 | INFO     | monitoring.scheduler:add_m30_job:11 - Scheduled M30 evaluation job.
+2026-06-14 08:01:02 | INFO     | monitoring.scheduler:add_trailing_job:16 - Scheduled trailing job.
+2026-06-14 08:01:02 | INFO     | monitoring.scheduler:start:20 - APScheduler started.
+2026-06-14 08:08:57 | INFO     | execution.connection:disconnect:35 - Disconnected from MT5 terminal.
+2026-06-14 08:09:04 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 08:09:04 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 08:09:22 | INFO     | main:process_m30_cycle:19 - M30 Candle Close Detected. Initiating Evaluation Cycle...
+2026-06-14 08:09:23 | INFO     | main:process_m30_cycle:81 - Executing BUY for USDCAD based on priority ranking.
+2026-06-14 08:09:23 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: IOC
+2026-06-14 08:09:23 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:09:24 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:09:26 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:09:30 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:09:30 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:09:30 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: FOK
+2026-06-14 08:09:30 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:09:31 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:09:33 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:09:37 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:09:37 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:09:37 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: RETURN
+2026-06-14 08:09:37 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:09:38 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:09:40 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:09:44 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:09:44 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (-2, 'Unnamed arguments not allowed'). Trying next filling mode...
+2026-06-14 08:09:44 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:09:44 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: IOC
+2026-06-14 08:09:44 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:09:45 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:09:47 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:09:51 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:09:51 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:09:51 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: FOK
+2026-06-14 08:09:51 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:09:52 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:09:54 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:09:58 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:09:58 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:09:58 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: RETURN
+2026-06-14 08:09:58 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:09:59 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:10:01 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:10:05 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:10:05 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:10:05 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:10:05 | INFO     | main:process_m30_cycle:92 - Slots remaining after USDCAD: 2
+2026-06-14 08:10:05 | INFO     | main:process_m30_cycle:81 - Executing BUY for XAGUSD based on priority ranking.
+2026-06-14 08:10:05 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: IOC
+2026-06-14 08:10:05 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:10:06 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:10:08 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:10:12 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:10:12 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:10:12 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: FOK
+2026-06-14 08:10:12 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:10:13 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:10:15 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:10:19 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:10:19 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:10:19 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: RETURN
+2026-06-14 08:10:19 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:10:20 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:10:22 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:10:26 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:10:26 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:10:26 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:10:26 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: IOC
+2026-06-14 08:10:26 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:10:27 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:10:29 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:10:33 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:10:33 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (-2, 'Unnamed arguments not allowed'). Trying next filling mode...
+2026-06-14 08:10:33 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: FOK
+2026-06-14 08:10:33 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:10:34 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:10:36 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:10:40 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:10:40 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:10:40 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: RETURN
+2026-06-14 08:10:40 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:10:41 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:10:43 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:10:47 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:10:47 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:10:47 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:10:47 | INFO     | main:process_m30_cycle:92 - Slots remaining after XAGUSD: 0
+2026-06-14 08:10:47 | INFO     | main:process_m30_cycle:68 - Risk slots exhausted during execution phase.
+2026-06-14 08:14:02 | INFO     | monitoring.scheduler:add_m30_job:11 - Scheduled M30 evaluation job.
+2026-06-14 08:14:02 | INFO     | monitoring.scheduler:add_trailing_job:16 - Scheduled trailing job.
+2026-06-14 08:14:02 | INFO     | monitoring.scheduler:start:20 - APScheduler started.
+2026-06-14 08:14:02 | INFO     | main:process_m30_cycle:19 - M30 Candle Close Detected. Initiating Evaluation Cycle...
+2026-06-14 08:14:02 | INFO     | main:process_m30_cycle:81 - Executing BUY for USDCAD based on priority ranking.
+2026-06-14 08:14:02 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: IOC
+2026-06-14 08:14:02 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:03 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:05 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:09 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:09 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (-2, 'Unnamed arguments not allowed'). Trying next filling mode...
+2026-06-14 08:14:09 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: FOK
+2026-06-14 08:14:09 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:10 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:12 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:16 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:16 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:14:16 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: RETURN
+2026-06-14 08:14:16 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:17 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:19 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:23 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:23 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (-2, 'Unnamed arguments not allowed'). Trying next filling mode...
+2026-06-14 08:14:23 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:14:23 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: IOC
+2026-06-14 08:14:23 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:24 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:26 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:30 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:30 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:14:30 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: FOK
+2026-06-14 08:14:30 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:31 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:33 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:37 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:37 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:14:37 | INFO     | execution.orders:open_trade:63 - Sending BUY order for USDCAD | Vol: 0.01 | SL: 1.39769 | Filling: RETURN
+2026-06-14 08:14:37 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:38 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:40 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:44 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:44 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:14:44 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:14:44 | INFO     | main:process_m30_cycle:92 - Slots remaining after USDCAD: 2
+2026-06-14 08:14:44 | INFO     | main:process_m30_cycle:81 - Executing BUY for XAGUSD based on priority ranking.
+2026-06-14 08:14:44 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: IOC
+2026-06-14 08:14:44 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:45 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:47 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:51 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:51 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:14:51 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: FOK
+2026-06-14 08:14:51 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:52 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:14:54 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:14:58 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:14:58 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (-2, 'Unnamed arguments not allowed'). Trying next filling mode...
+2026-06-14 08:14:58 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: RETURN
+2026-06-14 08:14:58 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:14:59 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:15:01 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:15:05 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:15:05 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:15:05 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:15:05 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: IOC
+2026-06-14 08:15:05 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:15:06 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:15:08 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:15:12 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:15:12 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=IOC. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:15:12 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: FOK
+2026-06-14 08:15:12 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:15:14 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:15:16 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:15:20 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:15:20 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=FOK. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:15:20 | INFO     | execution.orders:open_trade:63 - Sending BUY order for XAGUSD | Vol: 0.01 | SL: 66.86987 | Filling: RETURN
+2026-06-14 08:15:20 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 1/3
+2026-06-14 08:15:21 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 2/3
+2026-06-14 08:15:23 | WARNING  | execution.orders:_retry_wrapper:17 - MT5 function returned None. Attempt 3/3
+2026-06-14 08:15:27 | CRITICAL | execution.orders:_retry_wrapper:21 - MT5 Operation failed permanently after 3 attempts.
+2026-06-14 08:15:27 | WARNING  | execution.orders:open_trade:78 - Order failed with filling=RETURN. MT5 error: (1, 'Success'). Trying next filling mode...
+2026-06-14 08:15:27 | CRITICAL | execution.orders:open_trade:80 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:15:27 | INFO     | main:process_m30_cycle:92 - Slots remaining after XAGUSD: 0
+2026-06-14 08:15:27 | INFO     | main:process_m30_cycle:68 - Risk slots exhausted during execution phase.
+2026-06-14 08:19:12 | INFO     | execution.connection:disconnect:35 - Disconnected from MT5 terminal.
+2026-06-14 08:19:17 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 08:19:20 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 08:19:41 | INFO     | main:process_m30_cycle:19 - M30 Candle Close Detected. Initiating Evaluation Cycle...
+2026-06-14 08:19:41 | INFO     | main:process_m30_cycle:81 - Executing BUY for USDCAD based on priority ranking.
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [IOC] USDCAD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [FOK] USDCAD: retcode=0 | Done
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [RETURN] USDCAD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | CRITICAL | execution.orders:open_trade:98 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [IOC] USDCAD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [FOK] USDCAD: retcode=0 | Done
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [RETURN] USDCAD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | CRITICAL | execution.orders:open_trade:98 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:19:41 | INFO     | main:process_m30_cycle:92 - Slots remaining after USDCAD: 2
+2026-06-14 08:19:41 | INFO     | main:process_m30_cycle:81 - Executing BUY for XAGUSD based on priority ranking.
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [IOC] XAGUSD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [FOK] XAGUSD: retcode=0 | Done
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [RETURN] XAGUSD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | CRITICAL | execution.orders:open_trade:98 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [IOC] XAGUSD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [FOK] XAGUSD: retcode=0 | Done
+2026-06-14 08:19:41 | WARNING  | execution.orders:open_trade:79 - order_check REJECTED [RETURN] XAGUSD: retcode=10030 | Unsupported filling mode
+2026-06-14 08:19:41 | CRITICAL | execution.orders:open_trade:98 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:19:41 | INFO     | main:process_m30_cycle:92 - Slots remaining after XAGUSD: 0
+2026-06-14 08:19:41 | INFO     | main:process_m30_cycle:68 - Risk slots exhausted during execution phase.
+2026-06-14 08:23:03 | INFO     | execution.connection:disconnect:35 - Disconnected from MT5 terminal.
+2026-06-14 08:23:59 | INFO     | storage.database:_create_schema:32 - Initializing SQLite database schema...
+2026-06-14 08:24:00 | INFO     | execution.connection:connect:12 - Successfully connected to MetaTrader 5 terminal.
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:19 - M30 Candle Close Detected. Initiating Evaluation Cycle...
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:81 - Executing BUY for USDCAD based on priority ranking.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] USDCAD: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] USDCAD: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:24:06 | WARNING  | main:process_m30_cycle:94 - Both orders failed for USDCAD. Slots unchanged: 4
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:81 - Executing BUY for XAGUSD based on priority ranking.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] XAGUSD: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] XAGUSD: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:24:06 | WARNING  | main:process_m30_cycle:94 - Both orders failed for XAGUSD. Slots unchanged: 4
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:81 - Executing BUY for Jump 75 Index based on priority ranking.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 75 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 75 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 75 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 75 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 75 Index. Slots unchanged: 4
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:81 - Executing SELL for Jump 10 Index based on priority ranking.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 10 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 10 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 10 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 10 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 10 Index. Slots unchanged: 4
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:81 - Executing BUY for Volatility 75 Index based on priority ranking.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Volatility 75 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Volatility 75 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Volatility 75 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Volatility 75 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Volatility 75 Index. Slots unchanged: 4
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:81 - Executing BUY for Jump 50 Index based on priority ranking.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 50 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 50 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 50 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 50 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 50 Index. Slots unchanged: 4
+2026-06-14 08:24:06 | INFO     | main:process_m30_cycle:81 - Executing SELL for Jump 25 Index based on priority ranking.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 25 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 25 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 25 Index: retcode=0 | Done
+2026-06-14 08:24:06 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 25 Index. Giving up.
+2026-06-14 08:24:06 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 25 Index. Slots unchanged: 4
+2026-06-14 08:24:13 | INFO     | main:process_m30_cycle:19 - M30 Candle Close Detected. Initiating Evaluation Cycle...
+2026-06-14 08:24:14 | INFO     | main:process_m30_cycle:81 - Executing BUY for USDCAD based on priority ranking.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] USDCAD: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] USDCAD: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY USDCAD. Giving up.
+2026-06-14 08:24:14 | WARNING  | main:process_m30_cycle:94 - Both orders failed for USDCAD. Slots unchanged: 4
+2026-06-14 08:24:14 | INFO     | main:process_m30_cycle:81 - Executing BUY for XAGUSD based on priority ranking.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] XAGUSD: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] XAGUSD: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY XAGUSD. Giving up.
+2026-06-14 08:24:14 | WARNING  | main:process_m30_cycle:94 - Both orders failed for XAGUSD. Slots unchanged: 4
+2026-06-14 08:24:14 | INFO     | main:process_m30_cycle:81 - Executing BUY for Jump 75 Index based on priority ranking.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 75 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 75 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 75 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 75 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 75 Index. Slots unchanged: 4
+2026-06-14 08:24:14 | INFO     | main:process_m30_cycle:81 - Executing SELL for Jump 10 Index based on priority ranking.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 10 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 10 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 10 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 10 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 10 Index. Slots unchanged: 4
+2026-06-14 08:24:14 | INFO     | main:process_m30_cycle:81 - Executing BUY for Volatility 75 Index based on priority ranking.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Volatility 75 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Volatility 75 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Volatility 75 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Volatility 75 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Volatility 75 Index. Slots unchanged: 4
+2026-06-14 08:24:14 | INFO     | main:process_m30_cycle:81 - Executing BUY for Jump 50 Index based on priority ranking.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 50 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 50 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 50 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for BUY Jump 50 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 50 Index. Slots unchanged: 4
+2026-06-14 08:24:14 | INFO     | main:process_m30_cycle:81 - Executing SELL for Jump 25 Index based on priority ranking.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 25 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 25 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | execution.orders:open_trade:91 - order_check REJECTED [FOK] Jump 25 Index: retcode=0 | Done
+2026-06-14 08:24:14 | CRITICAL | execution.orders:open_trade:110 - FATAL: All filling modes failed for SELL Jump 25 Index. Giving up.
+2026-06-14 08:24:14 | WARNING  | main:process_m30_cycle:94 - Both orders failed for Jump 25 Index. Slots unchanged: 4
