@@ -16,7 +16,7 @@ def trail_positions():
         return
         
     for pos in positions:
-        if pos.magic not in [settings.magic_numbers.scalper, settings.magic_numbers.runner]:
+        if pos.magic not in [135001, 135002]:
             continue
             
         ind_data = get_m30_indicators(pos.symbol, count=250)
@@ -25,10 +25,10 @@ def trail_positions():
             
         new_sl = None
         
-        if pos.magic == settings.magic_numbers.scalper:
+        if pos.magic == 135001:
             # Trail behind EMA50
             new_sl = ind_data['ema_medium']
-        elif pos.magic == settings.magic_numbers.runner:
+        elif pos.magic == 135002:
             # Trail behind SMA200
             new_sl = ind_data['sma_slow']
             
@@ -41,20 +41,22 @@ def trail_positions():
             continue
             
         new_sl = round(float(new_sl), symbol_info.digits)
+        stoplevel = symbol_info.trade_stops_level * symbol_info.point
         
         # Check direction and ensure risk never widens
         if pos.type == mt5.ORDER_TYPE_BUY:
             # Move SL upward only
             if new_sl > pos.sl:
-                # Also ensure new_sl is below current price
+                # Ensure new_sl is at least stoplevel below current price
                 tick = mt5.symbol_info_tick(pos.symbol)
-                if tick and new_sl < tick.bid:
+                if tick and new_sl < (tick.bid - stoplevel):
                     log.info(f"Trailing SL for {pos.symbol} BUY (Magic {pos.magic}) upward to {new_sl}")
                     modify_sl(pos.ticket, pos.symbol, new_sl)
         elif pos.type == mt5.ORDER_TYPE_SELL:
             # Move SL downward only
             if pos.sl == 0.0 or new_sl < pos.sl:
+                # Ensure new_sl is at least stoplevel above current price
                 tick = mt5.symbol_info_tick(pos.symbol)
-                if tick and new_sl > tick.ask:
+                if tick and new_sl > (tick.ask + stoplevel):
                     log.info(f"Trailing SL for {pos.symbol} SELL (Magic {pos.magic}) downward to {new_sl}")
                     modify_sl(pos.ticket, pos.symbol, new_sl)

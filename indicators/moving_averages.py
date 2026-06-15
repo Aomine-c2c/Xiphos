@@ -14,9 +14,9 @@ def get_m30_indicators(symbol: str, count: int = 250):
     df['time'] = pd.to_datetime(df['time'], unit='s')
     
     # Calculate indicators using native pandas (no external TA library needed)
-    fast = settings.indicators.fast_ema
-    medium = settings.indicators.medium_ema
-    slow = settings.indicators.slow_sma
+    fast = 13
+    medium = 50
+    slow = 200
 
     df['ema_fast'] = df['close'].ewm(span=fast, adjust=False).mean()
     df['ema_medium'] = df['close'].ewm(span=medium, adjust=False).mean()

@@ -9,9 +9,9 @@ from monitoring.scheduler import scheduler
 from dashboard.cli import generate_dashboard
 from indicators.moving_averages import get_m30_indicators
 from strategies.trend_following import evaluate_signal
-from risk.slots import calculate_available_slots
-from risk.correlation import is_correlation_blocked
-from risk.priority import rank_signals
+from risk.RiskSlotManager import RiskSlotManager
+from risk.risk_manager import CorrelationGuard
+from risk.priority import SignalPriorityEngine
 
 from rich.live import Live
 
@@ -21,10 +21,17 @@ def process_m30_cycle():
     if not mt5_conn.check_health():
         return
         
-    slots_available = calculate_available_slots()
+    slots_available = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
     if slots_available <= 0:
         log.info("Max risk slots reached. Skipping new signal evaluation.")
         return
+        
+    # Get currently open trades count per symbol to prevent duplication
+    positions = mt5.positions_get()
+    open_counts = {}
+    if positions:
+        for p in positions:
+            open_counts[p.symbol] = open_counts.get(p.symbol, 0) + 1
         
     all_symbols = []
     for bucket in settings.correlation_groups.values():
@@ -60,7 +67,7 @@ def process_m30_cycle():
         return
         
     # Prioritize signals
-    ranked_signals = rank_signals(signals)
+    ranked_signals = SignalPriorityEngine.rank_signals(signals)
     
     # Execute until slots exhausted
     for sig in ranked_signals:
@@ -71,27 +78,40 @@ def process_m30_cycle():
         sym = sig["symbol"]
         typ = sig["type"]
         
-        if is_correlation_blocked(sym):
+        open_count = open_counts.get(sym, 0)
+        if open_count >= 2:
+            log.info(f"Skipping {sym} - 2 or more trades already open (preventing duplication).")
             continue
             
-        # Initial SL behind 50 EMA
-        sl_price = sig['ind_data']['ema_medium'] 
-        sl_price = round(float(sl_price), 5)
-        
-        log.info(f"Executing {typ} for {sym} based on priority ranking.")
-        
+        if CorrelationGuard.is_blocked(sym):
+            continue
+            
+        res_a = None
+        res_b = None
+        slots_consumed = 0
+            
         # Trade A (Scalper)
-        res_a = open_trade(sym, typ, settings.trading.lot_size, sl_price, settings.magic_numbers.scalper)
+        if open_count < 2 and slots_available > 0:
+            sl_scalper = round(float(sig['ind_data']['sma_slow']), 5)
+            res_a = open_trade(sym, typ, 0.01, sl_scalper, 135001)
+            if res_a:
+                open_count += 1
+                slots_consumed += 1
         
-        # Trade B (Runner)
-        res_b = open_trade(sym, typ, settings.trading.lot_size, sl_price, settings.magic_numbers.runner)
+        # Trade B (Runner) trails the slow SMA to capture the broader trend
+        if open_count < 2 and slots_available > slots_consumed:
+            sl_runner = round(float(sig['ind_data']['sma_slow']), 5)
+            res_b = open_trade(sym, typ, 0.01, sl_runner, 135002)
+            if res_b:
+                open_count += 1
+                slots_consumed += 1
         
         # Only consume slots when trades actually land
-        if res_a or res_b:
-            slots_available -= 2
+        if slots_consumed > 0:
+            slots_available -= slots_consumed
             log.info(f"Slots remaining after {sym}: {max(0, slots_available)}")
         else:
-            log.warning(f"Both orders failed for {sym}. Slots unchanged: {slots_available}")
+            log.warning(f"Orders failed or skipped for {sym}. Slots unchanged: {slots_available}")
 
 
 def main():

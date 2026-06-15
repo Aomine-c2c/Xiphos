@@ -8,7 +8,11 @@ BASE_DELAY = 1.0
 
 def _retry_wrapper(func, *args, **kwargs):
     for attempt in range(MAX_RETRIES):
-        result = func(*args, **kwargs)
+        if func.__name__ == 'order_send' or func.__name__ == 'order_check':
+            result = func(args[0])
+        else:
+            result = func(*args, **kwargs)
+            
         if result is not None and getattr(result, "retcode", mt5.TRADE_RETCODE_DONE) == mt5.TRADE_RETCODE_DONE:
             return result
         elif result is not None:

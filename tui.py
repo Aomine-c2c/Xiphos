@@ -180,7 +180,6 @@ class LogPanel(RichLog):
 class ControlsBar(Static):
     DEFAULT_CSS = "ControlsBar { height: 3; align: center middle; } Button { margin: 0 1; min-width: 14; }"
     def compose(self) -> ComposeResult:
-        yield Button("▶  Start",        id="btn-start",  variant="success")
         yield Button("■  Stop",          id="btn-stop",   variant="error")
         yield Button("⏸  Pause",         id="btn-pause",  variant="warning")
         yield Button("⚡ Force Cycle",   id="btn-force",  variant="primary")
@@ -267,6 +266,9 @@ class XiphosApp(App):
         self.set_interval(10, self._refresh_performance) # Refresh perf every 10s
         self.set_interval(3600, self._check_for_updates) # Hourly check
         self._check_for_updates() # Check once on startup
+        
+        # Auto-start trading execution loop
+        self.action_start_bot()
 
     # ── Release check worker ──────────────────────────────────────────────────
 
