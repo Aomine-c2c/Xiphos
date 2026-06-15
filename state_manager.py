@@ -88,3 +88,33 @@ class StateManager:
             cursor.execute("""
                 UPDATE trades SET sl_price = ? WHERE ticket = ? AND status = 'OPEN'
             """, (new_sl, int(ticket)))
+
+    def get_performance_metrics(self):
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as total, SUM(CASE WHEN profit > 0 THEN 1 ELSE 0 END) as wins, SUM(profit) as total_profit FROM trades WHERE status = 'CLOSED'")
+            row = cursor.fetchone()
+            
+            total = row['total'] or 0
+            wins = row['wins'] or 0
+            total_profit = row['total_profit'] or 0.0
+            
+            win_rate = (wins / total * 100) if total > 0 else 0.0
+            
+            return {
+                "total_trades": total,
+                "win_rate": win_rate,
+                "total_profit": total_profit
+            }
+
+    def get_trade_history(self, limit=50):
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT ticket, symbol, type, entry_price, close_time, profit 
+                FROM trades 
+                WHERE status = 'CLOSED' 
+                ORDER BY close_time DESC 
+                LIMIT ?
+            """, (limit,))
+            return [dict(row) for row in cursor.fetchall()]
