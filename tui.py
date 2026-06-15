@@ -333,7 +333,7 @@ class XiphosApp(App):
             m_text = (
                 f"  Total Trades:   [bold white]{metrics['total_trades']}[/bold white]\n"
                 f"  Win Rate:       [bold cyan]{metrics['win_rate']:.1f}%[/bold cyan]\n"
-                f"  Total Profit:   [bold {'green' if metrics['total_profit'] >= 0 else 'red'}]+${metrics['total_profit']:.2f}[/bold]\n"
+                f"  Total Profit:   [bold {'green' if metrics['total_profit'] >= 0 else 'red'}]+${metrics['total_profit']:.2f}[/]\n"
             )
             self.call_from_thread(self.query_one("#metrics-label", Label).update, m_text)
             
