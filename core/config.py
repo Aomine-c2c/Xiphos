@@ -5,7 +5,7 @@ from typing import List, Dict
 from core.paths import get_base_dir, ensure_config_exists
 
 class ExecutionConfig(BaseModel):
-    mode: str = "DIRECT"
+    mode: str = "AUTO"
     bridge_host: str = "127.0.0.1"
     bridge_port: int = 8000
 
