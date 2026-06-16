@@ -10,10 +10,12 @@ from dashboard.cli import generate_dashboard
 from indicators.moving_averages import get_m30_indicators
 from strategies.trend_following import evaluate_signal
 from risk.RiskSlotManager import RiskSlotManager
-from risk.risk_manager import CorrelationGuard
-from risk.priority import SignalPriorityEngine
+from risk.CorrelationGuard import CorrelationGuard
+from risk.SignalPriorityEngine import SignalPriorityEngine
 
 from rich.live import Live
+
+last_processed_candles = {}
 
 def process_m30_cycle():
     log.info("M30 Candle Close Detected. Initiating Evaluation Cycle...")
@@ -53,6 +55,11 @@ def process_m30_cycle():
         if not ind_data:
             continue
             
+        # CRITICAL FIX: Prevent MT5 shift race conditions by ensuring we never process the same candle twice.
+        candle_time = ind_data.get('time', 0)
+        if candle_time <= last_processed_candles.get(sym, 0):
+            continue
+            
         signal = evaluate_signal(ind_data)
         
         if signal:
@@ -69,6 +76,8 @@ def process_m30_cycle():
     # Prioritize signals
     ranked_signals = SignalPriorityEngine.rank_signals(signals)
     
+    session_blocked_buckets = set()
+    
     # Execute until slots exhausted
     for sig in ranked_signals:
         if slots_available <= 0:
@@ -78,12 +87,23 @@ def process_m30_cycle():
         sym = sig["symbol"]
         typ = sig["type"]
         
+        # Determine bucket to track intra-session blocks
+        bucket_name = None
+        for name, symbols in settings.correlation_groups.items():
+            if sym in symbols:
+                bucket_name = name
+                break
+                
+        if bucket_name in session_blocked_buckets:
+            log.info(f"Skipping {sym} - bucket {bucket_name} was dynamically blocked in this exact cycle (Sync Leak Prevented).")
+            continue
+        
         open_count = open_counts.get(sym, 0)
         if open_count >= 2:
             log.info(f"Skipping {sym} - 2 or more trades already open (preventing duplication).")
             continue
             
-        if CorrelationGuard.is_blocked(sym):
+        if CorrelationGuard.is_bucket_blocked(sym, magic_filter=[135001, 135002]):
             continue
             
         res_a = None
@@ -109,6 +129,9 @@ def process_m30_cycle():
         # Only consume slots when trades actually land
         if slots_consumed > 0:
             slots_available -= slots_consumed
+            last_processed_candles[sym] = sig['ind_data'].get('time', 0)
+            if bucket_name:
+                session_blocked_buckets.add(bucket_name)
             log.info(f"Slots remaining after {sym}: {max(0, slots_available)}")
         else:
             log.warning(f"Orders failed or skipped for {sym}. Slots unchanged: {slots_available}")

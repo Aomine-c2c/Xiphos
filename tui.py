@@ -10,7 +10,6 @@ import requests
 from datetime import datetime, timedelta
 from loguru import logger
 
-CURRENT_VERSION = "v1.2.3"
 
 from textual import work, on
 from textual.app import App, ComposeResult
@@ -26,14 +25,17 @@ import MetaTrader5 as mt5
 from core.config import settings
 from core.logger import log
 from execution.connection import mt5_conn
+from execution.orders import modify_sl
 from execution.trailing import trail_positions
 from indicators.moving_averages import get_m30_indicators
 from monitoring.scheduler import scheduler
-from risk.slots import calculate_available_slots
+from risk.RiskSlotManager import RiskSlotManager
 from strategies.trend_following import evaluate_signal
 from main import process_m30_cycle
 from state_manager import StateManager
 from mt5_executor import MT5Executor
+
+CURRENT_VERSION = "v1.2.3"
 
 # ── Bot thread management ─────────────────────────────────────────────────────
 
@@ -112,6 +114,45 @@ class SaveConfigModal(ModalScreen):
             self.dismiss(False)
 
 
+class PositionControlModal(ModalScreen):
+    CSS = """
+    PositionControlModal { align: center middle; background: rgba(0, 0, 0, 0.8); }
+    #pos-dialog { padding: 1 2; width: 45; height: 16; border: thick $accent; background: $surface; }
+    #input-new-sl { width: 15; margin-right: 1; }
+    """
+    def __init__(self, ticket: int, symbol: str, current_sl: str):
+        super().__init__()
+        self.ticket = ticket
+        self.symbol = symbol
+        self.current_sl = current_sl
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="pos-dialog"):
+            yield Label(f"[bold cyan]Manual Control for {self.symbol}[/bold cyan]\nTicket: {self.ticket}", id="pos-title")
+            
+            yield Label("\nModify Stop Loss:")
+            with Horizontal():
+                yield Input(value=self.current_sl, id="input-new-sl")
+                yield Button("Update SL", variant="primary", id="btn-update-sl")
+                
+            yield Label("\nClose Position:")
+            yield Button("CLOSE NOW", variant="error", id="btn-close-pos")
+            
+            yield Button("Cancel", variant="default", id="btn-cancel-pos", classes="mt-1")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-update-sl":
+            try:
+                new_sl = float(self.query_one("#input-new-sl", Input).value)
+                self.dismiss({"action": "modify_sl", "ticket": self.ticket, "symbol": self.symbol, "new_sl": new_sl})
+            except ValueError:
+                pass
+        elif event.button.id == "btn-close-pos":
+            self.dismiss({"action": "close", "ticket": self.ticket, "symbol": self.symbol})
+        else:
+            self.dismiss(None)
+
+
 # ── Widgets ───────────────────────────────────────────────────────────────────
 
 class StatusPanel(Static):
@@ -139,7 +180,7 @@ class MarketWatchTable(Static):
     DEFAULT_CSS = "MarketWatchTable { border: round $primary; padding: 0 1; height: 100%; width: 3fr; overflow-y: auto; }"
     def compose(self) -> ComposeResult:
         t = DataTable(id="mw-table", zebra_stripes=True, cursor_type="none")
-        t.add_columns("Symbol", "Price", "Trend", "Signal")
+        t.add_columns("Symbol", "Price", "Trend", "E13 Dist", "E50 Dist", "S200 Dist", "Bucket", "Signal")
         yield t
     def update_rows(self, rows: list) -> None:
         t = self.query_one("#mw-table", DataTable)
@@ -152,7 +193,7 @@ class PositionsTable(Static):
     DEFAULT_CSS = "PositionsTable { border: round $primary; padding: 0 1; height: 10; }"
     def compose(self) -> ComposeResult:
         t = DataTable(id="pos-table", zebra_stripes=True, cursor_type="none")
-        t.add_columns("Symbol", "Type", "Entry", "Current", "SL", "P&L", "Role")
+        t.add_columns("Ticket", "Symbol", "Type", "Entry", "Current", "SL", "P&L", "Role")
         yield t
     def update_rows(self, rows: list) -> None:
         t = self.query_one("#pos-table", DataTable)
@@ -198,11 +239,11 @@ class XiphosApp(App):
         ("f", "force_cycle", "Force Cycle"),
     ]
     CSS = """
-    Screen { background: $surface; }
+    Screen { background: #0f172a; }
     #top-row { height: 16; }
-    .section-lbl { color: $accent; text-style: bold; padding: 0 2; height: 1; }
-    .metrics-panel { border: round $success; padding: 1 2; height: auto; margin-bottom: 1;}
-    .config-panel { border: round $warning; padding: 1 2; height: auto; }
+    .section-lbl { color: #38bdf8; text-style: bold; padding: 0 2; height: 1; }
+    .metrics-panel { border: round #10b981; padding: 1 2; height: auto; margin-bottom: 1; background: #1e293b;}
+    .config-panel { border: round #f59e0b; padding: 1 2; height: auto; background: #1e293b;}
     .config-row { height: 3; align: left middle;}
     .config-label { padding-top: 1; width: 25; }
     """
@@ -312,7 +353,7 @@ class XiphosApp(App):
             mg_str    = f"[bold white]${account.margin_free:.2f}[/bold white]"
             pnl_c     = "green" if account.profit >= 0 else "red"
             pnl_str   = f"[bold {pnl_c}]${account.profit:+.2f}[/bold {pnl_c}]"
-            slots_av  = calculate_available_slots()
+            slots_av  = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
             slots_us  = settings.trading.max_risk_trades - slots_av
             sl_c      = "green" if slots_av > 0 else "red"
         else:
@@ -345,7 +386,7 @@ class XiphosApp(App):
                 else str(pos.magic)
             )
             rows.append((
-                pos.symbol, f"[{typ_c}]{typ}[/{typ_c}]", f"{pos.price_open:.5f}",
+                pos.ticket, pos.symbol, f"[{typ_c}]{typ}[/{typ_c}]", f"{pos.price_open:.5f}",
                 f"{pos.price_current:.5f}", f"{pos.sl:.5f}", f"[{pnl_c}]${pnl:+.2f}[/{pnl_c}]", role
             ))
         self.call_from_thread(self.query_one("#positions-panel", PositionsTable).update_rows, rows)
@@ -369,7 +410,9 @@ class XiphosApp(App):
                     elif new_price < old_price:
                         price_c = "red"
                 
-                spark = generate_sparkline(data["history"])
+                spark_raw = generate_sparkline(data["history"])
+                spark_c = "green" if data["history"][-1] >= data["history"][0] else "red"
+                spark = f"[{spark_c}]{spark_raw}[/{spark_c}]"
                 
                 sig = data["signal"]
                 if sig == "BUY":
@@ -379,7 +422,20 @@ class XiphosApp(App):
                 else:
                     sig_str = "[dim]─ NONE[/dim]"
                     
-                mw_rows.append((sym, f"[bold {price_c}]{new_price:.5f}[/bold {price_c}]", f"[cyan]{spark}[/cyan]", sig_str))
+                e13 = data.get("e13_dist", 0)
+                e50 = data.get("e50_dist", 0)
+                s200 = data.get("s200_dist", 0)
+                bkt = data.get("bucket", "N/A")
+                
+                fmt_d = lambda d: f"[green]+{d:.0f}[/]" if d > 0 else f"[red]{d:.0f}[/]" if d < 0 else "0"
+                
+                mw_rows.append((
+                    sym, 
+                    f"[bold {price_c}]{new_price:.5f}[/bold {price_c}]", 
+                    spark,
+                    fmt_d(e13), fmt_d(e50), fmt_d(s200), bkt,
+                    sig_str
+                ))
                 
         self.call_from_thread(self.query_one("#mw-panel", MarketWatchTable).update_rows, mw_rows)
 
@@ -393,14 +449,38 @@ class XiphosApp(App):
             if ind:
                 sig = evaluate_signal(ind)
                 data["signal"] = sig
+                
+                price = info.bid
+                point = info.point
+                if point > 0:
+                    data["e13_dist"] = (price - ind['ema_fast']) / point
+                    data["e50_dist"] = (price - ind['ema_medium']) / point
+                    data["s200_dist"] = (price - ind['sma_slow']) / point
+                    
+                bucket_name = "N/A"
+                for name, symbols in settings.correlation_groups.items():
+                    if sym in symbols:
+                        bucket_name = name
+                        break
+                data["bucket"] = bucket_name
         
     @work(thread=True)
     def _refresh_performance(self) -> None:
         try:
             metrics = state_manager.get_performance_metrics()
+            
+            pf = metrics.get('profit_factor', 0)
+            pf_str = f"{pf:.2f}" if pf != float('inf') else "INF"
+            
+            sr = metrics.get('sharpe_ratio', 0)
+            dd = metrics.get('max_drawdown', 0)
+            
             m_text = (
                 f"  Total Trades:   [bold white]{metrics['total_trades']}[/bold white]\n"
                 f"  Win Rate:       [bold cyan]{metrics['win_rate']:.1f}%[/bold cyan]\n"
+                f"  Profit Factor:  [bold cyan]{pf_str}[/bold cyan]\n"
+                f"  Max Drawdown:   [bold red]${dd:.2f}[/bold red]\n"
+                f"  Sharpe Ratio:   [bold cyan]{sr:.2f}[/bold cyan]\n"
                 f"  Total Profit:   [bold {'green' if metrics['total_profit'] >= 0 else 'red'}]+${metrics['total_profit']:.2f}[/]\n"
             )
             self.call_from_thread(self.query_one("#metrics-label", Label).update, m_text)
@@ -457,6 +537,70 @@ class XiphosApp(App):
         action = actions.get(event.button.id)
         if action:
             action()
+
+    @on(DataTable.RowSelected, "#pos-table")
+    def handle_position_selected(self, event: DataTable.RowSelected) -> None:
+        table = event.data_table
+        row_key = event.row_key
+        row_data = table.get_row(row_key)
+        ticket = int(row_data[0])
+        symbol = row_data[1]
+        sl_str = str(row_data[5])
+        
+        def handle_pos_action(result):
+            if result:
+                action = result["action"]
+                if action == "close":
+                    self._execute_single_close(result["ticket"], result["symbol"])
+                elif action == "modify_sl":
+                    self._execute_single_modify_sl(result["ticket"], result["symbol"], result["new_sl"])
+        
+        self.push_screen(PositionControlModal(ticket, symbol, sl_str), handle_pos_action)
+
+    @work(thread=True)
+    def _execute_single_close(self, ticket: int, symbol: str) -> None:
+        pos = mt5.positions_get(ticket=ticket)
+        if not pos:
+            self.call_from_thread(self.log_msg, f"[red]Ticket {ticket} not found.[/red]")
+            return
+        pos = pos[0]
+        tick = mt5.symbol_info_tick(symbol)
+        if not tick: return
+        
+        action = mt5.TRADE_ACTION_DEAL
+        if pos.type == mt5.ORDER_TYPE_BUY:
+            type_mt5 = mt5.ORDER_TYPE_SELL
+            price = tick.bid
+        else:
+            type_mt5 = mt5.ORDER_TYPE_BUY
+            price = tick.ask
+            
+        req = {
+            "action": action,
+            "symbol": pos.symbol,
+            "volume": pos.volume,
+            "type": type_mt5,
+            "position": pos.ticket,
+            "price": price,
+            "deviation": 20,
+            "magic": pos.magic,
+            "comment": "Manual Close via TUI",
+        }
+        res = mt5_executor._retry_wrapper(mt5.order_send, req)
+        if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+            self.call_from_thread(self.log_msg, f"[bold green]✔ Ticket {ticket} closed manually.[/bold green]")
+            self.call_from_thread(self._refresh_fast)
+        else:
+            self.call_from_thread(self.log_msg, f"[red]✘ Failed to close ticket {ticket}.[/red]")
+
+    @work(thread=True)
+    def _execute_single_modify_sl(self, ticket: int, symbol: str, new_sl: float) -> None:
+        res = modify_sl(ticket, symbol, new_sl)
+        if res:
+            self.call_from_thread(self.log_msg, f"[bold green]✔ Ticket {ticket} SL manually modified to {new_sl}.[/bold green]")
+            self.call_from_thread(self._refresh_fast)
+        else:
+            self.call_from_thread(self.log_msg, f"[red]✘ Failed to modify SL for ticket {ticket}.[/red]")
 
     def action_prompt_panic(self):
         def check_panic(result: bool):

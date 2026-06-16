@@ -92,19 +92,58 @@ class StateManager:
     def get_performance_metrics(self):
         with db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) as total, SUM(CASE WHEN profit > 0 THEN 1 ELSE 0 END) as wins, SUM(profit) as total_profit FROM trades WHERE status = 'CLOSED'")
-            row = cursor.fetchone()
+            cursor.execute("SELECT profit FROM trades WHERE status = 'CLOSED' ORDER BY close_time ASC")
+            rows = cursor.fetchall()
             
-            total = row['total'] or 0
-            wins = row['wins'] or 0
-            total_profit = row['total_profit'] or 0.0
+            total = len(rows)
+            wins = 0
+            gross_profit = 0.0
+            gross_loss = 0.0
             
+            peak = 0.0
+            current_equity = 0.0
+            max_dd = 0.0
+            profits = []
+            
+            for row in rows:
+                p = row['profit'] or 0.0
+                profits.append(p)
+                current_equity += p
+                
+                if p > 0:
+                    wins += 1
+                    gross_profit += p
+                else:
+                    gross_loss += abs(p)
+                    
+                if current_equity > peak:
+                    peak = current_equity
+                
+                dd = peak - current_equity
+                if dd > max_dd:
+                    max_dd = dd
+                    
+            total_profit = current_equity
             win_rate = (wins / total * 100) if total > 0 else 0.0
+            profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float('inf') if gross_profit > 0 else 0.0
             
+            sharpe = 0.0
+            if total > 1:
+                import math
+                avg_profit = sum(profits) / total
+                variance = sum((p - avg_profit) ** 2 for p in profits) / (total - 1)
+                std_dev = math.sqrt(variance)
+                
+                if std_dev > 0:
+                    sharpe = (avg_profit / std_dev) * math.sqrt(504) # Est 504 trades/year
+
             return {
                 "total_trades": total,
                 "win_rate": win_rate,
-                "total_profit": total_profit
+                "total_profit": total_profit,
+                "profit_factor": profit_factor,
+                "max_drawdown": max_dd,
+                "sharpe_ratio": sharpe
             }
 
     def get_trade_history(self, limit=50):

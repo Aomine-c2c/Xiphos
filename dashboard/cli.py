@@ -3,7 +3,7 @@ from rich.table import Table
 from rich.console import Console
 import MetaTrader5 as mt5
 from core.config import settings
-from risk.slots import calculate_available_slots
+from risk.RiskSlotManager import RiskSlotManager
 
 console = Console()
 
@@ -30,7 +30,7 @@ def generate_dashboard() -> Table:
     
     # Risk slots
     if account_info:
-        slots = calculate_available_slots()
+        slots = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
         used = settings.trading.max_risk_trades - slots
         table.add_row("Risk Slots Used", f"{used} / {settings.trading.max_risk_trades}")
         table.add_row("Risk Slots Available", str(slots))

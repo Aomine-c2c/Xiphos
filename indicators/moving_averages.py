@@ -3,8 +3,21 @@ import MetaTrader5 as mt5
 from core.logger import log
 from core.config import settings
 
+_indicator_cache = {}
+
 def get_m30_indicators(symbol: str, count: int = 250):
-    """ Fetch M30 candles and calculate indicators using native pandas """
+    """ Fetch M30 candles and calculate indicators using native pandas, with caching """
+    
+    # 1. Cheaply check the latest closed candle to utilize cache
+    recent = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M30, 0, 2)
+    if recent is None or len(recent) < 2:
+        return None
+        
+    last_closed_time = recent[0]['time']
+    
+    if symbol in _indicator_cache and _indicator_cache[symbol]['time'] == last_closed_time:
+        return _indicator_cache[symbol]['data']
+
     rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M30, 0, count)
     if rates is None or len(rates) == 0:
         log.warning(f"Failed to fetch rates for {symbol}")
@@ -35,10 +48,14 @@ def get_m30_indicators(symbol: str, count: int = 250):
         
     last_completed = df.iloc[-2]
     
-    return {
+    result = {
         "symbol": symbol,
+        "time": int(last_completed.name.timestamp()) if isinstance(last_completed.name, pd.Timestamp) else last_closed_time,
         "close": last_completed['close'],
         "ema_fast": last_completed['ema_fast'],
         "ema_medium": last_completed['ema_medium'],
         "sma_slow": last_completed['sma_slow']
     }
+    
+    _indicator_cache[symbol] = {'time': last_closed_time, 'data': result}
+    return result

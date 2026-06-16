@@ -58,6 +58,13 @@ def open_trade(symbol: str, type_str: str, volume: float, sl_price: float, magic
     if sym_info is None:
         log.error(f"Could not get symbol_info for {symbol}.")
         return None
+        
+    # CRITICAL FIX: Validate stoplevel to prevent MT5 INVALID_STOPS error
+    stoplevel = sym_info.trade_stops_level * sym_info.point
+    if abs(price - sl_price) <= stoplevel:
+        log.warning(f"BLOCKED: SL {sl_price} for {symbol} is too close to price {price}. Min stoplevel is {stoplevel}.")
+        return None
+        
     filling_bitmask = sym_info.filling_mode
 
     # Build list of only the modes this broker+symbol actually supports
