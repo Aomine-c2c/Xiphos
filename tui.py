@@ -35,7 +35,102 @@ from main import process_m30_cycle
 from state_manager import StateManager
 from mt5_executor import MT5Executor
 
-CURRENT_VERSION = "v1.2.3"
+import ctypes
+import os
+
+CURRENT_VERSION = "v1.2.4"
+
+# ── Process Resource Tracking ──────────────────────────────────────────────────
+
+class CPUTracker:
+    def __init__(self):
+        self.last_time = time.perf_counter()
+        self.last_cpu_time = time.process_time()
+        
+    def get_cpu_percent(self) -> float:
+        now = time.perf_counter()
+        cpu_now = time.process_time()
+        time_diff = now - self.last_time
+        cpu_diff = cpu_now - self.last_cpu_time
+        
+        self.last_time = now
+        self.last_cpu_time = cpu_now
+        
+        if time_diff > 0:
+            cores = os.cpu_count() or 1
+            return (cpu_diff / time_diff) * 100.0 / cores
+        return 0.0
+
+def get_memory_usage_mb() -> float:
+    try:
+        if os.name == 'nt':
+            class PROCESS_MEMORY_COUNTERS(ctypes.Structure):
+                _fields_ = [
+                    ("cb", ctypes.c_ulong),
+                    ("PageFaultCount", ctypes.c_ulong),
+                    ("PeakWorkingSetSize", ctypes.c_size_t),
+                    ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t),
+                    ("PeakPagefileUsage", ctypes.c_size_t)
+                ]
+            counters = PROCESS_MEMORY_COUNTERS()
+            process = ctypes.windll.kernel32.GetCurrentProcess()
+            if ctypes.windll.psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), ctypes.sizeof(counters)):
+                return counters.WorkingSetSize / (1024 * 1024)
+        else:
+            import resource
+            return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+    except Exception:
+        pass
+    return 0.0
+
+# ── Cumulative Equity ASCII Chart ──────────────────────────────────────────────
+
+def generate_ascii_chart(profits: list[float], height: int = 5, width: int = 40) -> str:
+    if not profits:
+        return "[No closed trade data available yet]"
+        
+    cum_sum = []
+    current = 0.0
+    for p in profits:
+        current += p
+        cum_sum.append(current)
+        
+    if len(cum_sum) > width:
+        cum_sum = cum_sum[-width:]
+        
+    n = len(cum_sum)
+    if n == 0:
+        return "[No closed trade data available yet]"
+        
+    min_val = min(cum_sum)
+    max_val = max(cum_sum)
+    val_range = max_val - min_val
+    if val_range == 0:
+        val_range = 1.0
+        
+    grid = [[" " for _ in range(n)] for _ in range(height)]
+    
+    for col, val in enumerate(cum_sum):
+        row = int((val - min_val) / val_range * (height - 1))
+        row = max(0, min(height - 1, row))
+        grid[height - 1 - row][col] = "●"
+        
+    lines = []
+    for r in range(height):
+        if r == 0:
+            lbl = f"[green]+${max_val:6.2f}[/green] ┐ "
+        elif r == height - 1:
+            lbl = f"[red]${min_val:7.2f}[/red] ┘ "
+        else:
+            lbl = "         │ "
+        lines.append(lbl + "".join(grid[r]))
+        
+    return "\n".join(lines)
 
 # ── Bot thread management ─────────────────────────────────────────────────────
 
@@ -117,14 +212,16 @@ class SaveConfigModal(ModalScreen):
 class PositionControlModal(ModalScreen):
     CSS = """
     PositionControlModal { align: center middle; background: rgba(0, 0, 0, 0.8); }
-    #pos-dialog { padding: 1 2; width: 45; height: 16; border: thick $accent; background: $surface; }
-    #input-new-sl { width: 15; margin-right: 1; }
+    #pos-dialog { padding: 1 2; width: 50; height: 21; border: thick $accent; background: $surface; }
+    #input-new-sl, #input-new-tp { width: 15; margin-right: 1; }
+    .pos-btn { min-width: 14; margin-right: 1; }
     """
-    def __init__(self, ticket: int, symbol: str, current_sl: str):
+    def __init__(self, ticket: int, symbol: str, current_sl: str, current_tp: str):
         super().__init__()
         self.ticket = ticket
         self.symbol = symbol
         self.current_sl = current_sl
+        self.current_tp = current_tp
 
     def compose(self) -> ComposeResult:
         with Vertical(id="pos-dialog"):
@@ -135,8 +232,16 @@ class PositionControlModal(ModalScreen):
                 yield Input(value=self.current_sl, id="input-new-sl")
                 yield Button("Update SL", variant="primary", id="btn-update-sl")
                 
-            yield Label("\nClose Position:")
-            yield Button("CLOSE NOW", variant="error", id="btn-close-pos")
+            yield Label("\nModify Take Profit:")
+            with Horizontal():
+                yield Input(value=self.current_tp, id="input-new-tp")
+                yield Button("Update TP", variant="primary", id="btn-update-tp")
+                
+            yield Label("\nExecution Actions:")
+            with Horizontal():
+                yield Button("CLOSE NOW", variant="error", id="btn-close-pos", classes="pos-btn")
+                yield Button("CLOSE 50%", variant="warning", id="btn-partial-pos", classes="pos-btn")
+                yield Button("BREAKEVEN", variant="warning", id="btn-be-pos", classes="pos-btn")
             
             yield Button("Cancel", variant="default", id="btn-cancel-pos", classes="mt-1")
 
@@ -147,10 +252,56 @@ class PositionControlModal(ModalScreen):
                 self.dismiss({"action": "modify_sl", "ticket": self.ticket, "symbol": self.symbol, "new_sl": new_sl})
             except ValueError:
                 pass
+        elif event.button.id == "btn-update-tp":
+            try:
+                new_tp = float(self.query_one("#input-new-tp", Input).value)
+                self.dismiss({"action": "modify_tp", "ticket": self.ticket, "symbol": self.symbol, "new_tp": new_tp})
+            except ValueError:
+                pass
         elif event.button.id == "btn-close-pos":
             self.dismiss({"action": "close", "ticket": self.ticket, "symbol": self.symbol})
+        elif event.button.id == "btn-be-pos":
+            self.dismiss({"action": "be", "ticket": self.ticket, "symbol": self.symbol})
+        elif event.button.id == "btn-partial-pos":
+            self.dismiss({"action": "partial", "ticket": self.ticket, "symbol": self.symbol})
         else:
             self.dismiss(None)
+
+
+class DashboardHeader(Static):
+    DEFAULT_CSS = """
+    DashboardHeader {
+        height: 3;
+        background: #090d16;
+        color: #e2e8f0;
+        border-bottom: solid #1e293b;
+        padding: 0 2;
+    }
+    #hdr-title {
+        margin-top: 1;
+        width: 30;
+    }
+    #hdr-stats {
+        align: right middle;
+    }
+    #hdr-stats Label {
+        margin-left: 2;
+        padding: 0 1;
+        background: #111827;
+        border: solid #1e293b;
+        height: 1;
+        margin-top: 1;
+    }
+    """
+    def compose(self) -> ComposeResult:
+        with Horizontal():
+            yield Label("[bold cyan]⚔️  XIPHOS ENGINE[/bold cyan] [dim]v1.2.4[/dim]", id="hdr-title")
+            with Horizontal(id="hdr-stats"):
+                yield Label("MT5: [bold red]OFFLINE[/bold red]", id="hdr-mt5")
+                yield Label("Bot: [bold red]STOPPED[/bold red]", id="hdr-bot")
+                yield Label("Slots: [bold white]0/4[/bold white]", id="hdr-slots")
+                yield Label("Next Cycle: [bold cyan]--:--[/bold cyan]", id="hdr-candle")
+                yield Label("Latency: [bold white]-- ms[/bold white]", id="hdr-latency")
 
 
 # ── Widgets ───────────────────────────────────────────────────────────────────
@@ -193,7 +344,7 @@ class PositionsTable(Static):
     DEFAULT_CSS = "PositionsTable { border: round $primary; padding: 0 1; height: 10; }"
     def compose(self) -> ComposeResult:
         t = DataTable(id="pos-table", zebra_stripes=True, cursor_type="none")
-        t.add_columns("Ticket", "Symbol", "Type", "Entry", "Current", "SL", "P&L", "Role")
+        t.add_columns("Ticket", "Symbol", "Type", "Entry", "Current", "SL", "TP", "P&L", "Role")
         yield t
     def update_rows(self, rows: list) -> None:
         t = self.query_one("#pos-table", DataTable)
@@ -232,24 +383,51 @@ class XiphosApp(App):
     TITLE = "Xiphos"
     SUB_TITLE = "Algorithmic Trading Framework"
     BINDINGS = [
-        ("q", "quit",        "Quit"),
-        ("s", "start_bot",   "Start"),
-        ("x", "stop_bot",    "Stop"),
-        ("p", "pause_bot",   "Pause"),
-        ("f", "force_cycle", "Force Cycle"),
+        ("q", "quit",            "Quit"),
+        ("s", "start_bot",       "Start"),
+        ("x", "stop_bot",        "Stop"),
+        ("p", "pause_bot",       "Pause"),
+        ("f", "force_cycle",     "Force Cycle"),
+        ("1", "select_tab('tab-live')",   "Live Tab"),
+        ("2", "select_tab('tab-perf')",   "Perf Tab"),
+        ("3", "select_tab('tab-config')", "Config Tab"),
+        ("ctrl+p", "pause_bot", "Pause Bot"),
+        ("ctrl+x", "prompt_panic", "Panic Close"),
     ]
     CSS = """
-    Screen { background: #0f172a; }
-    #top-row { height: 16; }
-    .section-lbl { color: #38bdf8; text-style: bold; padding: 0 2; height: 1; }
-    .metrics-panel { border: round #10b981; padding: 1 2; height: auto; margin-bottom: 1; background: #1e293b;}
-    .config-panel { border: round #f59e0b; padding: 1 2; height: auto; background: #1e293b;}
-    .config-row { height: 3; align: left middle;}
-    .config-label { padding-top: 1; width: 25; }
+    Screen { background: #0b0f19; }
+    #top-row { height: 15; }
+    #mw-container { width: 3fr; height: 100%; }
+    #mw-search-input { height: 3; margin-bottom: 0; border: round #1e293b; background: #111827; }
+    .section-lbl { color: #38bdf8; text-style: bold; padding: 0 2; height: 1; margin-top: 1; }
+    
+    /* Metrics and Config Panel styles */
+    .metrics-panel { border: round #10b981; padding: 1 2; height: auto; margin-bottom: 1; background: #111827; }
+    #diagnostics-panel { border: round #38bdf8; }
+    #strategy-panel { border: round #f59e0b; }
+    .config-panel { border: round #f59e0b; padding: 1 2; height: auto; background: #111827; }
+    .config-row { height: 3; align: left middle; }
+    .config-label { padding-top: 1; width: 25; color: #94a3b8; }
+    
+    /* Log Panel & Toolbar styles */
+    #log-container { height: 1fr; }
+    #log-toolbar { height: 3; align: left middle; margin-bottom: 0; padding: 0 1; }
+    #log-search-input { width: 2fr; height: 3; margin-right: 1; border: round #1e293b; background: #111827; }
+    .log-filter-btn { min-width: 8; height: 3; margin-right: 1; }
+    
+    /* Performance Tab layout styles */
+    #perf-left-col { width: 2fr; height: 100%; margin-right: 1; }
+    #perf-right-col { width: 3fr; height: 100%; }
+    .chart-panel { border: round #10b981; padding: 1 2; height: 9; background: #111827; margin-bottom: 1; }
+    #equity-chart { color: #10b981; }
+    
+    /* Custom controls layout styles */
+    ControlsBar { height: 3; align: center middle; margin-top: 1; }
+    ControlsBar Button { margin: 0 1; min-width: 14; }
     """
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield DashboardHeader()
         
         with TabbedContent(initial="tab-live"):
             
@@ -257,20 +435,45 @@ class XiphosApp(App):
             with TabPane("Live Trading", id="tab-live"):
                 with Horizontal(id="top-row"):
                     yield StatusPanel(id="status-panel")
-                    yield MarketWatchTable(id="mw-panel")
+                    with Vertical(id="mw-container"):
+                        yield Input(placeholder="🔍 Search symbols...", id="mw-search-input")
+                        yield MarketWatchTable(id="mw-panel")
                 yield Label("  ▸ OPEN POSITIONS", classes="section-lbl")
                 yield PositionsTable(id="positions-panel")
                 yield Label("  ▸ LIVE LOG", classes="section-lbl")
-                yield LogPanel(id="log-panel", highlight=True, markup=True, max_lines=500)
+                with Vertical(id="log-container"):
+                    with Horizontal(id="log-toolbar"):
+                        yield Input(placeholder="🔍 Search logs...", id="log-search-input")
+                        yield Button("ALL", variant="primary", classes="log-filter-btn", id="log-filter-all")
+                        yield Button("INFO", variant="default", classes="log-filter-btn", id="log-filter-info")
+                        yield Button("WARN", variant="default", classes="log-filter-btn", id="log-filter-warn")
+                        yield Button("ERROR", variant="default", classes="log-filter-btn", id="log-filter-error")
+                    yield LogPanel(id="log-panel", highlight=True, markup=True, max_lines=500)
                 yield ControlsBar()
                 
             # --- TAB 2: Performance Analytics ---
             with TabPane("Performance Analytics", id="tab-perf"):
-                yield Label("  ▸ GLOBAL METRICS", classes="section-lbl")
-                with Vertical(classes="metrics-panel"):
-                    yield Label("[dim]Loading metrics...[/dim]", id="metrics-label")
-                yield Label("  ▸ RECENT TRADE HISTORY", classes="section-lbl")
-                yield TradeHistoryTable(id="history-panel")
+                with Horizontal():
+                    with Vertical(id="perf-left-col"):
+                        yield Label("  ▸ DIAGNOSTICS & RESOURCES", classes="section-lbl")
+                        with Vertical(classes="metrics-panel", id="diagnostics-panel"):
+                            yield Label("[dim]Gathering diagnostics...[/dim]", id="diagnostics-label")
+                            
+                        yield Label("  ▸ STRATEGY PERFORMANCE", classes="section-lbl")
+                        with Vertical(classes="metrics-panel", id="strategy-panel"):
+                            yield Label("[dim]Loading strategy performance...[/dim]", id="strategy-label")
+                            
+                        yield Label("  ▸ GLOBAL METRICS", classes="section-lbl")
+                        with Vertical(classes="metrics-panel"):
+                            yield Label("[dim]Loading metrics...[/dim]", id="metrics-label")
+                            
+                    with Vertical(id="perf-right-col"):
+                        yield Label("  ▸ EQUITY CURVE (LAST 30 TRADES)", classes="section-lbl")
+                        with Vertical(classes="chart-panel"):
+                            yield Label("[dim]Generating equity curve...[/dim]", id="equity-chart")
+                            
+                        yield Label("  ▸ RECENT TRADE HISTORY", classes="section-lbl")
+                        yield TradeHistoryTable(id="history-panel")
 
             # --- TAB 3: Config & Controls ---
             with TabPane("Config & Controls", id="tab-config"):
@@ -279,6 +482,10 @@ class XiphosApp(App):
                     with Horizontal(classes="config-row"):
                         yield Label("Max Risk Trades:", classes="config-label")
                         yield Input(value=str(settings.trading.max_risk_trades), id="cfg-max-risk")
+                        
+                    with Horizontal(classes="config-row"):
+                        yield Label("Lot Size:", classes="config-label")
+                        yield Input(value=str(settings.trading.lot_size), id="cfg-lot-size")
                         
                     with Horizontal(classes="config-row"):
                         yield Label("Max Slots per Symbol:", classes="config-label")
@@ -296,12 +503,19 @@ class XiphosApp(App):
 
     def on_mount(self) -> None:
         logger.add(self._loguru_sink, format="{time:HH:mm:ss} | {level:<8} | {message}", colorize=False)
+        self.mw_search_query = ""
+        self.log_history = []
+        self.current_log_search = ""
+        self.current_log_level = "ALL"
+        self.cpu_tracker = CPUTracker()
+        
         self.market_watch_data = {}
         for _group, symbols in settings.correlation_groups.items():
             for sym in symbols:
                 self.market_watch_data[sym] = {"price": 0.0, "history": [], "signal": "NONE"}
                 
         self._connect_mt5()
+        self.set_interval(1,  self._refresh_seconds_timer) # 1s countdown timer
         self.set_interval(5,  self._refresh_fast)
         self.set_interval(30, self._refresh_signals)
         self.set_interval(10, self._refresh_performance) # Refresh perf every 10s
@@ -328,6 +542,13 @@ class XiphosApp(App):
         except Exception:
             pass
 
+    def _refresh_seconds_timer(self) -> None:
+        try:
+            secs = _next_m30_str()
+            self.query_one("#hdr-candle", Label).update(f"Next Cycle: [bold cyan]{secs}[/bold cyan]")
+        except Exception:
+            pass
+
     # ── MT5 connect worker ────────────────────────────────────────────────────
 
     @work(thread=True, exclusive=True)
@@ -341,7 +562,7 @@ class XiphosApp(App):
 
     # ── Background Refreshes ──────────────────────────────────────────────────
 
-    @work(thread=True)
+    @work(thread=True, exclusive=True)
     def _refresh_fast(self) -> None:
         # Status panel
         account = mt5.account_info()
@@ -387,13 +608,17 @@ class XiphosApp(App):
             )
             rows.append((
                 pos.ticket, pos.symbol, f"[{typ_c}]{typ}[/{typ_c}]", f"{pos.price_open:.5f}",
-                f"{pos.price_current:.5f}", f"{pos.sl:.5f}", f"[{pnl_c}]${pnl:+.2f}[/{pnl_c}]", role
+                f"{pos.price_current:.5f}", f"{pos.sl:.5f}", f"{pos.tp:.5f}", f"[{pnl_c}]${pnl:+.2f}[/{pnl_c}]", role
             ))
         self.call_from_thread(self.query_one("#positions-panel", PositionsTable).update_rows, rows)
 
         # Market watch
         mw_rows = []
+        search_query = self.mw_search_query
         for sym, data in self.market_watch_data.items():
+            bkt = data.get("bucket", "N/A")
+            if search_query and (search_query not in sym.lower() and search_query not in bkt.lower()):
+                continue
             info = mt5.symbol_info_tick(sym)
             if info:
                 new_price = info.bid
@@ -425,7 +650,6 @@ class XiphosApp(App):
                 e13 = data.get("e13_dist", 0)
                 e50 = data.get("e50_dist", 0)
                 s200 = data.get("s200_dist", 0)
-                bkt = data.get("bucket", "N/A")
                 
                 fmt_d = lambda d: f"[green]+{d:.0f}[/]" if d > 0 else f"[red]{d:.0f}[/]" if d < 0 else "0"
                 
@@ -467,11 +691,62 @@ class XiphosApp(App):
     @work(thread=True)
     def _refresh_performance(self) -> None:
         try:
-            metrics = state_manager.get_performance_metrics()
+            # 1. System diagnostics & latency
+            start_ping = time.perf_counter()
+            terminal_info = mt5.terminal_info()
+            latency = (time.perf_counter() - start_ping) * 1000.0
             
+            mem_mb = get_memory_usage_mb()
+            cpu_pct = self.cpu_tracker.get_cpu_percent()
+            
+            if terminal_info:
+                algo_str = "[bold green]ENABLED[/bold green]" if terminal_info.trade_allowed else "[bold red]DISABLED[/bold red]"
+                mt5_str = "[bold green]ONLINE[/bold green]"
+                ping_str = f"[bold green]{latency:.1f} ms[/bold green]"
+            else:
+                algo_str = "[dim]N/A[/dim]"
+                mt5_str = "[bold red]OFFLINE[/bold red]"
+                ping_str = "[bold red]-- ms[/bold red]"
+                
+            db_ok = "✔ OK"
+            try:
+                with db.get_connection() as conn:
+                    conn.execute("SELECT 1")
+            except Exception:
+                db_ok = "✘ ERR"
+                
+            diag_text = (
+                f"  MT5 Terminal:    {mt5_str}\n"
+                f"  Algo Trading:    {algo_str}\n"
+                f"  DB Status:       [bold cyan]{db_ok}[/bold cyan]\n"
+                f"  API Latency:     {ping_str}\n"
+                f"  Process Memory:  [bold white]{mem_mb:.1f} MB[/bold white]\n"
+                f"  Process CPU:     [bold white]{cpu_pct:.1f}%[/bold white]\n"
+            )
+            self.call_from_thread(self.query_one("#diagnostics-label", Label).update, diag_text)
+            
+            # Update DashboardHeader
+            self.call_from_thread(self._update_header, terminal_info, latency)
+            
+            # 2. Strategy Performance breakdown
+            strat_metrics = state_manager.get_strategy_performance_metrics()
+            s_text = ""
+            for name, m in strat_metrics.items():
+                pf = m['profit_factor']
+                pf_str = f"{pf:.2f}" if pf != float('inf') else "INF"
+                pnl_c = "green" if m['total_profit'] >= 0 else "red"
+                s_text += (
+                    f"[bold yellow]{name}[/bold yellow] ({settings.magic_numbers.scalper if name == 'Scalper' else settings.magic_numbers.runner}):\n"
+                    f"  Trades: [bold white]{m['total_trades']}[/bold white] | Win Rate: [bold cyan]{m['win_rate']:.1f}%[/bold cyan]\n"
+                    f"  Profit Factor: [bold cyan]{pf_str}[/bold cyan]\n"
+                    f"  Total P&L: [{pnl_c}]+${m['total_profit']:.2f}[/{pnl_c}]\n\n"
+                )
+            self.call_from_thread(self.query_one("#strategy-label", Label).update, s_text)
+
+            # 3. Global metrics
+            metrics = state_manager.get_performance_metrics()
             pf = metrics.get('profit_factor', 0)
             pf_str = f"{pf:.2f}" if pf != float('inf') else "INF"
-            
             sr = metrics.get('sharpe_ratio', 0)
             dd = metrics.get('max_drawdown', 0)
             
@@ -485,6 +760,13 @@ class XiphosApp(App):
             )
             self.call_from_thread(self.query_one("#metrics-label", Label).update, m_text)
             
+            # 4. Cumulative P&L chart
+            history_30 = state_manager.get_trade_history(limit=30)
+            profits_chrono = [h.get('profit', 0.0) for h in reversed(history_30)]
+            chart_text = generate_ascii_chart(profits_chrono, height=5, width=40)
+            self.call_from_thread(self.query_one("#equity-chart", Label).update, chart_text)
+            
+            # 5. History Table
             history = state_manager.get_trade_history(limit=50)
             rows = []
             for h in history:
@@ -494,7 +776,7 @@ class XiphosApp(App):
                 typ_c = "green" if typ == "BUY" else "red"
                 ts = h.get('close_time', '')
                 if ts and len(ts) > 19:
-                    ts = ts[:19] # trim microseconds
+                    ts = ts[:19]
                 rows.append((
                     ts,
                     h.get('symbol', ''),
@@ -506,6 +788,34 @@ class XiphosApp(App):
         except Exception as e:
             logger.error(f"Failed to fetch performance: {e}")
 
+    def _update_header(self, terminal_info, latency) -> None:
+        try:
+            bot_lbl = self.query_one("#hdr-bot", Label)
+            if _bot_running:
+                bot_lbl.update("Bot: [bold green]RUNNING[/bold green]")
+            else:
+                bot_lbl.update("Bot: [bold red]STOPPED[/bold red]")
+                
+            mt5_lbl = self.query_one("#hdr-mt5", Label)
+            if terminal_info:
+                mt5_lbl.update("MT5: [bold green]ONLINE[/bold green]")
+            else:
+                mt5_lbl.update("MT5: [bold red]OFFLINE[/bold red]")
+                
+            lat_lbl = self.query_one("#hdr-latency", Label)
+            if terminal_info:
+                lat_lbl.update(f"Latency: [bold green]{latency:.1f}ms[/bold green]")
+            else:
+                lat_lbl.update("Latency: [bold red]--ms[/bold red]")
+                
+            slots_lbl = self.query_one("#hdr-slots", Label)
+            slots_av = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
+            slots_us = settings.trading.max_risk_trades - slots_av
+            circles_str = "●" * slots_us + "○" * slots_av
+            slots_lbl.update(f"Slots: [bold cyan]{circles_str}[/bold cyan] ({slots_us}/{settings.trading.max_risk_trades})")
+        except Exception:
+            pass
+
     # ── Loguru sink ───────────────────────────────────────────────────────────
 
     def _loguru_sink(self, message) -> None:
@@ -515,7 +825,42 @@ class XiphosApp(App):
         c = colors.get(level, "white")
         ts = record["time"].strftime("%H:%M:%S")
         text = f"[{c}]{ts} {level:<8}[/{c}] {record['message']}"
-        self.call_from_thread(self.log_msg, text)
+        
+        self.log_history.append({
+            "text": text,
+            "level": level,
+            "message": record['message'].lower()
+        })
+        if len(self.log_history) > 1000:
+            self.log_history.pop(0)
+            
+        if self._should_display_log(level, record['message']):
+            self.call_from_thread(self.log_msg, text)
+
+    def _should_display_log(self, level: str, message_text: str) -> bool:
+        if self.current_log_level != "ALL":
+            if self.current_log_level == "WARN" and level not in ("WARNING", "CRITICAL"):
+                return False
+            elif self.current_log_level == "ERROR" and level not in ("ERROR", "CRITICAL"):
+                return False
+            elif self.current_log_level == "INFO" and level != "INFO":
+                return False
+                
+        search_query = self.current_log_search.strip().lower()
+        if search_query and search_query not in message_text.lower():
+            return False
+            
+        return True
+
+    def _reapply_log_filters(self) -> None:
+        try:
+            log_panel = self.query_one("#log-panel", LogPanel)
+            log_panel.clear()
+            for item in self.log_history:
+                if self._should_display_log(item["level"], item["message"]):
+                    log_panel.write(item["text"])
+        except Exception:
+            pass
 
     def log_msg(self, text: str) -> None:
         try:
@@ -546,6 +891,7 @@ class XiphosApp(App):
         ticket = int(row_data[0])
         symbol = row_data[1]
         sl_str = str(row_data[5])
+        tp_str = str(row_data[6])
         
         def handle_pos_action(result):
             if result:
@@ -554,8 +900,14 @@ class XiphosApp(App):
                     self._execute_single_close(result["ticket"], result["symbol"])
                 elif action == "modify_sl":
                     self._execute_single_modify_sl(result["ticket"], result["symbol"], result["new_sl"])
+                elif action == "modify_tp":
+                    self._execute_single_modify_tp(result["ticket"], result["symbol"], result["new_tp"])
+                elif action == "be":
+                    self._execute_single_be(result["ticket"], result["symbol"])
+                elif action == "partial":
+                    self._execute_partial_close(result["ticket"], result["symbol"])
         
-        self.push_screen(PositionControlModal(ticket, symbol, sl_str), handle_pos_action)
+        self.push_screen(PositionControlModal(ticket, symbol, sl_str, tp_str), handle_pos_action)
 
     @work(thread=True)
     def _execute_single_close(self, ticket: int, symbol: str) -> None:
@@ -601,6 +953,83 @@ class XiphosApp(App):
             self.call_from_thread(self._refresh_fast)
         else:
             self.call_from_thread(self.log_msg, f"[red]✘ Failed to modify SL for ticket {ticket}.[/red]")
+
+    @work(thread=True)
+    def _execute_single_modify_tp(self, ticket: int, symbol: str, new_tp: float) -> None:
+        positions = mt5.positions_get(ticket=ticket)
+        if not positions:
+            self.call_from_thread(self.log_msg, f"[red]Ticket {ticket} not found.[/red]")
+            return
+        position = positions[0]
+        request = {
+            "action": mt5.TRADE_ACTION_SLTP,
+            "symbol": symbol,
+            "sl": float(position.sl) if position.sl else 0.0,
+            "tp": float(new_tp),
+            "position": ticket
+        }
+        res = mt5_executor._retry_wrapper(mt5.order_send, request)
+        if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+            self.call_from_thread(self.log_msg, f"[bold green]✔ Ticket {ticket} TP manually modified to {new_tp}.[/bold green]")
+            self.call_from_thread(self._refresh_fast)
+        else:
+            self.call_from_thread(self.log_msg, f"[red]✘ Failed to modify TP for ticket {ticket}.[/red]")
+
+    @work(thread=True)
+    def _execute_single_be(self, ticket: int, symbol: str) -> None:
+        positions = mt5.positions_get(ticket=ticket)
+        if not positions:
+            self.call_from_thread(self.log_msg, f"[red]Ticket {ticket} not found.[/red]")
+            return
+        pos = positions[0]
+        entry = pos.price_open
+        res = modify_sl(ticket, symbol, entry)
+        if res:
+            self.call_from_thread(self.log_msg, f"[bold green]✔ Ticket {ticket} moved to Breakeven at {entry:.5f}.[/bold green]")
+            self.call_from_thread(self._refresh_fast)
+        else:
+            self.call_from_thread(self.log_msg, f"[red]✘ Failed to move ticket {ticket} to Breakeven.[/red]")
+
+    @work(thread=True)
+    def _execute_partial_close(self, ticket: int, symbol: str) -> None:
+        positions = mt5.positions_get(ticket=ticket)
+        if not positions:
+            self.call_from_thread(self.log_msg, f"[red]Ticket {ticket} not found.[/red]")
+            return
+        pos = positions[0]
+        half_vol = round(pos.volume / 2.0, 2)
+        if half_vol < 0.01:
+            self.call_from_thread(self.log_msg, f"[red]Ticket {ticket} volume {pos.volume} too small for partial close.[/red]")
+            return
+            
+        tick = mt5.symbol_info_tick(symbol)
+        if not tick: return
+        
+        action = mt5.TRADE_ACTION_DEAL
+        if pos.type == mt5.ORDER_TYPE_BUY:
+            type_mt5 = mt5.ORDER_TYPE_SELL
+            price = tick.bid
+        else:
+            type_mt5 = mt5.ORDER_TYPE_BUY
+            price = tick.ask
+            
+        req = {
+            "action": action,
+            "symbol": pos.symbol,
+            "volume": half_vol,
+            "type": type_mt5,
+            "position": pos.ticket,
+            "price": price,
+            "deviation": 20,
+            "magic": pos.magic,
+            "comment": "Manual Partial Close via TUI",
+        }
+        res = mt5_executor._retry_wrapper(mt5.order_send, req)
+        if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+            self.call_from_thread(self.log_msg, f"[bold green]✔ Ticket {ticket} partially closed (50% = {half_vol} lots).[/bold green]")
+            self.call_from_thread(self._refresh_fast)
+        else:
+            self.call_from_thread(self.log_msg, f"[red]✘ Failed to partially close ticket {ticket}.[/red]")
 
     def action_prompt_panic(self):
         def check_panic(result: bool):
@@ -659,20 +1088,23 @@ class XiphosApp(App):
     def save_configuration(self):
         try:
             max_risk = int(self.query_one("#cfg-max-risk", Input).value)
+            lot_size = float(self.query_one("#cfg-lot-size", Input).value)
             
             # Update yaml
             with open("config/settings.yaml", "r") as f:
                 data = yaml.safe_load(f)
                 
             data['trading']['max_risk_trades'] = max_risk
+            data['trading']['lot_size'] = lot_size
             
             with open("config/settings.yaml", "w") as f:
                 yaml.dump(data, f)
                 
             # Update running config
             settings.trading.max_risk_trades = max_risk
+            settings.trading.lot_size = lot_size
             
-            self.call_from_thread(self.log_msg, f"[bold green]✔ Config saved. max_risk_trades updated to {max_risk}.[/bold green]")
+            self.call_from_thread(self.log_msg, f"[bold green]✔ Config saved. max_risk_trades={max_risk}, lot_size={lot_size}.[/bold green]")
             self.call_from_thread(self._refresh_fast)
             
         except Exception as e:
@@ -706,6 +1138,30 @@ class XiphosApp(App):
         except Exception as e:
             self.call_from_thread(self.log_msg, f"[red]⚡ Force cycle error: {e}[/red]")
         self.call_from_thread(self._refresh_fast)
+
+    @on(Input.Changed, "#mw-search-input")
+    def handle_mw_search_changed(self, event: Input.Changed) -> None:
+        self.mw_search_query = event.value.strip().lower()
+        self._refresh_fast()
+
+    @on(Input.Changed, "#log-search-input")
+    def handle_log_search_changed(self, event: Input.Changed) -> None:
+        self.current_log_search = event.value
+        self._reapply_log_filters()
+
+    @on(Button.Pressed, ".log-filter-btn")
+    def handle_log_filter_pressed(self, event: Button.Pressed) -> None:
+        for btn in self.query(".log-filter-btn"):
+            btn.variant = "default"
+        event.button.variant = "primary"
+        self.current_log_level = event.button.label.plain.strip()
+        self._reapply_log_filters()
+
+    def action_select_tab(self, tab_id: str) -> None:
+        try:
+            self.query_one(TabbedContent).active = tab_id
+        except Exception:
+            pass
 
     def action_quit(self) -> None:
         global _bot_running

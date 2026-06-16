@@ -146,6 +146,47 @@ class StateManager:
                 "sharpe_ratio": sharpe
             }
 
+    def get_strategy_performance_metrics(self):
+        """Calculates performance metrics separately for Scalper (135001) and Runner (135002) trades."""
+        metrics = {}
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            
+            for magic, name in [(135001, "Scalper"), (135002, "Runner")]:
+                cursor.execute("""
+                    SELECT profit 
+                    FROM trades 
+                    WHERE status = 'CLOSED' AND magic = ? 
+                    ORDER BY close_time ASC
+                """, (magic,))
+                rows = cursor.fetchall()
+                
+                total = len(rows)
+                wins = 0
+                gross_profit = 0.0
+                gross_loss = 0.0
+                total_profit = 0.0
+                
+                for row in rows:
+                    p = row['profit'] or 0.0
+                    total_profit += p
+                    if p > 0:
+                        wins += 1
+                        gross_profit += p
+                    else:
+                        gross_loss += abs(p)
+                        
+                win_rate = (wins / total * 100) if total > 0 else 0.0
+                profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float('inf') if gross_profit > 0 else 0.0
+                
+                metrics[name] = {
+                    "total_trades": total,
+                    "win_rate": win_rate,
+                    "total_profit": total_profit,
+                    "profit_factor": profit_factor
+                }
+        return metrics
+
     def get_trade_history(self, limit=50):
         with db.get_connection() as conn:
             cursor = conn.cursor()
