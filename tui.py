@@ -34,6 +34,7 @@ from strategies.trend_following import evaluate_signal
 from main import process_m30_cycle
 from state_manager import StateManager
 from mt5_executor import MT5Executor
+from storage.database import db
 
 import ctypes
 import os
