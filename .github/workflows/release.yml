@@ -7,75 +7,65 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+    name: Build & Release (Windows)
+    runs-on: windows-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller
-          if [ "$RUNNER_OS" != "Windows" ]; then
-            sed -i.bak '/MetaTrader5/d' requirements.txt || true
-          fi
           pip install -r requirements.txt
-        shell: bash
+        shell: pwsh
 
-      - name: Build with PyInstaller
+      - name: Build executable with PyInstaller
+        run: pyinstaller Xiphos.spec
+        shell: pwsh
+
+      - name: Install Inno Setup via Chocolatey
+        run: choco install innosetup --yes --no-progress
+        shell: pwsh
+
+      - name: Inject version into setup.iss
         run: |
-          pyinstaller Xiphos.spec
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            pyinstaller --onefile --hidden-import="uvicorn.logging" --hidden-import="uvicorn.loops" --hidden-import="uvicorn.loops.auto" --hidden-import="uvicorn.protocols" --hidden-import="uvicorn.protocols.http" --hidden-import="uvicorn.protocols.http.auto" --hidden-import="uvicorn.protocols.websockets" --hidden-import="uvicorn.protocols.websockets.auto" --hidden-import="uvicorn.lifespan" --hidden-import="uvicorn.lifespan.on" --hidden-import="uvicorn.lifespan.off" bridge/server.py -n bridge_server
-          fi
-        shell: bash
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          (Get-Content setup.iss) -replace 'AppVersion=.*', "AppVersion=$version" | Set-Content setup.iss
+          Write-Host "Injected version: $version"
+        shell: pwsh
 
-      - name: Compile Inno Setup Installer (Windows Only)
-        if: runner.os == 'Windows'
-        run: iscc setup.iss
-        shell: cmd
-          
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v1
+      - name: Compile Inno Setup Installer
+        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss'
+        shell: pwsh
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Xiphos Release ${{ github.ref_name }}
-          body: |
-            ## Xiphos Algorithmic Trading Framework 🚀
-            
-            Welcome to the newest release of Xiphos!
-            
-            ![Xiphos Banner](https://raw.githubusercontent.com/Aomine-c2c/Xiphos/main/assets/banner.png)
-            
-            ### ✨ What's New
-            - Advanced Textual UI Dashboard with Analytics.
-            - Termux and Linux Bridge Support.
-            - Universal Installation Scripts.
-            
-            ### 📥 Installation
-            
-            **For Termux / Linux / macOS (Bridge Mode):**
-            ```bash
-            curl -sL https://raw.githubusercontent.com/Aomine-c2c/Xiphos/main/install.sh | bash
-            ```
-            
-            **For Windows (Direct Mode):**
-            Download the repository and run `install.bat`, or use the `Xiphos_Setup.exe` installer attached below!
-            
+          name: Xiphos ${{ github.ref_name }}
           generate_release_notes: true
+          body: |
+            ## Xiphos Algorithmic Trading Framework ${{ github.ref_name }} 🚀
+
+            ![Xiphos Banner](https://raw.githubusercontent.com/Aomine-c2c/Xiphos/main/assets/banner.png)
+
+            ### 📥 Installation (Windows)
+            Download and run `Xiphos_Setup.exe` below. The installer will:
+            - Place the executable in `%LocalAppData%\Programs\Xiphos`
+            - Add Xiphos to your system PATH (optional)
+            - Create a desktop shortcut (optional)
+
+            ### ⚙️ Requirements
+            - Windows 10/11 x64
+            - MetaTrader 5 installed and running
+
           files: |
-            dist/Xiphos.exe
-            dist/Xiphos
-            dist/bridge_server.exe
             Output/Xiphos_Setup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
