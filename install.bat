@@ -68,12 +68,32 @@ if not exist "config\settings.yaml" (
     echo   group_5_indices: ["Volatility 75 Index"] >> config\settings.yaml
 )
 
-:: 6. Create Launch Command
+:: 6. Select UI & Create Launch Command
+echo [*] Select your preferred User Interface:
+echo 1) Institutional Web Dashboard (Next.js - Recommended)
+echo 2) Terminal UI (TUI - Lightweight)
+set /p UI_CHOICE="Enter 1 or 2 (Default: 1): "
+if "%UI_CHOICE%"=="" set UI_CHOICE=1
+
+if "%UI_CHOICE%"=="1" (
+    echo [*] Setting up Web Dashboard dependencies...
+    cd web
+    call npm install
+    call npm run build
+    cd ..
+)
+
 echo [*] Setting up 'Xiphos' launch command...
 echo @echo off > xiphos.bat
 echo cd /d "%CD%" >> xiphos.bat
-echo call venv\Scripts\activate.bat >> xiphos.bat
-echo python tui.py >> xiphos.bat
+if "%UI_CHOICE%"=="1" (
+    echo start cmd /c "cd web && npm run start" >> xiphos.bat
+    echo call venv\Scripts\activate.bat >> xiphos.bat
+    echo python api_server.py >> xiphos.bat
+) else (
+    echo call venv\Scripts\activate.bat >> xiphos.bat
+    echo python tui.py >> xiphos.bat
+)
 
 if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
 copy xiphos.bat "%USERPROFILE%\.local\bin\xiphos.bat" >nul

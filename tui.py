@@ -43,7 +43,7 @@ from storage.database import db
 import ctypes
 import os
 
-CURRENT_VERSION = "v1.3.0"
+CURRENT_VERSION = "v2.0.0"
 
 # ── Process Resource Tracking ──────────────────────────────────────────────────
 

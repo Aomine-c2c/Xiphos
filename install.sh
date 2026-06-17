@@ -116,13 +116,39 @@ correlation_groups:
 EOL
 fi
 
-# 6. Create Launch Command
+# 6. Select UI & Create Launch Command
+echo "[*] Select your preferred User Interface:"
+echo "1) Institutional Web Dashboard (Next.js - Recommended)"
+echo "2) Terminal UI (TUI - Lightweight)"
+read -p "Enter 1 or 2 (Default: 1): " UI_CHOICE
+if [ -z "$UI_CHOICE" ]; then
+    UI_CHOICE=1
+fi
+
+if [ "$UI_CHOICE" == "1" ]; then
+    echo "[*] Setting up Web Dashboard dependencies..."
+    cd web
+    npm install
+    npm run build
+    cd ..
+fi
+
 echo "[*] Setting up 'Xiphos' launch command..."
 cat > xiphos_launcher.sh << EOL
 #!/bin/bash
 cd "$(pwd)"
-source venv/bin/activate
-python tui.py
+
+if [ "$UI_CHOICE" == "1" ]; then
+    cd web && npm run start &
+    NEXT_PID=\$!
+    cd ..
+    source venv/bin/activate
+    python api_server.py
+    kill \$NEXT_PID
+else
+    source venv/bin/activate
+    python tui.py
+fi
 EOL
 
 chmod +x xiphos_launcher.sh
