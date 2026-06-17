@@ -100,6 +100,7 @@ interface TradingStore {
   systemStats: { cpu: number; memory: number };
   logs: LogItem[];
   chatMessages: ChatMessage[];
+  correlationMatrix: Record<string, Record<string, string>>;
   
   ws: WebSocket | null;
   
@@ -273,6 +274,8 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
     }
   ],
   
+  correlationMatrix: {},
+  
   ws: null,
   
   connectWebSocket: () => {
@@ -321,9 +324,10 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
                   })
                 : get().marketWatch,
               rankedSignals: data.ranked_signals.length > 0 ? data.ranked_signals : get().rankedSignals,
-              gates: Object.keys(data.gates).length > 0 ? data.gates : get().gates,
+              gates: Object.keys(data.gates || {}).length > 0 ? data.gates : get().gates,
               lastCycleTime: data.last_cycle_time || get().lastCycleTime,
-              systemStats: data.system_stats || get().systemStats
+              systemStats: data.system_stats || get().systemStats,
+              correlationMatrix: data.correlation_matrix || get().correlationMatrix
             });
             break;
             

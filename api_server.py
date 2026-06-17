@@ -26,6 +26,7 @@ from main import process_m30_cycle, last_cycle_data
 from state_manager import StateManager
 from mt5_executor import MT5Executor
 from storage.database import db
+from core.correlation_engine import correlation_engine
 
 app = FastAPI(title="Xiphos Institutional Web API")
 
@@ -356,7 +357,8 @@ def compile_system_state():
         "system_stats": {
             "cpu": cpu_pct,
             "memory": mem_mb
-        }
+        },
+        "correlation_matrix": correlation_engine.get_matrix()
     }
 
 # Periodical update dispatcher loop
