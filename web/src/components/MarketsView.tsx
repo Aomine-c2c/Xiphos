@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { useTradingStore } from "../store/useTradingStore";
 import { TrendingUp, Search, Activity, ChevronRight } from "lucide-react";
+import Battlefield from "./Battlefield";
+import Sidebar from "./Sidebar";
+import MarketRadar from "./MarketRadar";
 
 export default function MarketsView() {
   const { marketWatch } = useTradingStore();
@@ -15,28 +18,6 @@ export default function MarketsView() {
   const buyCount = marketWatch.filter(m => m.signal === "BUY").length;
   const sellCount = marketWatch.filter(m => m.signal === "SELL").length;
   const neutralCount = marketWatch.filter(m => m.signal !== "BUY" && m.signal !== "SELL").length;
-
-  const symbols = ["EURUSD", "GBPUSD", "XAUUSD", "XAGUSD"];
-  const shortSymbols = ["EUR", "GBP", "XAU", "XAG"];
-  const corrMatrix = [
-    [1.0, 0.82, 0.15, 0.18],
-    [0.82, 1.0, 0.12, 0.10],
-    [0.15, 0.12, 1.0, 0.94],
-    [0.18, 0.10, 0.94, 1.0],
-  ];
-
-  const getCorrBg = (val: number, isSelf: boolean) => {
-    if (isSelf) return "rgba(30,58,96,0.5)";
-    if (val > 0.7) return "rgba(0,168,255,0.12)";
-    if (val > 0.4) return "rgba(255,176,32,0.10)";
-    return "transparent";
-  };
-  const getCorrText = (val: number, isSelf: boolean) => {
-    if (isSelf) return "#1e3a60";
-    if (val > 0.7) return "#00A8FF";
-    if (val > 0.4) return "#FFB020";
-    return "#425062";
-  };
 
   const drawSparkline = (history: number[] | undefined, color = "#00D26A") => {
     if (!history || history.length < 2) return null;
@@ -95,84 +76,43 @@ export default function MarketsView() {
         <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden">
 
           {/* LEFT sidebar */}
-          <div className="col-span-3 border-r border-slate-900/60 p-4 flex flex-col gap-5 overflow-hidden">
-
-            {/* Signal breakdown */}
-            <div>
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3 border-b border-slate-950 pb-1.5">
-                SIGNAL BREAKDOWN
-              </span>
-              <div className="space-y-3">
-                {[
-                  { label: "BULLISH (BUY)", count: buyCount, color: "#00D26A" },
-                  { label: "BEARISH (SELL)", count: sellCount, color: "#FF4D4D" },
-                  { label: "NEUTRAL / FLAT", count: neutralCount, color: "#FFB020" },
-                ].map(item => (
-                  <div key={item.label}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[9px] text-[#8e9aa8] font-bold">{item.label}</span>
-                      <span className="text-[15px] font-black leading-none" style={{ color: item.color }}>{item.count}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-950 rounded-sm overflow-hidden">
-                      <div
-                        className="h-full rounded-sm transition-all"
-                        style={{ width: `${marketWatch.length ? (item.count / marketWatch.length) * 100 : 0}%`, backgroundColor: item.color }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="col-span-3 border-r border-slate-900/60 p-4 flex flex-col gap-4 overflow-hidden h-full">
+            <div className="flex-[0.28] shrink-0 overflow-hidden bg-[#070B14]/40 rounded-sm border border-slate-900/40">
+              <Battlefield />
             </div>
-
-            {/* Correlation heatmap */}
-            <div className="flex-1 min-h-0">
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3 border-b border-slate-950 pb-1.5">
-                CORRELATION MATRIX
-              </span>
-              <div className="w-full">
-                {/* Header row */}
-                <div className="grid grid-cols-5 gap-0.5 mb-0.5">
-                  <div />
-                  {shortSymbols.map(s => (
-                    <div key={s} className="text-[7px] text-[#6f7e90] font-black text-center">{s}</div>
-                  ))}
-                </div>
-                {/* Data rows */}
-                {symbols.map((rowSym, ri) => (
-                  <div key={rowSym} className="grid grid-cols-5 gap-0.5 mb-0.5">
-                    <div className="text-[7px] text-[#6f7e90] font-black flex items-center">{shortSymbols[ri]}</div>
-                    {symbols.map((_, ci) => {
-                      const val = corrMatrix[ri][ci];
-                      const isSelf = ri === ci;
-                      return (
-                        <div
-                          key={ci}
-                          className="h-6 rounded-sm flex items-center justify-center text-[6px] font-black"
-                          style={{ backgroundColor: getCorrBg(val, isSelf), color: getCorrText(val, isSelf) }}
-                        >
-                          {isSelf ? "—" : val.toFixed(2)}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 space-y-1">
-                <div className="flex items-center gap-1.5 text-[7.5px] text-[#425062]">
-                  <span className="h-1.5 w-4 rounded-sm inline-block bg-[#00A8FF]/30" />
-                  HIGH CORRELATION &gt;0.70
-                </div>
-                <div className="flex items-center gap-1.5 text-[7.5px] text-[#425062]">
-                  <span className="h-1.5 w-4 rounded-sm inline-block bg-[#FFB020]/25" />
-                  MODERATE 0.40–0.70
-                </div>
-              </div>
+            <div className="flex-[0.44] min-h-0 overflow-hidden bg-[#070B14]/40 rounded-sm border border-slate-900/40">
+              <Sidebar />
             </div>
-
+            <div className="flex-[0.28] min-h-0 overflow-hidden bg-[#070B14]/40 rounded-sm border border-slate-900/40">
+              <MarketRadar />
+            </div>
           </div>
 
           {/* RIGHT: Markets table */}
-          <div className="col-span-9 p-4 flex flex-col overflow-hidden">
+          <div className="col-span-9 p-4 flex flex-col overflow-hidden gap-4">
+            
+            {/* Signal Breakdown Header */}
+            <div className="grid grid-cols-3 gap-4 shrink-0">
+              {[
+                { label: "BULLISH (BUY)", count: buyCount, color: "#00D26A" },
+                { label: "BEARISH (SELL)", count: sellCount, color: "#FF4D4D" },
+                { label: "NEUTRAL / FLAT", count: neutralCount, color: "#FFB020" },
+              ].map(item => (
+                <div key={item.label} className="bg-[#070B14]/40 border border-slate-900/60 rounded-sm p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] text-[#8e9aa8] font-bold">{item.label}</span>
+                    <span className="text-[16px] font-black leading-none" style={{ color: item.color }}>{item.count}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-950 rounded-sm overflow-hidden border border-slate-900/50">
+                    <div
+                      className="h-full rounded-sm transition-all"
+                      style={{ width: `${marketWatch.length ? (item.count / marketWatch.length) * 100 : 0}%`, backgroundColor: item.color }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <div className="flex-1 min-h-0 overflow-hidden">
               <table className="w-full text-left text-[11px] border-collapse font-bold">
                 <thead>

@@ -3,6 +3,8 @@
 import React from "react";
 import { useTradingStore } from "../store/useTradingStore";
 import { Briefcase, ShieldAlert } from "lucide-react";
+import WarRoom from "./WarRoom";
+import RightPanel from "./RightPanel";
 
 export default function PositionsView() {
   const { positions, closePosition, breakeven, partialClose } = useTradingStore();
@@ -40,10 +42,10 @@ export default function PositionsView() {
           </div>
         </div>
 
-        {/* Split: 3 + 9 */}
+        {/* Split: 3 + 6 + 3 */}
         <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden">
 
-          {/* LEFT: Summary panels */}
+          {/* LEFT: Summary panels (3/12) */}
           <div className="col-span-3 border-r border-slate-900/60 p-4 flex flex-col gap-4 overflow-hidden">
 
             {/* Unrealized PnL */}
@@ -115,86 +117,75 @@ export default function PositionsView() {
 
           </div>
 
-          {/* RIGHT: Full positions table */}
-          <div className="col-span-9 p-4 flex flex-col overflow-hidden">
-            <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider mb-2 border-b border-slate-950 pb-1.5 flex-shrink-0 block">
-              ACTIVE TRADES REGISTRY ({positions.length})
-            </span>
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <table className="w-full text-left text-[11px] border-collapse font-bold">
-                <thead>
-                  <tr className="bg-slate-950/80 border-b border-slate-900 text-[#6f7e90] uppercase text-[9px] select-none">
-                    <th className="p-2.5 font-black">TICKET</th>
-                    <th className="p-2.5 font-black">SYMBOL</th>
-                    <th className="p-2.5 font-black">DIR</th>
-                    <th className="p-2.5 font-black text-right">LOTS</th>
-                    <th className="p-2.5 font-black text-right">OPEN PRICE</th>
-                    <th className="p-2.5 font-black text-right">CURRENT</th>
-                    <th className="p-2.5 font-black text-right">PROFIT</th>
-                    <th className="p-2.5 font-black">RISK TYPE</th>
-                    <th className="p-2.5 text-center font-black">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {positions.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="text-center py-24 text-[#425062] font-black uppercase text-[11px]">
-                        [NO ACTIVE POSITIONS]
-                      </td>
-                    </tr>
-                  ) : (
-                    positions.map((pos) => {
-                      const isProfit = pos.profit >= 0;
-                      const isFree = pos.risk_status === "FREE";
-                      return (
-                        <tr key={pos.ticket} className="border-b border-slate-950/60 hover:bg-[#070B14]/60 transition-colors">
-                          <td className="p-2.5 text-[#6f7e90]">{pos.ticket}</td>
-                          <td className="p-2.5 text-white font-black">{pos.symbol}</td>
-                          <td className={`p-2.5 font-black ${pos.type === "BUY" ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>{pos.type}</td>
-                          <td className="p-2.5 text-right text-white">{pos.volume.toFixed(2)}</td>
-                          <td className="p-2.5 text-right text-[#ccd6e0]">
-                            {pos.price_open.toFixed(pos.symbol.includes("USD") && !pos.symbol.startsWith("X") ? 5 : 2)}
-                          </td>
-                          <td className="p-2.5 text-right text-[#ccd6e0]">
-                            {pos.price_current.toFixed(pos.symbol.includes("USD") && !pos.symbol.startsWith("X") ? 5 : 2)}
-                          </td>
-                          <td className={`p-2.5 text-right font-black ${isProfit ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>
-                            {isProfit ? "+" : ""}${pos.profit.toFixed(2)}
-                          </td>
-                          <td className="p-2.5">
-                            <span className={`px-1.5 py-0.5 rounded-sm text-[8px] font-black border uppercase ${
-                              isFree ? "bg-[#00D26A]/5 border-[#00D26A]/45 text-[#00D26A]" : "bg-[#FF4D4D]/5 border-[#FF4D4D]/45 text-[#FF4D4D]"
-                            }`}>
-                              {isFree ? "RISK FREE" : "BEARING"}
-                            </span>
-                          </td>
-                          <td className="p-2 flex gap-1 justify-center items-center">
-                            <button onClick={() => breakeven(pos.ticket, pos.symbol)}
-                              className="px-2 py-1 bg-[#00A8FF]/20 hover:bg-[#00A8FF] hover:text-black border border-[#00A8FF]/30 text-[#00A8FF] text-[9px] font-black rounded-sm cursor-pointer transition-all">
-                              BE
-                            </button>
-                            <button onClick={() => partialClose(pos.ticket, pos.symbol)}
-                              className="px-2 py-1 bg-[#FFB020]/20 hover:bg-[#FFB020] hover:text-black border border-[#FFB020]/30 text-[#FFB020] text-[9px] font-black rounded-sm cursor-pointer transition-all">
-                              50%
-                            </button>
-                            <button onClick={() => closePosition(pos.ticket, pos.symbol)}
-                              className="px-2 py-1 bg-[#FF4D4D]/20 hover:bg-[#FF4D4D] hover:text-black border border-[#FF4D4D]/30 text-[#FF4D4D] text-[9px] font-black rounded-sm cursor-pointer transition-all">
-                              CLOSE
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+          {/* CENTER: WarRoom + Full positions table (6/12) */}
+          <div className="col-span-6 p-4 flex flex-col gap-4 overflow-hidden border-r border-slate-900/60">
+            <div className="flex-[0.40] shrink-0 overflow-hidden">
+              <WarRoom />
             </div>
-            <div className="text-[9px] text-[#FFB020] font-bold leading-none border-t border-slate-950 pt-2.5 flex-shrink-0 mt-2">
-              ⚠ WARNING: Manual actions bypass bot scheduling and send instructions directly to the execution pipeline.
+            
+            <div className="flex-[0.60] flex flex-col overflow-hidden bg-[#070B14]/40 rounded-sm border border-slate-900/40 p-3">
+              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider mb-2 border-b border-slate-950 pb-1.5 flex-shrink-0 block">
+                ACTIVE TRADES REGISTRY ({positions.length})
+              </span>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <table className="w-full text-left text-[11px] border-collapse font-bold">
+                  <thead>
+                    <tr className="bg-slate-950/80 border-b border-slate-900 text-[#6f7e90] uppercase text-[9px] select-none">
+                      <th className="p-2.5 font-black">TICKET</th>
+                      <th className="p-2.5 font-black">SYMBOL</th>
+                      <th className="p-2.5 font-black">DIR</th>
+                      <th className="p-2.5 font-black text-right">LOTS</th>
+                      <th className="p-2.5 font-black text-right">CURRENT</th>
+                      <th className="p-2.5 font-black text-right">PROFIT</th>
+                      <th className="p-2.5 font-black">RISK TYPE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {positions.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="text-center py-24 text-[#425062] font-black uppercase text-[11px]">
+                          [NO ACTIVE POSITIONS]
+                        </td>
+                      </tr>
+                    ) : (
+                      positions.map((pos) => {
+                        const isProfit = pos.profit >= 0;
+                        const isFree = pos.risk_status === "FREE";
+                        return (
+                          <tr key={pos.ticket} className="border-b border-slate-950/60 hover:bg-[#070B14]/60 transition-colors">
+                            <td className="p-2.5 text-[#6f7e90]">{pos.ticket}</td>
+                            <td className="p-2.5 text-white font-black">{pos.symbol}</td>
+                            <td className={`p-2.5 font-black ${pos.type === "BUY" ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>{pos.type}</td>
+                            <td className="p-2.5 text-right text-white">{pos.volume.toFixed(2)}</td>
+                            <td className="p-2.5 text-right text-[#ccd6e0]">
+                              {pos.price_current.toFixed(pos.symbol.includes("USD") && !pos.symbol.startsWith("X") ? 5 : 2)}
+                            </td>
+                            <td className={`p-2.5 text-right font-black ${isProfit ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>
+                              {isProfit ? "+" : ""}${pos.profit.toFixed(2)}
+                            </td>
+                            <td className="p-2.5">
+                              <span className={`px-1.5 py-0.5 rounded-sm text-[8px] font-black border uppercase ${
+                                isFree ? "bg-[#00D26A]/5 border-[#00D26A]/45 text-[#00D26A]" : "bg-[#FF4D4D]/5 border-[#FF4D4D]/45 text-[#FF4D4D]"
+                              }`}>
+                                {isFree ? "RISK FREE" : "BEARING"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
-        </div>
+          {/* RIGHT: Active Deals Panel (3/12) */}
+          <div className="col-span-3 p-4 flex flex-col gap-4 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-hidden bg-[#070B14]/40 rounded-sm border border-slate-900/40">
+              <RightPanel />
+            </div>
+          </div>
       </div>
 
       {/* Footer */}

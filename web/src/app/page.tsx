@@ -2,14 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
 import CenterPanel from "../components/CenterPanel";
-import RightPanel from "../components/RightPanel";
 import ChatPanel from "../components/ChatPanel";
 import DecisionFeed from "../components/DecisionFeed";
-import WarRoom from "../components/WarRoom";
-import Battlefield from "../components/Battlefield";
-import MarketRadar from "../components/MarketRadar";
 import DecisionCards from "../components/DecisionCards";
 import ConfidenceEngine from "../components/ConfidenceEngine";
 import RiskManagerView from "../components/RiskManagerView";
@@ -60,42 +55,27 @@ export default function Home() {
       {/* 2. CORE COCKPIT PANEL LAYOUT */}
       {activeTab === "DASHBOARD" ? (
         <main className="flex-1 min-h-0 p-4 grid grid-cols-12 gap-4 overflow-hidden">
-          
-          {/* Column 1: Left Risk & Battlefield (3/12 width) */}
+          {/* Column 1: Signal Decisions (3/12 width) */}
           <div className="col-span-3 flex flex-col gap-4 overflow-hidden h-full">
-            <div className="flex-[0.28] shrink-0 overflow-hidden">
-              <Battlefield />
+            <div className="flex-[0.40] shrink-0 overflow-hidden">
+              <DecisionCards />
             </div>
-            <div className="flex-[0.44] min-h-0 overflow-hidden">
-              <Sidebar />
-            </div>
-            <div className="flex-[0.28] min-h-0 overflow-hidden">
-              <MarketRadar />
+            <div className="flex-[0.60] min-h-0 overflow-hidden">
+              <DecisionFeed />
             </div>
           </div>
 
-          {/* Column 2: Center Signal Command & Manager Views (6/12 width) */}
-          <div className="col-span-6 flex flex-col gap-4 overflow-hidden h-full justify-between">
-            <div className="flex-[0.70] min-h-0 overflow-hidden">
+          {/* Column 2: Center Signal Command View (6/12 width) */}
+          <div className="col-span-6 flex flex-col gap-4 overflow-hidden h-full">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <CenterPanel />
             </div>
-            <div className="flex-[0.30] min-h-0 overflow-hidden">
-              <WarRoom />
-            </div>
           </div>
 
-          {/* Column 3: Right Active Deals, Vincent AI & Decision Feed (3/12 width) */}
+          {/* Column 3: Vincent AI Chat (3/12 width) */}
           <div className="col-span-3 flex flex-col gap-4 overflow-hidden h-full">
-            <div className="flex-[0.72] flex flex-col gap-4 overflow-hidden">
-              <div className="flex-[0.55] overflow-hidden">
-                <RightPanel />
-              </div>
-              <div className="flex-[0.45] overflow-hidden">
-                <ChatPanel />
-              </div>
-            </div>
-            <div className="flex-[0.23] min-h-0 overflow-hidden">
-              <DecisionFeed />
+            <div className="flex-1 overflow-hidden">
+              <ChatPanel />
             </div>
           </div>
 
