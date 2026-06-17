@@ -9,12 +9,13 @@ def setup_logger():
     logger.remove()
     
     # Add console handler
-    logger.add(
-        sys.stdout, 
-        colorize=True, 
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>", 
-        level=settings.logging.level
-    )
+    if os.environ.get("XIPHOS_TUI") != "1":
+        logger.add(
+            sys.stdout, 
+            colorize=True, 
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>", 
+            level=settings.logging.level
+        )
     
     base_dir = get_base_dir()
     log_dir = os.path.join(base_dir, "logs")

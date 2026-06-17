@@ -1,4 +1,4 @@
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
 from core.config import settings
 from core.logger import log
 from indicators.moving_averages import get_m30_indicators

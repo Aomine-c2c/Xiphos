@@ -1,10 +1,9 @@
-from live_bot import LiveBot
-import MetaTrader5 as mt5
+from main import process_m30_cycle
+from bridge.proxy import mt5
 
 def test():
-    print("Testing live_bot execution cycle...")
-    bot = LiveBot()
-    bot.evaluate_gates_and_execute()
+    print("Testing cycle execution...")
+    process_m30_cycle()
     mt5.shutdown()
     print("Cycle complete.")
 

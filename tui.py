@@ -1,15 +1,18 @@
 """
-Xiphos Trading Framework - Advanced Textual TUI
+Xiphos Trading Framework - Advanced Textual TUI Cockpit
 Run with: python tui.py
 """
+
+import os
+os.environ["XIPHOS_TUI"] = "1"
 
 import threading
 import time
 import yaml
 import requests
+import sys
 from datetime import datetime, timedelta
 from loguru import logger
-
 
 from textual import work, on
 from textual.app import App, ComposeResult
@@ -20,7 +23,7 @@ from textual.widgets import (
 )
 from textual.screen import ModalScreen
 
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
 
 from core.config import settings
 from core.logger import log
@@ -30,8 +33,9 @@ from execution.trailing import trail_positions
 from indicators.moving_averages import get_m30_indicators
 from monitoring.scheduler import scheduler
 from risk.RiskSlotManager import RiskSlotManager
+from risk.CorrelationGuard import CorrelationGuard
 from strategies.trend_following import evaluate_signal
-from main import process_m30_cycle
+from main import process_m30_cycle, last_cycle_data
 from state_manager import StateManager
 from mt5_executor import MT5Executor
 from storage.database import db
@@ -39,7 +43,7 @@ from storage.database import db
 import ctypes
 import os
 
-CURRENT_VERSION = "v1.2.4"
+CURRENT_VERSION = "v1.3.0"
 
 # ── Process Resource Tracking ──────────────────────────────────────────────────
 
@@ -269,6 +273,8 @@ class PositionControlModal(ModalScreen):
             self.dismiss(None)
 
 
+# ── Cockpit Headers & Panels ──────────────────────────────────────────────────
+
 class DashboardHeader(Static):
     DEFAULT_CSS = """
     DashboardHeader {
@@ -278,15 +284,16 @@ class DashboardHeader(Static):
         border-bottom: solid #1e293b;
         padding: 0 2;
     }
-    #hdr-title {
+    #hdr-left {
+        width: 35;
         margin-top: 1;
-        width: 30;
     }
     #hdr-stats {
         align: right middle;
+        height: 3;
     }
     #hdr-stats Label {
-        margin-left: 2;
+        margin-left: 1;
         padding: 0 1;
         background: #111827;
         border: solid #1e293b;
@@ -296,19 +303,260 @@ class DashboardHeader(Static):
     """
     def compose(self) -> ComposeResult:
         with Horizontal():
-            yield Label("[bold cyan]⚔️  XIPHOS ENGINE[/bold cyan] [dim]v1.2.4[/dim]", id="hdr-title")
+            with Vertical(id="hdr-left"):
+                yield Label("[bold cyan]⚔️  XIPHOS ENGINE[/bold cyan]", id="hdr-title-text")
+                yield Label("[dim green]M30 TREND FOLLOWING SYSTEM[/dim green]", id="hdr-subtitle-text")
             with Horizontal(id="hdr-stats"):
-                yield Label("MT5: [bold red]OFFLINE[/bold red]", id="hdr-mt5")
-                yield Label("Bot: [bold red]STOPPED[/bold red]", id="hdr-bot")
-                yield Label("Slots: [bold white]0/4[/bold white]", id="hdr-slots")
-                yield Label("Next Cycle: [bold cyan]--:--[/bold cyan]", id="hdr-candle")
-                yield Label("Latency: [bold white]-- ms[/bold white]", id="hdr-latency")
+                yield Label("Status: [bold red]● STOPPED[/bold red]", id="hdr-bot")
+                yield Label("Broker: [bold white]Deriv MT5[/bold white]", id="hdr-broker")
+                yield Label("MT5: [bold red]● OFFLINE[/bold red]", id="hdr-mt5")
+                yield Label("Time: [bold cyan]--:--:--[/bold cyan]", id="hdr-time")
+                yield Label("TF: [bold white]M30[/bold white]", id="hdr-tf")
+                yield Label("Bal: [bold white]--[/bold white]", id="hdr-bal")
+                yield Label("Eq: [bold white]--[/bold white]", id="hdr-eq")
+                yield Label("Margin: [bold white]--[/bold white]", id="hdr-margin")
 
 
-# ── Widgets ───────────────────────────────────────────────────────────────────
+class OverviewPanel(Static):
+    DEFAULT_CSS = "OverviewPanel { border: round $primary; padding: 0 1; background: #111827; height: 10; }"
+    def compose(self) -> ComposeResult:
+        yield Label("[bold cyan]OVERVIEW[/bold cyan]")
+        yield Label(id="overview-content")
+    def update_data(self, uptime: str) -> None:
+        last_eval = last_cycle_data["time"].split()[-1] if last_cycle_data["time"] else "--:--:--"
+        text = (
+            f"Bot Status:        {'[bold green]RUNNING[/bold green]' if _bot_running else '[bold red]STOPPED[/bold red]'}\n"
+            f"Strategy:          [bold white]XIPHOS M30[/bold white]\n"
+            f"Timeframe:         [bold white]M30[/bold white]\n"
+            f"Last Candle:       [bold white]{last_eval}[/bold white]\n"
+            f"Next Evaluation:   [bold white]{_next_m30_str()}[/bold white]\n"
+            f"Uptime:            [bold white]{uptime}[/bold white]\n"
+            f"Version:           [bold white]{CURRENT_VERSION}[/bold white]"
+        )
+        self.query_one("#overview-content", Label).update(text)
+
+
+class RiskSummaryPanel(Static):
+    DEFAULT_CSS = "RiskSummaryPanel { border: round $primary; padding: 0 1; background: #111827; height: 11; }"
+    def compose(self) -> ComposeResult:
+        yield Label("[bold cyan]RISK SUMMARY[/bold cyan]")
+        yield Label(id="risk-summary-content")
+    def update_data(self) -> None:
+        slots_limit = settings.trading.max_risk_trades
+        slots_av = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
+        slots_us = slots_limit - slots_av
+        
+        # Generate progress bar
+        pct = int((slots_us / slots_limit) * 100) if slots_limit > 0 else 0
+        bar_len = 12
+        filled = int((slots_us / slots_limit) * bar_len) if slots_limit > 0 else 0
+        bar = "█" * filled + "░" * (bar_len - filled)
+        
+        text = (
+            f"Max Risk Trades:    [bold white]{slots_limit}[/bold white]\n"
+            f"Current Risk:       [bold white]{slots_us}[/bold white]\n"
+            f"Risk-Free:          [bold green]{RiskSlotManager.get_risk_free_count(magic_filter=[135001, 135002])}[/bold green]\n"
+            f"Available Slots:    [bold green]{slots_av}[/bold green]\n\n"
+            f"  [bold cyan]{pct}%[/bold cyan]  [bold green][{bar}][/bold green]\n"
+            f"        [bold white]{slots_us} / {slots_limit} SLOTS USED[/bold white]"
+        )
+        self.query_one("#risk-summary-content", Label).update(text)
+
+
+class CorrelationGuardPanel(Static):
+    DEFAULT_CSS = "CorrelationGuardPanel { border: round $primary; padding: 0 1; background: #111827; height: 13; overflow-y: auto; }"
+    def compose(self) -> ComposeResult:
+        yield Label("[bold cyan]CORRELATION GUARD[/bold cyan]")
+        yield Label(id="corr-guard-content")
+    def update_data(self) -> None:
+        text = ""
+        for group_name, symbols in settings.correlation_groups.items():
+            clean_name = group_name.replace("_", " ").upper()
+            text += f"[bold yellow]{clean_name}[/bold yellow]:\n"
+            
+            blocking = CorrelationGuard.get_blocking_positions(symbols[0] if symbols else "", magic_filter=[135001, 135002])
+            
+            for sym in symbols[:4]:
+                positions = mt5.positions_get(symbol=sym) or []
+                has_rb = False
+                has_rf = False
+                for p in positions:
+                    if p.magic in [135001, 135002]:
+                        if p.sl == 0.0 or (p.type == mt5.ORDER_TYPE_BUY and p.sl < p.price_open) or (p.type == mt5.ORDER_TYPE_SELL and p.sl > p.price_open):
+                            has_rb = True
+                        else:
+                            has_rf = True
+                            
+                if has_rb:
+                    status = "[bold red]RISK-BEARING[/bold red]"
+                elif has_rf:
+                    status = "[bold green]RISK-FREE[/bold green]"
+                elif blocking and sym not in [p.symbol for p in blocking]:
+                    status = "[bold orange3]BLOCKED[/bold orange3]"
+                else:
+                    status = "[dim green]ALLOWED[/dim green]"
+                    
+                text += f"  {sym:<8} {status}\n"
+            text += "\n"
+        self.query_one("#corr-guard-content", Label).update(text.rstrip())
+
+
+class QuickActionsPanel(Static):
+    DEFAULT_CSS = """
+    QuickActionsPanel { border: round $primary; padding: 0 1; background: #111827; height: 14; }
+    QuickActionsPanel Button { width: 100%; margin-bottom: 1; height: 3; }
+    """
+    def compose(self) -> ComposeResult:
+        yield Label("[bold cyan]QUICK ACTIONS[/bold cyan]\n")
+        yield Button("⏸ PAUSE BOT", id="btn-pause", variant="warning")
+        yield Button("❌ CLOSE ALL", id="btn-panic", variant="error")
+        yield Button("🔄 FORCE CYCLE", id="btn-force", variant="primary")
+
+
+class SystemHealthPanel(Static):
+    DEFAULT_CSS = """
+    SystemHealthPanel { height: 6; margin-bottom: 1; }
+    .gate-card {
+        width: 1fr;
+        height: 100%;
+        border: round #1e293b;
+        background: #111827;
+        margin-right: 1;
+        content-align: center middle;
+        text-align: center;
+    }
+    .gate-card.pass { border: round #10b981; }
+    .gate-card.fail { border: round #ef4444; }
+    """
+    def compose(self) -> ComposeResult:
+        with Horizontal():
+            with Vertical(classes="gate-card", id="gate-card-1"):
+                yield Label("[bold white]GATE 1[/bold white]\n[dim]RISK SLOT[/dim]\n[bold green]✔ PASS[/bold green]\n[dim]0/4 USED[/dim]", id="lbl-gate-1")
+            with Vertical(classes="gate-card", id="gate-card-2"):
+                yield Label("[bold white]GATE 2[/bold white]\n[dim]CORRELATION[/dim]\n[bold green]✔ PASS[/bold green]\n[dim]NO BLOCK[/dim]", id="lbl-gate-2")
+            with Vertical(classes="gate-card", id="gate-card-3"):
+                yield Label("[bold white]GATE 3[/bold white]\n[dim]FAN ALIGNMENT[/dim]\n[bold green]✔ PASS[/bold green]\n[dim]VALID[/dim]", id="lbl-gate-3")
+            with Vertical(classes="gate-card", id="gate-card-4"):
+                yield Label("[bold white]GATE 4[/bold white]\n[dim]PRIORITY FILTER[/dim]\n[bold green]✔ PASS[/bold green]\n[dim]0 RANKED[/dim]", id="lbl-gate-4")
+            with Vertical(classes="gate-card", id="gate-card-5"):
+                yield Label("[bold white]GATE 5[/bold white]\n[dim]HARD SL[/dim]\n[bold green]✔ PASS[/bold green]\n[dim]ENFORCED[/dim]", id="lbl-gate-5")
+                
+    def update_gates(self) -> None:
+        gates = last_cycle_data.get("gates", {})
+        for i in range(1, 6):
+            gate_key = f"gate_{i}_" + ("risk_slot" if i==1 else "correlation" if i==2 else "fan_alignment" if i==3 else "priority_filter" if i==4 else "hard_sl")
+            status = gates.get(gate_key, "PASS")
+            details = gates.get(f"gate_{i}_details", "ENFORCED" if i==5 else "")
+            
+            try:
+                card = self.query_one(f"#gate-card-{i}", Vertical)
+                card.remove_class("pass", "fail")
+                if status == "PASS":
+                    card.add_class("pass")
+                    status_str = "[bold green]✔ PASS[/bold green]"
+                elif status == "FAIL":
+                    card.add_class("fail")
+                    status_str = "[bold red]✘ FAIL[/bold red]"
+                else:
+                    status_str = "[bold yellow]─ N/A[/bold yellow]"
+                    
+                lbl = self.query_one(f"#lbl-gate-{i}", Label)
+                gate_names = ["RISK SLOT", "CORRELATION", "FAN ALIGNMENT", "PRIORITY FILTER", "HARD SL"]
+                lbl.update(f"[bold white]GATE {i}[/bold white]\n[dim]{gate_names[i-1]}[/dim]\n{status_str}\n[dim]{details}[/dim]")
+            except Exception:
+                pass
+
+
+class PriorityEnginePanel(Static):
+    DEFAULT_CSS = "PriorityEnginePanel { border: round $primary; padding: 0 1; background: #111827; height: 10; }"
+    def compose(self) -> ComposeResult:
+        yield Label("[bold cyan]MULTI-SIGNAL PRIORITY ENGINE (GATE 4)[/bold cyan]")
+        t = DataTable(id="prior-table", zebra_stripes=True, cursor_type="none")
+        t.add_columns("Rank", "Symbol", "Direction", "Price", "SMA200", "Distance", "Proj Risk", "Status")
+        yield t
+    def update_data(self) -> None:
+        try:
+            t = self.query_one("#prior-table", DataTable)
+            t.clear()
+            for sig in last_cycle_data.get("ranked_signals", []):
+                status_c = "green" if sig["status"] == "APPROVED" else "yellow"
+                dir_c = "green" if sig["direction"] == "BUY" else "red"
+                arrow = "↑ BUY" if sig["direction"] == "BUY" else "↓ SELL"
+                
+                t.add_row(
+                    str(sig["priority"]),
+                    sig["symbol"],
+                    f"[{dir_c}]{arrow}[/{dir_c}]",
+                    f"{sig['price']:.5f}",
+                    f"{sig['sma200']:.5f}",
+                    f"{sig['distance']}",
+                    f"${sig['projected_risk']:.2f}",
+                    f"[{status_c}]{sig['status']}[/{status_c}]"
+                )
+        except Exception:
+            pass
+
+
+class TradeManagerPanel(Static):
+    DEFAULT_CSS = """
+    TradeManagerPanel { border: round $primary; padding: 0 1; background: #111827; height: 11; }
+    .strat-card { width: 1fr; height: 100%; padding: 0 1; }
+    """
+    def compose(self) -> ComposeResult:
+        yield Label("[bold cyan]TRADE MANAGER[/bold cyan]")
+        with Horizontal():
+            with Vertical(classes="strat-card"):
+                yield Label("[bold yellow]TRADE A - SCALPER[/bold yellow] (135001)")
+                yield Label(
+                    "Initial SL:  [cyan]SMA200[/cyan]\n"
+                    "Trailing:    [cyan]EMA50[/cyan]\n"
+                    "Direction:   Trend Following\n"
+                    "Purpose:     Capture momentum\n"
+                    "SL Behavior: Never widen"
+                )
+            with Vertical(classes="strat-card"):
+                yield Label("[bold yellow]TRADE B - RUNNER[/bold yellow] (135002)")
+                yield Label(
+                    "Initial SL:  [cyan]SMA200[/cyan]\n"
+                    "Trailing:    [cyan]SMA200[/cyan]\n"
+                    "Direction:   Trend Following\n"
+                    "Purpose:     Capture macro trend\n"
+                    "SL Behavior: Never widen"
+                )
+
+
+class SystemPerformancePanel(Static):
+    DEFAULT_CSS = "SystemPerformancePanel { border: round $primary; padding: 0 1; background: #111827; height: 9; }"
+    def compose(self) -> ComposeResult:
+        yield Label("[bold cyan]SYSTEM PERFORMANCE[/bold cyan]")
+        yield Label(id="perf-gauges-content")
+    def update_data(self, cpu_pct: float, mem_mb: float) -> None:
+        try:
+            import shutil
+            total, used, free = shutil.disk_usage("/")
+            disk_pct = (used / total) * 100.0
+            total_gb = total / (1024**3)
+            used_gb = used / (1024**3)
+        except Exception:
+            disk_pct = 0.0
+            total_gb = used_gb = 0.0
+            
+        make_bar = lambda p: "█" * int(p/10) + "░" * (10 - int(p/10))
+        
+        text = (
+            f"CPU Usage:      {make_bar(cpu_pct)} [bold cyan]{cpu_pct:.1f}%[/bold cyan]\n"
+            f"Memory Usage:   {make_bar((mem_mb/1600.0)*100.0)} [bold cyan]{mem_mb:.1f} MB[/bold cyan] / 1.6 GB\n"
+            f"Disk Usage:     {make_bar(disk_pct)} [bold cyan]{disk_pct:.1f}%[/bold cyan] ({used_gb:.1f} GB / {total_gb:.1f} GB)"
+        )
+        try:
+            self.query_one("#perf-gauges-content", Label).update(text)
+        except Exception:
+            pass
+
+# ── Base Panels ───────────────────────────────────────────────────────────────
 
 class StatusPanel(Static):
-    DEFAULT_CSS = "StatusPanel { border: round $primary; padding: 1 2; height: 100%; width: 2fr; }"
+    DEFAULT_CSS = "StatusPanel { border: round $primary; padding: 1 2; height: 100%; width: 100%; }"
     def compose(self) -> ComposeResult:
         yield Label("[dim]Loading...[/dim]", id="status-content")
     def update_display(self, text: str) -> None:
@@ -328,8 +576,9 @@ def generate_sparkline(history: list[float]) -> str:
         return "▄" * len(history)
     return "".join(bars[int(7 * (v - min_val) / rng)] for v in history)
 
+
 class MarketWatchTable(Static):
-    DEFAULT_CSS = "MarketWatchTable { border: round $primary; padding: 0 1; height: 100%; width: 3fr; overflow-y: auto; }"
+    DEFAULT_CSS = "MarketWatchTable { border: round $primary; padding: 0 1; height: 100%; width: 100%; overflow-y: auto; }"
     def compose(self) -> ComposeResult:
         t = DataTable(id="mw-table", zebra_stripes=True, cursor_type="none")
         t.add_columns("Symbol", "Price", "Trend", "E13 Dist", "E50 Dist", "S200 Dist", "Bucket", "Signal")
@@ -342,7 +591,7 @@ class MarketWatchTable(Static):
 
 
 class PositionsTable(Static):
-    DEFAULT_CSS = "PositionsTable { border: round $primary; padding: 0 1; height: 10; }"
+    DEFAULT_CSS = "PositionsTable { border: round $primary; padding: 0 1; height: 100%; }"
     def compose(self) -> ComposeResult:
         t = DataTable(id="pos-table", zebra_stripes=True, cursor_type="none")
         t.add_columns("Ticket", "Symbol", "Type", "Entry", "Current", "SL", "TP", "P&L", "Role")
@@ -352,6 +601,7 @@ class PositionsTable(Static):
         t.clear()
         for row in rows:
             t.add_row(*row)
+
 
 class TradeHistoryTable(Static):
     DEFAULT_CSS = "TradeHistoryTable { border: round $accent; padding: 0 1; height: 1fr; }"
@@ -378,6 +628,47 @@ class ControlsBar(Static):
         yield Button("⚡ Force Cycle",   id="btn-force",  variant="primary")
 
 
+class NotificationBanner(Static):
+    DEFAULT_CSS = """
+    NotificationBanner {
+        height: 3;
+        content-align: center middle;
+        background: #1e1b4b;
+        color: #e0e7ff;
+        border-bottom: solid #312e81;
+        display: none;
+        text-style: bold;
+    }
+    NotificationBanner.info {
+        background: #1e1b4b;
+        color: #e0e7ff;
+        border-bottom: solid #312e81;
+    }
+    NotificationBanner.success {
+        background: #064e3b;
+        color: #d1fae5;
+        border-bottom: solid #047857;
+    }
+    NotificationBanner.warn {
+        background: #78350f;
+        color: #fef3c7;
+        border-bottom: solid #b45309;
+    }
+    NotificationBanner.error {
+        background: #7f1d1d;
+        color: #fee2e2;
+        border-bottom: solid #b91c1c;
+    }
+    """
+    def show_message(self, message: str, level: str = "info") -> None:
+        self.update(message)
+        self.remove_class("info", "success", "warn", "error")
+        self.add_class(level)
+        self.styles.display = "block"
+        
+    def clear_message(self) -> None:
+        self.styles.display = "none"
+
 # ── App ───────────────────────────────────────────────────────────────────────
 
 class XiphosApp(App):
@@ -389,14 +680,52 @@ class XiphosApp(App):
         ("x", "stop_bot",        "Stop"),
         ("p", "pause_bot",       "Pause"),
         ("f", "force_cycle",     "Force Cycle"),
-        ("1", "select_tab('tab-live')",   "Live Tab"),
-        ("2", "select_tab('tab-perf')",   "Perf Tab"),
-        ("3", "select_tab('tab-config')", "Config Tab"),
+        ("1", "select_tab('tab-dash')",   "Dashboard"),
+        ("2", "select_tab('tab-live')",   "Markets"),
+        ("3", "select_tab('tab-pos')",    "Positions"),
+        ("4", "select_tab('tab-risk')",   "Risk Manager"),
+        ("5", "select_tab('tab-perf')",   "Analytics"),
+        ("6", "select_tab('tab-logs')",   "Logs"),
+        ("7", "select_tab('tab-config')", "Settings"),
         ("ctrl+p", "pause_bot", "Pause Bot"),
         ("ctrl+x", "prompt_panic", "Panic Close"),
     ]
     CSS = """
     Screen { background: #0b0f19; }
+    
+    /* Dashboard Grid layout */
+    #dash-workspace {
+        height: 100%;
+    }
+    #dash-col-left {
+        width: 1fr;
+        height: 100%;
+        overflow-y: auto;
+        margin-right: 1;
+    }
+    #dash-col-center {
+        width: 2fr;
+        height: 100%;
+        overflow-y: auto;
+        margin-right: 1;
+    }
+    #dash-col-right {
+        width: 2fr;
+        height: 100%;
+        overflow-y: auto;
+    }
+    #risk-col-left {
+        width: 2fr;
+        margin-right: 1;
+    }
+    #risk-col-right {
+        width: 3fr;
+    }
+    
+    OverviewPanel, RiskSummaryPanel, CorrelationGuardPanel, QuickActionsPanel, SystemHealthPanel, PriorityEnginePanel, TradeManagerPanel, SystemPerformancePanel {
+        margin-bottom: 1;
+    }
+
     #top-row { height: 15; }
     #mw-container { width: 3fr; height: 100%; }
     #mw-search-input { height: 3; margin-bottom: 0; border: round #1e293b; background: #111827; }
@@ -429,31 +758,63 @@ class XiphosApp(App):
 
     def compose(self) -> ComposeResult:
         yield DashboardHeader()
+        yield NotificationBanner(id="notification-banner")
         
-        with TabbedContent(initial="tab-live"):
+        with TabbedContent(initial="tab-dash"):
             
-            # --- TAB 1: Live Trading ---
-            with TabPane("Live Trading", id="tab-live"):
-                with Horizontal(id="top-row"):
-                    yield StatusPanel(id="status-panel")
-                    with Vertical(id="mw-container"):
-                        yield Input(placeholder="🔍 Search symbols...", id="mw-search-input")
-                        yield MarketWatchTable(id="mw-panel")
-                yield Label("  ▸ OPEN POSITIONS", classes="section-lbl")
-                yield PositionsTable(id="positions-panel")
-                yield Label("  ▸ LIVE LOG", classes="section-lbl")
-                with Vertical(id="log-container"):
-                    with Horizontal(id="log-toolbar"):
-                        yield Input(placeholder="🔍 Search logs...", id="log-search-input")
-                        yield Button("ALL", variant="primary", classes="log-filter-btn", id="log-filter-all")
-                        yield Button("INFO", variant="default", classes="log-filter-btn", id="log-filter-info")
-                        yield Button("WARN", variant="default", classes="log-filter-btn", id="log-filter-warn")
-                        yield Button("ERROR", variant="default", classes="log-filter-btn", id="log-filter-error")
-                    yield LogPanel(id="log-panel", highlight=True, markup=True, max_lines=500)
+            # --- TAB 1: Cockpit Dashboard ---
+            with TabPane("Dashboard", id="tab-dash"):
+                with Horizontal(id="dash-workspace"):
+                    # Left Column
+                    with Vertical(id="dash-col-left"):
+                        yield OverviewPanel(id="dash-overview")
+                        yield RiskSummaryPanel(id="dash-risk")
+                        yield CorrelationGuardPanel(id="dash-corr")
+                        yield QuickActionsPanel(id="dash-actions")
+                        
+                    # Center Column
+                    with Vertical(id="dash-col-center"):
+                        yield SystemHealthPanel(id="dash-health")
+                        yield PriorityEnginePanel(id="dash-priority")
+                        yield Label("  ▸ MARKET WATCH (M30)", classes="section-lbl")
+                        yield MarketWatchTable(id="dash-mw-panel")
+                        yield Label("  ▸ LIVE LOG", classes="section-lbl")
+                        yield LogPanel(id="dash-log-panel", highlight=True, markup=True, max_lines=150)
+                        
+                    # Right Column
+                    with Vertical(id="dash-col-right"):
+                        yield Label("  ▸ ACTIVE POSITIONS", classes="section-lbl")
+                        yield PositionsTable(id="dash-pos-panel")
+                        yield Label("  ▸ EQUITY CURVE (LAST 30 TRADES)", classes="section-lbl")
+                        with Vertical(classes="chart-panel"):
+                            yield Label("[dim]Generating equity curve...[/dim]", id="dash-equity-chart")
+                        yield TradeManagerPanel(id="dash-trade-mgr")
+                        yield SystemPerformancePanel(id="dash-performance")
+
+            # --- TAB 2: Detailed Markets ---
+            with TabPane("Markets", id="tab-live"):
+                with Vertical(id="mw-container-detailed"):
+                    yield Input(placeholder="🔍 Search symbols...", id="mw-search-input")
+                    yield MarketWatchTable(id="mw-panel")
                 yield ControlsBar()
                 
-            # --- TAB 2: Performance Analytics ---
-            with TabPane("Performance Analytics", id="tab-perf"):
+            # --- TAB 3: Positions Control ---
+            with TabPane("Positions", id="tab-pos"):
+                yield Label("  ▸ OPEN POSITIONS", classes="section-lbl")
+                yield PositionsTable(id="positions-panel")
+                
+            # --- TAB 4: Risk Manager ---
+            with TabPane("Risk Manager", id="tab-risk"):
+                with Horizontal():
+                    with Vertical(id="risk-col-left"):
+                        yield Label("  ▸ DYNAMIC RISK SLOTS", classes="section-lbl")
+                        yield RiskSummaryPanel(id="risk-mgr-slots")
+                    with Vertical(id="risk-col-right"):
+                        yield Label("  ▸ CORRELATION GUARD STATUS", classes="section-lbl")
+                        yield CorrelationGuardPanel(id="risk-mgr-corr")
+
+            # --- TAB 5: Performance Analytics ---
+            with TabPane("Analytics", id="tab-perf"):
                 with Horizontal():
                     with Vertical(id="perf-left-col"):
                         yield Label("  ▸ DIAGNOSTICS & RESOURCES", classes="section-lbl")
@@ -476,8 +837,19 @@ class XiphosApp(App):
                         yield Label("  ▸ RECENT TRADE HISTORY", classes="section-lbl")
                         yield TradeHistoryTable(id="history-panel")
 
-            # --- TAB 3: Config & Controls ---
-            with TabPane("Config & Controls", id="tab-config"):
+            # --- TAB 6: System Logs ---
+            with TabPane("Logs", id="tab-logs"):
+                with Vertical(id="log-container"):
+                    with Horizontal(id="log-toolbar"):
+                        yield Input(placeholder="🔍 Search logs...", id="log-search-input")
+                        yield Button("ALL", variant="primary", classes="log-filter-btn", id="log-filter-all")
+                        yield Button("INFO", variant="default", classes="log-filter-btn", id="log-filter-info")
+                        yield Button("WARN", variant="default", classes="log-filter-btn", id="log-filter-warn")
+                        yield Button("ERROR", variant="default", classes="log-filter-btn", id="log-filter-error")
+                    yield LogPanel(id="log-panel", highlight=True, markup=True, max_lines=1000)
+
+            # --- TAB 7: Settings & Controls ---
+            with TabPane("Settings", id="tab-config"):
                 yield Label("  ▸ SYSTEM CONFIGURATION (settings.yaml)", classes="section-lbl")
                 with VerticalScroll(classes="config-panel"):
                     with Horizontal(classes="config-row"):
@@ -490,7 +862,7 @@ class XiphosApp(App):
                         
                     with Horizontal(classes="config-row"):
                         yield Label("Max Slots per Symbol:", classes="config-label")
-                        yield Input(value="2", id="cfg-max-slots") # Hardcoded in live_bot, but good to display
+                        yield Input(value="2", id="cfg-max-slots")
                         
                     with Horizontal(classes="config-row"):
                         yield Button("💾 Save Configuration", variant="success", id="btn-save-config")
@@ -509,6 +881,7 @@ class XiphosApp(App):
         self.current_log_search = ""
         self.current_log_level = "ALL"
         self.cpu_tracker = CPUTracker()
+        self.start_time = time.time()
         
         self.market_watch_data = {}
         for _group, symbols in settings.correlation_groups.items():
@@ -516,15 +889,51 @@ class XiphosApp(App):
                 self.market_watch_data[sym] = {"price": 0.0, "history": [], "signal": "NONE"}
                 
         self._connect_mt5()
-        self.set_interval(1,  self._refresh_seconds_timer) # 1s countdown timer
+        self.set_interval(1,  self._refresh_seconds_timer)
         self.set_interval(5,  self._refresh_fast)
         self.set_interval(30, self._refresh_signals)
-        self.set_interval(10, self._refresh_performance) # Refresh perf every 10s
-        self.set_interval(3600, self._check_for_updates) # Hourly check
-        self._check_for_updates() # Check once on startup
+        self.set_interval(10, self._refresh_performance)
+        self.set_interval(3600, self._check_for_updates)
+        self._check_for_updates()
         
         # Auto-start trading execution loop
         self.action_start_bot()
+        
+        self.last_position_tickets = None
+        self.last_mt5_connected = None
+
+    def trigger_alert(self, message: str, level: str = "info") -> None:
+        try:
+            banner = self.query_one("#notification-banner", NotificationBanner)
+            banner.show_message(message, level)
+            
+            # Cancel any previous clear timer
+            if hasattr(self, "_clear_banner_timer") and self._clear_banner_timer:
+                try:
+                    self._clear_banner_timer.stop()
+                except Exception:
+                    pass
+            
+            self._clear_banner_timer = self.set_timer(3.0, banner.clear_message)
+        except Exception as e:
+            import sys
+            sys.stderr.write(f"Error triggering alert: {e}\n")
+
+    def flash_widget_border(self, widget_id: str, color: str, duration: float = 1.5) -> None:
+        try:
+            widget = self.query_one(widget_id)
+            default_color = "$accent" if "history" in widget_id or "hist" in widget_id or "chart" in widget_id else "$primary"
+            widget.styles.border = ("round", color)
+            
+            def revert_border():
+                try:
+                    widget.styles.border = ("round", default_color)
+                except Exception:
+                    pass
+            self.set_timer(duration, revert_border)
+        except Exception as e:
+            import sys
+            sys.stderr.write(f"Error flashing border for {widget_id}: {e}\n")
 
     # ── Release check worker ──────────────────────────────────────────────────
 
@@ -546,7 +955,11 @@ class XiphosApp(App):
     def _refresh_seconds_timer(self) -> None:
         try:
             secs = _next_m30_str()
-            self.query_one("#hdr-candle", Label).update(f"Next Cycle: [bold cyan]{secs}[/bold cyan]")
+            # Try updating both timer labels if mounted
+            try:
+                self.query_one("#hdr-candle", Label).update(f"Next Cycle: [bold cyan]{secs}[/bold cyan]")
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -565,9 +978,19 @@ class XiphosApp(App):
 
     @work(thread=True, exclusive=True)
     def _refresh_fast(self) -> None:
-        # Status panel
         account = mt5.account_info()
         secs = _next_m30_str()
+        
+        is_connected = account is not None
+        if self.last_mt5_connected is not None:
+            if is_connected and not self.last_mt5_connected:
+                self.call_from_thread(self.trigger_alert, "✔ Connected to MetaTrader 5.", "success")
+            elif not is_connected and self.last_mt5_connected:
+                self.call_from_thread(self.trigger_alert, "✘ MetaTrader 5 Connection Lost!", "error")
+                # Flash status panel on detailed tab
+                self.call_from_thread(self.flash_widget_border, "#status-panel", "red")
+        self.last_mt5_connected = is_connected
+
         if account:
             conn_str  = "[bold green]● ONLINE[/bold green]"
             bal_str   = f"[bold white]${account.balance:.2f}[/bold white]"
@@ -592,10 +1015,35 @@ class XiphosApp(App):
             f"  Risk Slots   [{sl_c}]{slots_us}/{settings.trading.max_risk_trades}[/{sl_c}]\n"
             f"  Next M30     [cyan]{secs}[/cyan]"
         )
-        self.call_from_thread(self.query_one("#status-panel", StatusPanel).update_display, status_text)
+        try:
+            self.call_from_thread(self.query_one("#status-panel", StatusPanel).update_display, status_text)
+        except Exception:
+            pass
 
-        # Positions table
+        # Positions tables (both detailed and dashboard)
         positions = mt5.positions_get() or []
+        current_tickets = {pos.ticket for pos in positions}
+        
+        if self.last_position_tickets is not None:
+            new_tickets = current_tickets - self.last_position_tickets
+            closed_tickets = self.last_position_tickets - current_tickets
+            
+            if new_tickets:
+                for ticket in new_tickets:
+                    pos_obj = next((p for p in positions if p.ticket == ticket), None)
+                    sym = pos_obj.symbol if pos_obj else "Unknown"
+                    self.call_from_thread(self.trigger_alert, f"📈 Opened position: {sym} (Ticket {ticket})", "success")
+                self.call_from_thread(self.flash_widget_border, "#positions-panel", "green")
+                self.call_from_thread(self.flash_widget_border, "#dash-pos-panel", "green")
+                
+            if closed_tickets:
+                for ticket in closed_tickets:
+                    self.call_from_thread(self.trigger_alert, f"📉 Closed position: Ticket {ticket}", "info")
+                self.call_from_thread(self.flash_widget_border, "#positions-panel", "red")
+                self.call_from_thread(self.flash_widget_border, "#dash-pos-panel", "red")
+                
+        self.last_position_tickets = current_tickets
+
         rows = []
         for pos in positions:
             pnl = pos.profit
@@ -607,13 +1055,22 @@ class XiphosApp(App):
                 else "Runner" if pos.magic == settings.magic_numbers.runner
                 else str(pos.magic)
             )
+            risk_label = "[bold green]FREE[/bold green]" if pos.sl > 0 and ((pos.type == mt5.ORDER_TYPE_BUY and pos.sl >= pos.price_open) or (pos.type == mt5.ORDER_TYPE_SELL and pos.sl <= pos.price_open)) else "[bold red]RISK[/bold red]"
             rows.append((
                 pos.ticket, pos.symbol, f"[{typ_c}]{typ}[/{typ_c}]", f"{pos.price_open:.5f}",
-                f"{pos.price_current:.5f}", f"{pos.sl:.5f}", f"{pos.tp:.5f}", f"[{pnl_c}]${pnl:+.2f}[/{pnl_c}]", role
+                f"{pos.price_current:.5f}", f"{pos.sl:.5f}", f"{pos.tp:.5f}", f"[{pnl_c}]${pnl:+.2f}[/{pnl_c}]", risk_label if "dash" in self.query_one(TabbedContent).active else role
             ))
-        self.call_from_thread(self.query_one("#positions-panel", PositionsTable).update_rows, rows)
+            
+        try:
+            self.call_from_thread(self.query_one("#positions-panel", PositionsTable).update_rows, rows)
+        except Exception:
+            pass
+        try:
+            self.call_from_thread(self.query_one("#dash-pos-panel", PositionsTable).update_rows, rows)
+        except Exception:
+            pass
 
-        # Market watch
+        # Market watch tables
         mw_rows = []
         search_query = self.mw_search_query
         for sym, data in self.market_watch_data.items():
@@ -662,7 +1119,14 @@ class XiphosApp(App):
                     sig_str
                 ))
                 
-        self.call_from_thread(self.query_one("#mw-panel", MarketWatchTable).update_rows, mw_rows)
+        try:
+            self.call_from_thread(self.query_one("#mw-panel", MarketWatchTable).update_rows, mw_rows)
+        except Exception:
+            pass
+        try:
+            self.call_from_thread(self.query_one("#dash-mw-panel", MarketWatchTable).update_rows, mw_rows)
+        except Exception:
+            pass
 
     @work(thread=True)
     def _refresh_signals(self) -> None:
@@ -724,10 +1188,48 @@ class XiphosApp(App):
                 f"  Process Memory:  [bold white]{mem_mb:.1f} MB[/bold white]\n"
                 f"  Process CPU:     [bold white]{cpu_pct:.1f}%[/bold white]\n"
             )
-            self.call_from_thread(self.query_one("#diagnostics-label", Label).update, diag_text)
+            try:
+                self.call_from_thread(self.query_one("#diagnostics-label", Label).update, diag_text)
+            except Exception:
+                pass
             
             # Update DashboardHeader
             self.call_from_thread(self._update_header, terminal_info, latency)
+            
+            # Update Dashboard static panels
+            uptime_str = self._get_uptime_str()
+            try:
+                self.call_from_thread(self.query_one("#dash-overview", OverviewPanel).update_data, uptime_str)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#dash-risk", RiskSummaryPanel).update_data)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#risk-mgr-slots", RiskSummaryPanel).update_data)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#dash-corr", CorrelationGuardPanel).update_data)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#risk-mgr-corr", CorrelationGuardPanel).update_data)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#dash-health", SystemHealthPanel).update_gates)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#dash-priority", PriorityEnginePanel).update_data)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#dash-performance", SystemPerformancePanel).update_data, cpu_pct, mem_mb)
+            except Exception:
+                pass
             
             # 2. Strategy Performance breakdown
             strat_metrics = state_manager.get_strategy_performance_metrics()
@@ -742,7 +1244,10 @@ class XiphosApp(App):
                     f"  Profit Factor: [bold cyan]{pf_str}[/bold cyan]\n"
                     f"  Total P&L: [{pnl_c}]+${m['total_profit']:.2f}[/{pnl_c}]\n\n"
                 )
-            self.call_from_thread(self.query_one("#strategy-label", Label).update, s_text)
+            try:
+                self.call_from_thread(self.query_one("#strategy-label", Label).update, s_text)
+            except Exception:
+                pass
 
             # 3. Global metrics
             metrics = state_manager.get_performance_metrics()
@@ -759,13 +1264,23 @@ class XiphosApp(App):
                 f"  Sharpe Ratio:   [bold cyan]{sr:.2f}[/bold cyan]\n"
                 f"  Total Profit:   [bold {'green' if metrics['total_profit'] >= 0 else 'red'}]+${metrics['total_profit']:.2f}[/]\n"
             )
-            self.call_from_thread(self.query_one("#metrics-label", Label).update, m_text)
+            try:
+                self.call_from_thread(self.query_one("#metrics-label", Label).update, m_text)
+            except Exception:
+                pass
             
             # 4. Cumulative P&L chart
             history_30 = state_manager.get_trade_history(limit=30)
             profits_chrono = [h.get('profit', 0.0) for h in reversed(history_30)]
             chart_text = generate_ascii_chart(profits_chrono, height=5, width=40)
-            self.call_from_thread(self.query_one("#equity-chart", Label).update, chart_text)
+            try:
+                self.call_from_thread(self.query_one("#equity-chart", Label).update, chart_text)
+            except Exception:
+                pass
+            try:
+                self.call_from_thread(self.query_one("#dash-equity-chart", Label).update, chart_text)
+            except Exception:
+                pass
             
             # 5. History Table
             history = state_manager.get_trade_history(limit=50)
@@ -785,7 +1300,10 @@ class XiphosApp(App):
                     f"{h.get('entry_price', 0):.5f}",
                     f"[{pnl_c}]${profit:+.2f}[/{pnl_c}]"
                 ))
-            self.call_from_thread(self.query_one("#history-panel", TradeHistoryTable).update_rows, rows)
+            try:
+                self.call_from_thread(self.query_one("#history-panel", TradeHistoryTable).update_rows, rows)
+            except Exception:
+                pass
         except Exception as e:
             logger.error(f"Failed to fetch performance: {e}")
 
@@ -793,29 +1311,38 @@ class XiphosApp(App):
         try:
             bot_lbl = self.query_one("#hdr-bot", Label)
             if _bot_running:
-                bot_lbl.update("Bot: [bold green]RUNNING[/bold green]")
+                bot_lbl.update("Status: [bold green]● RUNNING[/bold green]")
             else:
-                bot_lbl.update("Bot: [bold red]STOPPED[/bold red]")
+                bot_lbl.update("Status: [bold red]● STOPPED[/bold red]")
                 
             mt5_lbl = self.query_one("#hdr-mt5", Label)
             if terminal_info:
-                mt5_lbl.update("MT5: [bold green]ONLINE[/bold green]")
+                mt5_lbl.update("MT5: [bold green]● CONNECTED[/bold green]")
             else:
-                mt5_lbl.update("MT5: [bold red]OFFLINE[/bold red]")
+                mt5_lbl.update("MT5: [bold red]● OFFLINE[/bold red]")
                 
-            lat_lbl = self.query_one("#hdr-latency", Label)
-            if terminal_info:
-                lat_lbl.update(f"Latency: [bold green]{latency:.1f}ms[/bold green]")
-            else:
-                lat_lbl.update("Latency: [bold red]--ms[/bold red]")
-                
-            slots_lbl = self.query_one("#hdr-slots", Label)
-            slots_av = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
-            slots_us = settings.trading.max_risk_trades - slots_av
-            circles_str = "●" * slots_us + "○" * slots_av
-            slots_lbl.update(f"Slots: [bold cyan]{circles_str}[/bold cyan] ({slots_us}/{settings.trading.max_risk_trades})")
+            time_lbl = self.query_one("#hdr-time", Label)
+            server_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            time_lbl.update(f"Time: [bold cyan]{server_time_str}[/bold cyan]")
+            
+            # Balance/Equity/Margin
+            account = mt5.account_info()
+            if account:
+                self.query_one("#hdr-bal", Label).update(f"Bal: [bold white]${account.balance:.2f}[/bold white]")
+                self.query_one("#hdr-eq", Label).update(f"Eq: [bold white]${account.equity:.2f}[/bold white]")
+                self.query_one("#hdr-margin", Label).update(f"Margin: [bold white]${account.margin_free:.2f}[/bold white]")
         except Exception:
             pass
+
+    def _get_uptime_str(self) -> str:
+        uptime_secs = int(time.time() - self.start_time)
+        d = uptime_secs // 86400
+        h = (uptime_secs % 86400) // 3600
+        m = (uptime_secs % 3600) // 60
+        s = uptime_secs % 60
+        if d > 0:
+            return f"{d}d {h}h {m}m {s}s"
+        return f"{h}h {m}m {s}s"
 
     # ── Loguru sink ───────────────────────────────────────────────────────────
 
@@ -837,6 +1364,11 @@ class XiphosApp(App):
             
         if self._should_display_log(level, record['message']):
             self.call_from_thread(self.log_msg, text)
+            
+        if level in ("ERROR", "CRITICAL"):
+            self.call_from_thread(self.trigger_alert, f"❌ Error: {record['message']}", "error")
+            self.call_from_thread(self.flash_widget_border, "#log-panel", "red")
+            self.call_from_thread(self.flash_widget_border, "#dash-log-panel", "red")
 
     def _should_display_log(self, level: str, message_text: str) -> bool:
         if self.current_log_level != "ALL":
@@ -862,10 +1394,22 @@ class XiphosApp(App):
                     log_panel.write(item["text"])
         except Exception:
             pass
+        try:
+            dash_panel = self.query_one("#dash-log-panel", LogPanel)
+            dash_panel.clear()
+            for item in self.log_history:
+                if self._should_display_log(item["level"], item["message"]):
+                    dash_panel.write(item["text"])
+        except Exception:
+            pass
 
     def log_msg(self, text: str) -> None:
         try:
             self.query_one("#log-panel", LogPanel).write(text)
+        except Exception:
+            pass
+        try:
+            self.query_one("#dash-log-panel", LogPanel).write(text)
         except Exception:
             pass
 
@@ -1054,7 +1598,6 @@ class XiphosApp(App):
             
         closed = 0
         for pos in positions:
-            # Close trade using an opposite order
             tick = mt5.symbol_info_tick(pos.symbol)
             if not tick: continue
             
@@ -1082,7 +1625,8 @@ class XiphosApp(App):
                 closed += 1
                 
         self.call_from_thread(self.log_msg, f"[bold green]✔ Panic close completed. {closed}/{len(positions)} trades closed.[/bold green]")
-        self.call_from_thread(self.action_stop_bot) # Automatically stop bot loop to prevent immediate re-entry
+        self.call_from_thread(self.trigger_alert, f"⚠️ Panic Close completed: {closed}/{len(positions)} trades closed.", "warn")
+        self.call_from_thread(self.action_stop_bot)
         self.call_from_thread(self._refresh_fast)
         
     @work(thread=True)
@@ -1091,7 +1635,6 @@ class XiphosApp(App):
             max_risk = int(self.query_one("#cfg-max-risk", Input).value)
             lot_size = float(self.query_one("#cfg-lot-size", Input).value)
             
-            # Update yaml
             with open("config/settings.yaml", "r") as f:
                 data = yaml.safe_load(f)
                 
@@ -1101,15 +1644,16 @@ class XiphosApp(App):
             with open("config/settings.yaml", "w") as f:
                 yaml.dump(data, f)
                 
-            # Update running config
             settings.trading.max_risk_trades = max_risk
             settings.trading.lot_size = lot_size
             
             self.call_from_thread(self.log_msg, f"[bold green]✔ Config saved. max_risk_trades={max_risk}, lot_size={lot_size}.[/bold green]")
+            self.call_from_thread(self.trigger_alert, "💾 Configuration saved to settings.yaml", "success")
             self.call_from_thread(self._refresh_fast)
             
         except Exception as e:
             self.call_from_thread(self.log_msg, f"[bold red]✘ Failed to save config: {e}[/bold red]")
+            self.call_from_thread(self.trigger_alert, f"✘ Failed to save config: {e}", "error")
 
     def action_start_bot(self) -> None:
         global _bot_running, _bot_thread
@@ -1119,6 +1663,7 @@ class XiphosApp(App):
         _bot_running = True
         _bot_thread = threading.Thread(target=_bot_loop, args=(self.log_msg,), daemon=True)
         _bot_thread.start()
+        self.trigger_alert("▶ Bot execution loop started.", "success")
 
     def action_stop_bot(self) -> None:
         global _bot_running
@@ -1126,6 +1671,7 @@ class XiphosApp(App):
             self.log_msg("[yellow]Bot is not running.[/yellow]")
             return
         _bot_running = False
+        self.trigger_alert("■ Bot execution loop stopped.", "warn")
 
     def action_pause_bot(self) -> None:
         self.log_msg("[yellow]⏸ Pause toggles APScheduler jobs (coming soon).[/yellow]")
@@ -1136,8 +1682,10 @@ class XiphosApp(App):
         try:
             process_m30_cycle()
             self.call_from_thread(self.log_msg, "[cyan]⚡ Force cycle complete.[/cyan]")
+            self.call_from_thread(self.trigger_alert, "⚡ Force cycle completed successfully.", "success")
         except Exception as e:
             self.call_from_thread(self.log_msg, f"[red]⚡ Force cycle error: {e}[/red]")
+            self.call_from_thread(self.trigger_alert, f"⚡ Force cycle error: {e}", "error")
         self.call_from_thread(self._refresh_fast)
 
     @on(Input.Changed, "#mw-search-input")

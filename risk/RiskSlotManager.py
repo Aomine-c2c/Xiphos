@@ -1,7 +1,8 @@
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
+from core.config import settings
 
 class RiskSlotManager:
-    GLOBAL_LIMIT = 4
+    GLOBAL_LIMIT = 4 # Kept for backward compatibility, but actual calculations use settings
 
     @staticmethod
     def _evaluate_positions(magic_filter=None):
@@ -53,12 +54,14 @@ class RiskSlotManager:
     @staticmethod
     def can_open_new_trade(magic_filter=None) -> bool:
         """ 
-        Returns True if the current risk-bearing positions are strictly less than the GLOBAL_LIMIT.
+        Returns True if the current risk-bearing positions are strictly less than the dynamic limit.
         Risk-free positions do not count towards this limit.
         """
-        return RiskSlotManager.get_risk_bearing_count(magic_filter) < RiskSlotManager.GLOBAL_LIMIT
+        limit = settings.trading.max_risk_trades
+        return RiskSlotManager.get_risk_bearing_count(magic_filter) < limit
 
     @staticmethod
     def get_available_slots(magic_filter=None) -> int:
         """ Returns exactly how many more risk-bearing trades can be opened. """
-        return max(0, RiskSlotManager.GLOBAL_LIMIT - RiskSlotManager.get_risk_bearing_count(magic_filter))
+        limit = settings.trading.max_risk_trades
+        return max(0, limit - RiskSlotManager.get_risk_bearing_count(magic_filter))

@@ -1,5 +1,5 @@
 import time
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
 from core.logger import log
 
 class MT5Connection:

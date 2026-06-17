@@ -1,5 +1,6 @@
 import time
-import MetaTrader5 as mt5
+from datetime import datetime
+from bridge.proxy import mt5
 from core.config import settings
 from core.logger import log
 from execution.connection import mt5_conn
@@ -17,16 +18,63 @@ from rich.live import Live
 
 last_processed_candles = {}
 
+last_cycle_data = {
+    "time": "",
+    "ranked_signals": [],
+    "gates": {
+        "gate_1_risk_slot": "PASS",
+        "gate_1_details": "0 / 4 USED",
+        "gate_2_correlation": "PASS",
+        "gate_2_details": "NO BLOCK",
+        "gate_3_fan_alignment": "PASS",
+        "gate_3_details": "VALID",
+        "gate_4_priority_filter": "PASS",
+        "gate_4_details": "0 SIGNALS RANKED",
+        "gate_5_hard_sl": "PASS",
+        "gate_5_details": "ENFORCED"
+    }
+}
+
 def process_m30_cycle():
     log.info("M30 Candle Close Detected. Initiating Evaluation Cycle...")
+    
+    last_cycle_data["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Gate 5: Hard SL is always enforced
+    last_cycle_data["gates"]["gate_5_hard_sl"] = "PASS"
+    last_cycle_data["gates"]["gate_5_details"] = "ENFORCED"
     
     if not mt5_conn.check_health():
         return
         
+    slots_limit = settings.trading.max_risk_trades
     slots_available = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
+    slots_used = slots_limit - slots_available
+    
+    # Gate 1: Risk Slot check
     if slots_available <= 0:
+        last_cycle_data["gates"]["gate_1_risk_slot"] = "FAIL"
+        last_cycle_data["gates"]["gate_1_details"] = f"{slots_used} / {slots_limit} USED"
+        last_cycle_data["gates"]["gate_2_correlation"] = "N/A"
+        last_cycle_data["gates"]["gate_3_fan_alignment"] = "N/A"
+        last_cycle_data["gates"]["gate_4_priority_filter"] = "N/A"
+        last_cycle_data["gates"]["gate_4_details"] = "0 RANKED"
+        last_cycle_data["ranked_signals"] = []
         log.info("Max risk slots reached. Skipping new signal evaluation.")
         return
+    else:
+        last_cycle_data["gates"]["gate_1_risk_slot"] = "PASS"
+        last_cycle_data["gates"]["gate_1_details"] = f"{slots_used} / {slots_limit} USED"
+        
+    # Gate 2: Correlation Guard check
+    blocked_count = 0
+    for name, symbols in settings.correlation_groups.items():
+        if symbols:
+            blocking = CorrelationGuard.get_blocking_positions(symbols[0], magic_filter=[135001, 135002])
+            if blocking:
+                blocked_count += 1
+    last_cycle_data["gates"]["gate_2_correlation"] = "PASS"
+    last_cycle_data["gates"]["gate_2_details"] = f"{blocked_count} BLOCKED" if blocked_count > 0 else "NO BLOCK"
         
     # Get currently open trades count per symbol to prevent duplication
     positions = mt5.positions_get()
@@ -69,12 +117,38 @@ def process_m30_cycle():
                 "ind_data": ind_data
             })
             
+    # Gate 3: Fan Alignment check
     if not signals:
+        last_cycle_data["gates"]["gate_3_fan_alignment"] = "FAIL"
+        last_cycle_data["gates"]["gate_3_details"] = "NO SIGNAL"
+        last_cycle_data["gates"]["gate_4_priority_filter"] = "N/A"
+        last_cycle_data["gates"]["gate_4_details"] = "0 RANKED"
+        last_cycle_data["ranked_signals"] = []
         log.info("No valid signals detected on this cycle.")
         return
+    else:
+        last_cycle_data["gates"]["gate_3_fan_alignment"] = "PASS"
+        last_cycle_data["gates"]["gate_3_details"] = f"{len(signals)} ALIGNED"
         
-    # Prioritize signals
+    # Prioritize signals (Gate 4)
     ranked_signals = SignalPriorityEngine.rank_signals(signals)
+    last_cycle_data["gates"]["gate_4_priority_filter"] = "PASS"
+    last_cycle_data["gates"]["gate_4_details"] = f"{len(ranked_signals)} RANKED"
+    
+    # Populate ranked signals for TUI display
+    last_cycle_data["ranked_signals"] = [
+        {
+            "priority": i + 1,
+            "symbol": sig["symbol"],
+            "direction": sig["type"],
+            "price": sig["ind_data"]["close"],
+            "sma200": sig["ind_data"]["sma_slow"],
+            "distance": int(sig["distance"] / (mt5.symbol_info(sig["symbol"]).point if mt5.symbol_info(sig["symbol"]) else 0.00001)),
+            "projected_risk": sig["projected_risk"],
+            "status": "PENDING"
+        }
+        for i, sig in enumerate(ranked_signals)
+    ]
     
     session_blocked_buckets = set()
     
@@ -132,6 +206,12 @@ def process_m30_cycle():
             last_processed_candles[sym] = sig['ind_data'].get('time', 0)
             if bucket_name:
                 session_blocked_buckets.add(bucket_name)
+            
+            # Set this symbol's status to APPROVED in last_cycle_data
+            for rs in last_cycle_data["ranked_signals"]:
+                if rs["symbol"] == sym:
+                    rs["status"] = "APPROVED"
+            
             log.info(f"Slots remaining after {sym}: {max(0, slots_available)}")
         else:
             log.warning(f"Orders failed or skipped for {sym}. Slots unchanged: {slots_available}")

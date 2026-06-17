@@ -25,7 +25,8 @@ def setup_logger():
         c_handler.setFormatter(c_format)
         f_handler.setFormatter(f_format)
 
-        logger.addHandler(c_handler)
+        if os.environ.get("XIPHOS_TUI") != "1":
+            logger.addHandler(c_handler)
         logger.addHandler(f_handler)
     
     return logger

@@ -6,6 +6,10 @@ from core.config import Settings, load_settings
 
 def test_load_valid_settings(tmp_path):
     valid_yaml = """
+    execution:
+      mode: "AUTO"
+      bridge_host: "127.0.0.1"
+      bridge_port: 8000
     trading:
       timeframe: "M30"
       max_risk_trades: 4
@@ -37,6 +41,10 @@ def test_load_valid_settings(tmp_path):
 
 def test_load_invalid_settings(tmp_path):
     invalid_yaml = """
+    execution:
+      mode: "AUTO"
+      bridge_host: "127.0.0.1"
+      bridge_port: 8000
     trading:
       timeframe: "M30"
       max_risk_trades: "four"  # Invalid type

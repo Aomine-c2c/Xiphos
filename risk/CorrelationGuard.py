@@ -1,21 +1,15 @@
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
+from core.config import settings
 from typing import List, Optional
 
 class CorrelationGuard:
-    # Default predefined buckets based on user requirements.
-    # Can be overridden or extended as needed.
-    BUCKETS = {
-        "Group 1": ["EURUSD", "GBPUSD"],
-        "Group 2": ["XAUUSD", "XAGUSD"]
-    }
-
     @staticmethod
     def get_bucket(symbol: str) -> Optional[List[str]]:
         """
         Returns the bucket (list of symbols) containing the specified symbol.
         Returns None if the symbol does not belong to any bucket.
         """
-        for group_name, symbols in CorrelationGuard.BUCKETS.items():
+        for group_name, symbols in settings.correlation_groups.items():
             if symbol in symbols:
                 return symbols
         return None
