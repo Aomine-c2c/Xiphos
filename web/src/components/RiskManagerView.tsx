@@ -5,13 +5,13 @@ import { Shield, CheckCircle, Lock } from "lucide-react";
 import { useTradingStore } from "../store/useTradingStore";
 
 export default function RiskManagerView() {
-  const { positions } = useTradingStore();
+  const { account, positions } = useTradingStore();
   const [maxRiskSlots, setMaxRiskSlots] = useState(4);
   const [correlationLimit, setCorrelationLimit] = useState(70);
 
   const usedSlots = positions.filter(p => p.risk_status === "RISK").length;
   const slotPct = Math.round((usedSlots / maxRiskSlots) * 100);
-  const currentDrawdown = 1.2;
+  const currentDrawdown = 1.2; // Could derive from performanceMetrics in the future
   const drawdownLimit = 5.0;
   const drawdownPct = Math.round((currentDrawdown / drawdownLimit) * 100);
 
@@ -21,12 +21,19 @@ export default function RiskManagerView() {
   const currencyWeight = Math.round((currencyLots / totalLots) * 100);
   const metalWeight = 100 - currencyWeight;
 
-  const symbolRiskData = [
-    { symbol: "EURUSD", group: "G1", exposure: "0.12 lots", pnl: "-0.28%", pnlPos: false, status: "SAFE" },
-    { symbol: "GBPUSD", group: "G1", exposure: "0.08 lots", pnl: "-0.15%", pnlPos: false, status: "SAFE" },
-    { symbol: "XAUUSD", group: "G2", exposure: "0.01 lots", pnl: "+0.42%", pnlPos: true, status: "SAFE" },
-    { symbol: "XAGUSD", group: "G2", exposure: "0.01 lots", pnl: "+0.11%", pnlPos: true, status: "SAFE" },
-  ];
+  const symbolRiskData = positions.map(p => {
+    const isCurrency = ["EURUSD", "GBPUSD"].includes(p.symbol);
+    const pnlPct = account.balance > 0 ? (p.profit / account.balance) * 100 : 0;
+    
+    return {
+      symbol: p.symbol,
+      group: isCurrency ? "G1" : "G2",
+      exposure: `${p.volume.toFixed(2)} lots`,
+      pnl: `${pnlPct > 0 ? '+' : ''}${pnlPct.toFixed(2)}%`,
+      pnlPos: pnlPct >= 0,
+      status: p.risk_status === "RISK" ? "WARN" : "SAFE"
+    };
+  });
 
   const marginMeters = [
     { label: "Margin Alarm Threshold", val: "200% MIN", progress: 85, color: "#00D26A" },

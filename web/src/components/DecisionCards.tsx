@@ -5,7 +5,7 @@ import { useTradingStore } from "../store/useTradingStore";
 import { Check, ShieldAlert, Cpu } from "lucide-react";
 
 export default function DecisionCards() {
-  const { gates, sendCommand } = useTradingStore();
+  const { gates, rankedSignals, sendCommand } = useTradingStore();
 
   const handleEngage = () => {
     alert("Signal engaged. Dispatched order execution package to direct broker link.");
@@ -15,6 +15,16 @@ export default function DecisionCards() {
   const handleDismiss = () => {
     alert("Signal dismissed. Purging current cycle candidate.");
   };
+
+  const topSignal = rankedSignals && rankedSignals.length > 0 ? rankedSignals[0] : null;
+
+  if (!topSignal) {
+    return (
+      <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm p-4 font-mono select-none text-[10px] text-[#6f7e90] flex items-center justify-center h-full">
+        NO ACTIVE SIGNALS PENDING DECISION
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm flex flex-col overflow-hidden font-mono select-none">
@@ -32,20 +42,20 @@ export default function DecisionCards() {
         <div className="flex justify-between items-start border-b border-slate-950 pb-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-base font-black text-white">EURUSD</span>
-              <span className="text-[9px] bg-[#00D26A] text-black font-black px-2 py-0.5 rounded-sm">
-                BUY
+              <span className="text-base font-black text-white">{topSignal.symbol}</span>
+              <span className={`text-[9px] font-black px-2 py-0.5 rounded-sm ${topSignal.direction === 'BUY' ? 'bg-[#00D26A] text-black' : 'bg-[#FF4D4D] text-white'}`}>
+                {topSignal.direction}
               </span>
             </div>
             <span className="text-[9px] text-[#425062] font-bold">
-              TRIGGER TIME: <span className="text-white">14:30:00</span>
+              TRIGGER TIME: <span className="text-white">LIVE</span>
             </span>
           </div>
 
           <div className="text-right space-y-1">
             <span className="text-[10px] text-[#8e9aa8] uppercase font-bold block leading-none">DISTANCE</span>
             <span className="text-xl font-black text-[#00A8FF] glow-blue leading-none">
-              715 <span className="text-[10px] text-[#8e9aa8] font-bold">pts</span>
+              {topSignal.distance} <span className="text-[10px] text-[#8e9aa8] font-bold">pts</span>
             </span>
           </div>
         </div>
@@ -58,18 +68,18 @@ export default function DecisionCards() {
 
           <div className="grid grid-cols-2 gap-2">
             {[
-              { id: 1, name: "RISK SLOTS", status: "PASS", color: "#00D26A" },
-              { id: 2, name: "CORRELATION", status: "PASS", color: "#00D26A" },
-              { id: 3, name: "FAN ALIGNMENT", status: "PASS", color: "#00D26A" },
-              { id: 4, name: "PRIORITY RANK", status: "PASS", color: "#00D26A" }
+              { id: 1, name: "RISK SLOTS", status: gates?.gate_1_risk_slot || "WAIT", color: gates?.gate_1_risk_slot === "PASS" ? "#00D26A" : "#FFB020" },
+              { id: 2, name: "CORRELATION", status: gates?.gate_2_correlation || "WAIT", color: gates?.gate_2_correlation === "PASS" ? "#00D26A" : "#FFB020" },
+              { id: 3, name: "FAN ALIGNMENT", status: gates?.gate_3_fan_alignment || "WAIT", color: gates?.gate_3_fan_alignment === "PASS" ? "#00D26A" : "#FFB020" },
+              { id: 4, name: "PRIORITY RANK", status: gates?.gate_4_priority_filter || "WAIT", color: gates?.gate_4_priority_filter === "PASS" ? "#00D26A" : "#FFB020" }
             ].map((gate) => (
               <div key={gate.id} className="flex items-center justify-between border border-slate-950 p-2 rounded-sm bg-slate-950/20 text-[10px]">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[#00A8FF] font-black text-[8px]">G{gate.id}</span>
                   <span className="text-white font-bold">{gate.name}</span>
                 </div>
-                <span className="text-[#00D26A] font-black text-[9px] flex items-center gap-0.5">
-                  <Check className="h-3 w-3" /> PASS
+                <span style={{ color: gate.color }} className="font-black text-[9px] flex items-center gap-0.5">
+                  <Check className="h-3 w-3" /> {gate.status}
                 </span>
               </div>
             ))}
