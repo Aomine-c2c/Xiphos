@@ -358,7 +358,8 @@ def compile_system_state():
             "cpu": cpu_pct,
             "memory": mem_mb
         },
-        "correlation_matrix": correlation_engine.get_matrix()
+        "correlation_matrix": correlation_engine.get_matrix(),
+        "performance_metrics": sm.get_performance_metrics()
     }
 
 # Periodical update dispatcher loop

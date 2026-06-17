@@ -71,6 +71,16 @@ export interface RankedSignal {
   status: string;
 }
 
+export interface PerformanceMetrics {
+  total_trades: number;
+  win_rate: number;
+  total_profit: number;
+  profit_factor: number;
+  max_drawdown: number;
+  sharpe_ratio: number;
+  equity_curve: number[];
+}
+
 export interface LogItem {
   timestamp: string;
   level: string;
@@ -101,6 +111,7 @@ interface TradingStore {
   logs: LogItem[];
   chatMessages: ChatMessage[];
   correlationMatrix: Record<string, Record<string, string>>;
+  performanceMetrics: PerformanceMetrics;
   
   ws: WebSocket | null;
   
@@ -276,6 +287,16 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   
   correlationMatrix: {},
   
+  performanceMetrics: {
+    total_trades: 0,
+    win_rate: 0,
+    total_profit: 0,
+    profit_factor: 0,
+    max_drawdown: 0,
+    sharpe_ratio: 0,
+    equity_curve: [100.0]
+  },
+  
   ws: null,
   
   connectWebSocket: () => {
@@ -327,7 +348,8 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
               gates: Object.keys(data.gates || {}).length > 0 ? data.gates : get().gates,
               lastCycleTime: data.last_cycle_time || get().lastCycleTime,
               systemStats: data.system_stats || get().systemStats,
-              correlationMatrix: data.correlation_matrix || get().correlationMatrix
+              correlationMatrix: data.correlation_matrix || get().correlationMatrix,
+              performanceMetrics: data.performance_metrics || get().performanceMetrics
             });
             break;
             

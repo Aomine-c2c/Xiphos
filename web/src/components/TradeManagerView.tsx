@@ -3,18 +3,12 @@
 import React, { useState } from "react";
 import { Sliders, ShieldCheck, Terminal } from "lucide-react";
 
+import { useTradingStore } from "../store/useTradingStore";
+
 export default function TradeManagerView() {
+  const { logs } = useTradingStore();
   const [scalperActive, setScalperActive] = useState(true);
   const [runnerActive, setRunnerActive] = useState(true);
-
-  const [execLog] = useState<string[]>([
-    "[08:24:11] SCALPER: Signal on EURUSD M30 — EMA fan aligned BULLISH",
-    "[08:22:44] RUNNER: Trailing SL moved to SMA200 on XAUUSD",
-    "[08:19:30] RISK: Correlation guard check — GROUP 2 at 44% (SAFE)",
-    "[08:15:02] SCALPER: Breakeven locked on ticket #240820",
-    "[08:12:18] SYSTEM: WebSocket reconnected to API server",
-    "[08:08:45] RUNNER: New position opened — XAGUSD BUY 0.01 @ 33.24",
-  ]);
 
   const bots = [
     { id: "135001", name: "TRADE A — SCALPER", role: "Scalper", active: scalperActive, lastSignal: "08:24:11", symbol: "EURUSD M30", color: "#FFB020" as const },
@@ -130,11 +124,11 @@ export default function TradeManagerView() {
                 <span>LIVE EXECUTION LOG</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A] animate-pulse ml-auto" />
               </div>
-              <div className="space-y-1.5">
-                {execLog.map((log, idx) => (
+              <div className="space-y-1.5 overflow-y-auto max-h-[200px]">
+                {logs.slice(-10).map((log, idx) => (
                   <div key={idx} className="flex gap-2 text-[9px]">
                     <span className="text-[#425062] shrink-0">&gt;</span>
-                    <span className="text-[#ccd6e0]">{log}</span>
+                    <span className="text-[#ccd6e0]">{log.formatted}</span>
                   </div>
                 ))}
               </div>

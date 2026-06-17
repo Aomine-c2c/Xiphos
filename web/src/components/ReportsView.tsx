@@ -5,10 +5,10 @@ import { FileText, TrendingUp, Download, Award } from "lucide-react";
 import { useTradingStore } from "../store/useTradingStore";
 
 export default function ReportsView() {
-  const { account } = useTradingStore();
+  const { account, performanceMetrics } = useTradingStore();
 
-  const balanceHistory = [100.00, 100.00, 102.10, 102.10, 104.85, 104.85, 114.30, 114.30, 117.30, 117.30, 127.45];
-  const equityHistory =  [100.00, 102.10, 101.60, 104.85, 103.90, 109.10, 114.30, 113.80, 117.30, 122.50, 127.45];
+  const balanceHistory = performanceMetrics?.equity_curve || [100.0];
+  const equityHistory = performanceMetrics?.equity_curve || [100.0];
 
   const reportsList = [
     { id: "R-9402", type: "AUDIT LOG", name: "DAILY_PERFORMANCE_2026_06_16.csv", date: "2026-06-16", size: "12 KB" },
@@ -18,10 +18,10 @@ export default function ReportsView() {
   ];
 
   const kpis = [
-    { label: "PROFIT FACTOR", value: "3.45", sub: "HIGH EFFICIENCY", color: "#00D26A" },
-    { label: "BEST MONTH", value: "+$18.40", sub: "MAY 2026", color: "#00A8FF" },
-    { label: "WORST MONTH", value: "-$2.10", sub: "APR 2026", color: "#FF4D4D" },
-    { label: "TOTAL RETURN", value: "+27.45%", sub: "SINCE INCEPTION", color: "#00D26A" },
+    { label: "PROFIT FACTOR", value: performanceMetrics?.profit_factor.toFixed(2) || "0.00", sub: "EFFICIENCY RATING", color: "#00D26A" },
+    { label: "WIN RATE", value: `${performanceMetrics?.win_rate.toFixed(1) || 0}%`, sub: "RELIABILITY", color: "#00A8FF" },
+    { label: "MAX DRAWDOWN", value: `-$${performanceMetrics?.max_drawdown.toFixed(2) || 0}`, sub: "PEAK TO TROUGH", color: "#FF4D4D" },
+    { label: "TOTAL RETURN", value: `+$${performanceMetrics?.total_profit.toFixed(2) || 0}`, sub: "SINCE INCEPTION", color: "#00D26A" },
   ];
 
   const drawChart = () => {
@@ -188,7 +188,7 @@ export default function ReportsView() {
             <span>XIPHOS STRATEGY COMPLIANCE STATEMENT</span>
           </div>
           <span className="text-[#8e9aa8] text-[9px]">
-            PROFIT FACTOR: <span className="text-[#00D26A] font-black">3.45 (HIGH EFFICIENCY)</span>
+            PROFIT FACTOR: <span className="text-[#00D26A] font-black">{performanceMetrics?.profit_factor.toFixed(2) || "0.00"} (HIGH EFFICIENCY)</span>
           </span>
         </div>
       </div>

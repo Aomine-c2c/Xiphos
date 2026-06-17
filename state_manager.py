@@ -105,6 +105,10 @@ class StateManager:
             max_dd = 0.0
             profits = []
             
+            # Start the curve with the base starting equity (we can assume 100 for percentage visualization or pull actual if known)
+            equity_curve = [100.0]
+            current_equity = 100.0
+            
             for row in rows:
                 p = row['profit'] or 0.0
                 profits.append(p)
@@ -119,11 +123,14 @@ class StateManager:
                 if current_equity > peak:
                     peak = current_equity
                 
+                
                 dd = peak - current_equity
                 if dd > max_dd:
                     max_dd = dd
                     
-            total_profit = current_equity
+                equity_curve.append(current_equity)
+                    
+            total_profit = current_equity - 100.0
             win_rate = (wins / total * 100) if total > 0 else 0.0
             profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float('inf') if gross_profit > 0 else 0.0
             
@@ -143,7 +150,8 @@ class StateManager:
                 "total_profit": total_profit,
                 "profit_factor": profit_factor,
                 "max_drawdown": max_dd,
-                "sharpe_ratio": sharpe
+                "sharpe_ratio": sharpe,
+                "equity_curve": equity_curve
             }
 
     def get_strategy_performance_metrics(self):
