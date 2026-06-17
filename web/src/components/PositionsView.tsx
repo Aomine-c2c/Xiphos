@@ -186,6 +186,7 @@ export default function PositionsView() {
               <RightPanel />
             </div>
           </div>
+        </div>
       </div>
 
       {/* Footer */}
