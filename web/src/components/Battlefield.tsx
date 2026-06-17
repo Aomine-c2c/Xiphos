@@ -22,28 +22,26 @@ export default function Battlefield() {
 
   // Nodes position coordinates inside 260x110 viewport with extended telemetry
   const nodes: NodeData[] = [
-    { id: "EURUSD", name: "EURUSD", x: 130, y: 18, status: "RISK-BEARING", direction: "BUY", confidence: "92%", rank: "#2", color: "#FF4D4D" },
-    { id: "GBPUSD", name: "GBPUSD", x: 210, y: 55, status: "BLOCKED", direction: "BUY", confidence: "78%", rank: "#3", color: "#FFB020" },
-    { id: "XAUUSD", name: "XAUUSD", x: 130, y: 92, status: "RISK-FREE", direction: "BUY", confidence: "94%", rank: "#1", color: "#00D26A" },
-    { id: "XAGUSD", name: "XAGUSD", x: 50, y: 55, status: "RISK-FREE", direction: "BUY", confidence: "72%", rank: "#4", color: "#00D26A" }
+    { id: "EURUSD", name: "EURUSD", x: 130, y: 20, status: "RISK-BEARING", direction: "BUY", confidence: "92", rank: "#2", color: "#FF4D4D" },
+    { id: "GBPUSD", name: "GBPUSD", x: 210, y: 55, status: "BLOCKED", direction: "BUY", confidence: "78", rank: "#3", color: "#FFB020" },
+    { id: "XAUUSD", name: "XAUUSD", x: 130, y: 90, status: "RISK-FREE", direction: "BUY", confidence: "94", rank: "#1", color: "#00D26A" },
+    { id: "XAGUSD", name: "XAGUSD", x: 50, y: 55, status: "RISK-FREE", direction: "BUY", confidence: "72", rank: "#4", color: "#00D26A" }
   ];
 
   // Links representing correlation strengths
   const links = [
-    { source: "EURUSD", target: "GBPUSD", correlation: "92%", type: "high-threat", color: "#FF4D4D" },
-    { source: "XAUUSD", target: "XAGUSD", correlation: "89%", type: "high", color: "#FFB020" },
-    { source: "EURUSD", target: "XAUUSD", correlation: "25%", type: "low", color: "#425062" },
-    { source: "EURUSD", target: "XAGUSD", correlation: "22%", type: "low", color: "#425062" },
-    { source: "GBPUSD", target: "XAUUSD", correlation: "24%", type: "low", color: "#425062" },
-    { source: "GBPUSD", target: "XAGUSD", correlation: "21%", type: "low", color: "#425062" }
+    { source: "EURUSD", target: "GBPUSD", correlation: "92", type: "high-threat", color: "#FF4D4D" },
+    { source: "XAUUSD", target: "XAGUSD", correlation: "89", type: "high", color: "#FFB020" },
+    { source: "EURUSD", target: "XAUUSD", correlation: "25", type: "low", color: "#425062" },
+    { source: "EURUSD", target: "XAGUSD", correlation: "22", type: "low", color: "#425062" },
+    { source: "GBPUSD", target: "XAUUSD", correlation: "24", type: "low", color: "#425062" },
+    { source: "GBPUSD", target: "XAGUSD", correlation: "21", type: "low", color: "#425062" }
   ];
 
-  // Evolve Typography: Title +40% (text-[11px] -> text-[15px])
-  // Section Headers +30% (text-[8px] -> text-[11px])
   return (
     <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm flex flex-col overflow-hidden font-mono select-none relative h-full justify-between">
       
-      {/* Title Header (+40% scaled: text-[15px]) */}
+      {/* Title Header */}
       <div className="p-2.5 border-b border-slate-950 flex items-center justify-between bg-[#0a101b]/40 flex-shrink-0">
         <span className="text-[14px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
           MARKET COMMAND GRAPH
@@ -63,6 +61,9 @@ export default function Battlefield() {
             const toNode = nodes.find((n) => n.id === link.target)!;
             const isThreat = link.type === "high-threat";
             const isHigh = link.type === "high";
+            const corrValue = parseInt(link.correlation);
+            // Dynamic edge thickness based on correlation (max ~3px, min 0.5px)
+            const strokeThickness = Math.max(0.5, (corrValue / 100) * 3);
 
             return (
               <g key={idx}>
@@ -72,7 +73,7 @@ export default function Battlefield() {
                   x2={toNode.x}
                   y2={toNode.y}
                   stroke={link.color}
-                  strokeWidth={isThreat ? 2 : isHigh ? 1.5 : 1}
+                  strokeWidth={strokeThickness}
                   strokeDasharray={isThreat || isHigh ? "none" : "3,3"}
                   className={isThreat ? "animate-pulse" : ""}
                 />
@@ -96,7 +97,7 @@ export default function Battlefield() {
                   fontSize="7.5"
                   fontWeight="black"
                 >
-                  {link.correlation}
+                  {link.correlation}%
                 </text>
               </g>
             );
@@ -105,6 +106,10 @@ export default function Battlefield() {
           {/* Nodes rendering */}
           {nodes.map((node) => {
             const isSelected = selectedNode?.id === node.id;
+            const confValue = parseInt(node.confidence);
+            // Dynamic node size based on confidence (max ~18, min 10)
+            const nodeRadius = Math.max(10, (confValue / 100) * 18);
+
             return (
               <g
                 key={node.id}
@@ -115,7 +120,7 @@ export default function Battlefield() {
                 <circle
                   cx={node.x}
                   cy={node.y}
-                  r={15}
+                  r={nodeRadius}
                   fill="#0E1525"
                   stroke={isSelected ? "#00A8FF" : node.color}
                   strokeWidth={isSelected ? 2.5 : 1.5}
@@ -162,7 +167,7 @@ export default function Battlefield() {
                 RANK: <span className="text-xiphos-blue font-black">{selectedNode.rank}</span>
               </div>
               <div>
-                CONFIDENCE: <span className="text-[#00D26A] font-black">{selectedNode.confidence}</span>
+                CONFIDENCE: <span className="text-[#00D26A] font-black">{selectedNode.confidence}%</span>
               </div>
               <div>
                 RISK STATE: <span className="text-white font-bold">{selectedNode.status}</span>
@@ -175,7 +180,7 @@ export default function Battlefield() {
         )}
       </div>
 
-      {/* Legend Area (+30% scaled: text-[8px] -> text-[10.5px]) */}
+      {/* Legend Area */}
       <div className="p-3 border-t border-slate-950 flex items-center justify-between text-[10px] text-[#6f7e90] font-black bg-[#0E1525] flex-shrink-0">
         <div className="flex items-center gap-1">
           <span className="h-1.5 w-1.5 rounded-full bg-[#FF4D4D]" />
