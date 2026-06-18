@@ -14,17 +14,17 @@ export default function WarRoom() {
   const portfolioHealth = "EXCELLENT";
 
   return (
-    <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm p-4 font-mono select-none flex flex-col justify-between h-full">
+    <div className="bg-[#0E1525]/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm p-4 font-mono select-none flex flex-col justify-between h-full transition-all duration-300 hover:border-xiphos-blue/40">
       
       {/* 6-Card Grid Row */}
       <div className="grid grid-cols-6 gap-4">
         
         {/* Card 1: Equity */}
         <div className="bg-[#070B14]/60 border border-slate-900/60 p-3.5 rounded-sm flex flex-col justify-between h-[105px] relative overflow-hidden group hover:border-[#00D26A]/50 transition-colors">
-          <span className="text-[10px] text-[#8e9aa8] uppercase tracking-wider font-bold z-10">
+          <span className="text-[16px] text-[#8e9aa8] uppercase tracking-wider font-bold z-10">
             EQUITY
           </span>
-          <span className="text-xl font-black text-white mt-1 leading-none z-10">
+          <span className="text-3xl font-black text-white mt-1 leading-none z-10">
             ${account.equity.toFixed(2)}
           </span>
           {/* Equity SVG Area Chart with Gradient */}
@@ -50,10 +50,10 @@ export default function WarRoom() {
 
         {/* Card 2: Balance */}
         <div className="bg-[#070B14]/60 border border-slate-900/60 p-3.5 rounded-sm flex flex-col justify-between h-[105px] relative overflow-hidden group hover:border-[#00D26A]/50 transition-colors">
-          <span className="text-[10px] text-[#8e9aa8] uppercase tracking-wider font-bold z-10">
+          <span className="text-[16px] text-[#8e9aa8] uppercase tracking-wider font-bold z-10">
             BALANCE
           </span>
-          <span className="text-xl font-black text-white mt-1 leading-none z-10">
+          <span className="text-3xl font-black text-white mt-1 leading-none z-10">
             ${account.balance.toFixed(2)}
           </span>
           {/* Balance SVG Line Chart */}
@@ -80,14 +80,14 @@ export default function WarRoom() {
 
         {/* Card 3: Net Profit */}
         <div className="bg-[#070B14]/60 border border-slate-900/60 p-3.5 rounded-sm flex flex-col justify-between h-[105px]">
-          <span className="text-[10px] text-[#8e9aa8] uppercase tracking-wider font-bold">
+          <span className="text-[16px] text-[#8e9aa8] uppercase tracking-wider font-bold">
             NET PROFIT
           </span>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-xl font-black text-[#00D26A] leading-none">
+            <span className="text-3xl font-black text-[#00D26A] leading-none">
               +$27.45
             </span>
-            <span className="text-[10px] text-[#00D26A] font-black leading-none bg-[#00D26A]/10 px-1 py-0.5 rounded-sm border border-[#00D26A]/20">
+            <span className="text-[16px] text-[#00D26A] font-black leading-none bg-[#00D26A]/10 px-1 py-0.5 rounded-sm border border-[#00D26A]/20">
               +27.45%
             </span>
           </div>
@@ -102,7 +102,7 @@ export default function WarRoom() {
                 onMouseLeave={() => setHoveredBar(null)}
               >
                 {hoveredBar === i && (
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#070B14] border border-slate-700 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm z-50">
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-[#070B14] border border-slate-700 text-white text-[14px] font-bold px-1.5 py-0.5 rounded-sm z-50">
                     +${(height * 0.5).toFixed(1)}
                   </div>
                 )}
@@ -113,7 +113,7 @@ export default function WarRoom() {
 
         {/* Card 4: Win Rate (Double Ring) */}
         <div className="bg-[#070B14]/60 border border-slate-900/60 p-3.5 rounded-sm flex flex-col justify-between h-[105px] items-center text-center">
-          <span className="text-[10px] text-[#8e9aa8] uppercase tracking-wider font-bold w-full text-left">
+          <span className="text-[16px] text-[#8e9aa8] uppercase tracking-wider font-bold w-full text-left">
             WIN RATE
           </span>
           <div className="relative w-16 h-16 flex items-center justify-center mt-1">
@@ -146,7 +146,7 @@ export default function WarRoom() {
                 strokeLinecap="round"
               />
             </svg>
-            <span className="text-sm font-black text-white z-10 leading-none">
+            <span className="text-3xl font-black text-white z-10 leading-none">
               74%
             </span>
           </div>
@@ -154,14 +154,14 @@ export default function WarRoom() {
 
         {/* Card 5: Profit Factor */}
         <div className="bg-[#070B14]/60 border border-slate-900/60 p-3.5 rounded-sm flex flex-col justify-between h-[105px]">
-          <span className="text-[10px] text-[#8e9aa8] uppercase tracking-wider font-bold">
+          <span className="text-[16px] text-[#8e9aa8] uppercase tracking-wider font-bold">
             PROFIT FACTOR
           </span>
-          <span className="text-xl font-black text-white mt-1 leading-none">
+          <span className="text-3xl font-black text-white mt-1 leading-none">
             2.35
           </span>
           <div className="mt-3">
-            <div className="flex justify-between text-[8px] text-[#6f7e90] font-black mb-1">
+            <div className="flex justify-between text-[14px] text-[#6f7e90] font-black mb-1">
               <span>GROSS LOSS: $18.20</span>
               <span>GROSS WIN: $42.77</span>
             </div>
@@ -174,14 +174,14 @@ export default function WarRoom() {
 
         {/* Card 6: Drawdown */}
         <div className="bg-[#070B14]/60 border border-slate-900/60 p-3.5 rounded-sm flex flex-col justify-between h-[105px]">
-          <span className="text-[10px] text-[#8e9aa8] uppercase tracking-wider font-bold">
+          <span className="text-[16px] text-[#8e9aa8] uppercase tracking-wider font-bold">
             MAX DRAWDOWN
           </span>
-          <span className="text-xl font-black text-[#FF4D4D] mt-1 leading-none">
+          <span className="text-3xl font-black text-[#FF4D4D] mt-1 leading-none">
             3.12%
           </span>
           <div className="mt-3">
-            <div className="flex justify-between text-[8px] text-[#6f7e90] font-black mb-1">
+            <div className="flex justify-between text-[14px] text-[#6f7e90] font-black mb-1">
               <span>CURRENT</span>
               <span>LIMIT 5.0%</span>
             </div>
@@ -197,7 +197,7 @@ export default function WarRoom() {
       </div>
 
       {/* Upgraded Secondary Metadata Row w/ Migrated Risk Stats */}
-      <div className="bg-[#070B14]/80 border border-slate-900 rounded-sm p-3 mt-4 flex items-center justify-between text-[10px] text-[#8e9aa8] font-black tracking-wide leading-none">
+      <div className="bg-[#070B14]/80 border border-slate-900 rounded-sm p-3 mt-4 flex items-center justify-between text-[16px] text-[#8e9aa8] font-black tracking-wide leading-none">
         
         {/* Performance Stats */}
         <div className="flex items-center gap-6">
@@ -241,6 +241,14 @@ export default function WarRoom() {
             <span className="text-[#00D26A] bg-[#00D26A]/10 px-1.5 py-0.5 rounded-[1px] border border-[#00D26A]/20">
               {portfolioHealth}
             </span>
+          </div>
+          <div className="flex gap-2 items-center ml-6">
+            <button 
+              onClick={() => { if(window.confirm('EMERGENCY: Close ALL Positions?')) useTradingStore.getState().sendCommand('panic_close'); }} 
+              className="px-3 py-1 bg-[#FF4D4D]/20 hover:bg-[#FF4D4D]/80 hover:text-white text-[#FF4D4D] border border-[#FF4D4D]/40 rounded-sm text-[16px] uppercase font-black transition-all shadow-[0_0_10px_rgba(255,77,77,0.2)] animate-pulse hover:animate-none cursor-pointer"
+            >
+              PANIC CLOSE
+            </button>
           </div>
         </div>
 

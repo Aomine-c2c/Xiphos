@@ -10,7 +10,7 @@ import threading
 import time
 import yaml
 import requests
-import sys
+
 from datetime import datetime, timedelta
 from loguru import logger
 
@@ -18,15 +18,15 @@ from textual import work, on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import (
-    Header, Footer, DataTable, RichLog, Label, Button, Static,
-    TabbedContent, TabPane, Input, Markdown
+    Footer, DataTable, RichLog, Label, Button, Static,
+    TabbedContent, TabPane, Input
 )
 from textual.screen import ModalScreen
 
 from bridge.proxy import mt5
 
 from core.config import settings
-from core.logger import log
+
 from execution.connection import mt5_conn
 from execution.orders import modify_sl
 from execution.trailing import trail_positions
@@ -44,6 +44,12 @@ import ctypes
 import os
 
 CURRENT_VERSION = "v2.0.0"
+
+ID_POS_PANEL = ID_POS_PANEL
+ID_DASH_POS_PANEL = ID_DASH_POS_PANEL
+ID_LOG_PANEL = ID_LOG_PANEL
+ID_MW_PANEL = ID_MW_PANEL
+ID_DASH_MW_PANEL = ID_DASH_MW_PANEL
 
 # ── Process Resource Tracking ──────────────────────────────────────────────────
 
@@ -69,7 +75,7 @@ class CPUTracker:
 def get_memory_usage_mb() -> float:
     try:
         if os.name == 'nt':
-            class PROCESS_MEMORY_COUNTERS(ctypes.Structure):
+            class ProcessMemoryCounters(ctypes.Structure):
                 _fields_ = [
                     ("cb", ctypes.c_ulong),
                     ("PageFaultCount", ctypes.c_ulong),
@@ -82,7 +88,7 @@ def get_memory_usage_mb() -> float:
                     ("PagefileUsage", ctypes.c_size_t),
                     ("PeakPagefileUsage", ctypes.c_size_t)
                 ]
-            counters = PROCESS_MEMORY_COUNTERS()
+            counters = ProcessMemoryCounters()
             process = ctypes.windll.kernel32.GetCurrentProcess()
             if ctypes.windll.psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), ctypes.sizeof(counters)):
                 return counters.WorkingSetSize / (1024 * 1024)
@@ -382,7 +388,7 @@ class CorrelationGuardPanel(Static):
                 has_rf = False
                 for p in positions:
                     if p.magic in [135001, 135002]:
-                        if p.sl == 0.0 or (p.type == mt5.ORDER_TYPE_BUY and p.sl < p.price_open) or (p.type == mt5.ORDER_TYPE_SELL and p.sl > p.price_open):
+                        if p.sl <= 0.0 or (p.type == mt5.ORDER_TYPE_BUY and p.sl < p.price_open) or (p.type == mt5.ORDER_TYPE_SELL and p.sl > p.price_open):
                             has_rb = True
                         else:
                             has_rf = True
@@ -444,7 +450,17 @@ class SystemHealthPanel(Static):
     def update_gates(self) -> None:
         gates = last_cycle_data.get("gates", {})
         for i in range(1, 6):
-            gate_key = f"gate_{i}_" + ("risk_slot" if i==1 else "correlation" if i==2 else "fan_alignment" if i==3 else "priority_filter" if i==4 else "hard_sl")
+            if i == 1:
+                suffix = "risk_slot"
+            elif i == 2:
+                suffix = "correlation"
+            elif i == 3:
+                suffix = "fan_alignment"
+            elif i == 4:
+                suffix = "priority_filter"
+            else:
+                suffix = "hard_sl"
+            gate_key = f"gate_{i}_{suffix}"
             status = gates.get(gate_key, "PASS")
             details = gates.get(f"gate_{i}_details", "ENFORCED" if i==5 else "")
             
@@ -533,7 +549,7 @@ class SystemPerformancePanel(Static):
     def update_data(self, cpu_pct: float, mem_mb: float) -> None:
         try:
             import shutil
-            total, used, free = shutil.disk_usage("/")
+            total, used, _ = shutil.disk_usage("/")
             disk_pct = (used / total) * 100.0
             total_gb = total / (1024**3)
             used_gb = used / (1024**3)
@@ -1003,8 +1019,13 @@ class XiphosApp(App):
             sl_c      = "green" if slots_av > 0 else "red"
         else:
             conn_str = "[bold red]● OFFLINE[/bold red]"
-            bal_str = eq_str = mg_str = pnl_str = "[dim]N/A[/dim]"
-            slots_us, slots_av, sl_c = 0, 0, "red"
+            bal_str = "[dim]N/A[/dim]"
+            eq_str = "[dim]N/A[/dim]"
+            mg_str = "[dim]N/A[/dim]"
+            pnl_str = "[dim]N/A[/dim]"
+            slots_us = 0
+            slots_av = 0
+            sl_c = "red"
 
         status_text = (
             f"  Connection   {conn_str}\n"
@@ -1033,14 +1054,14 @@ class XiphosApp(App):
                     pos_obj = next((p for p in positions if p.ticket == ticket), None)
                     sym = pos_obj.symbol if pos_obj else "Unknown"
                     self.call_from_thread(self.trigger_alert, f"📈 Opened position: {sym} (Ticket {ticket})", "success")
-                self.call_from_thread(self.flash_widget_border, "#positions-panel", "green")
-                self.call_from_thread(self.flash_widget_border, "#dash-pos-panel", "green")
+                self.call_from_thread(self.flash_widget_border, ID_POS_PANEL, "green")
+                self.call_from_thread(self.flash_widget_border, ID_DASH_POS_PANEL, "green")
                 
             if closed_tickets:
                 for ticket in closed_tickets:
                     self.call_from_thread(self.trigger_alert, f"📉 Closed position: Ticket {ticket}", "info")
-                self.call_from_thread(self.flash_widget_border, "#positions-panel", "red")
-                self.call_from_thread(self.flash_widget_border, "#dash-pos-panel", "red")
+                self.call_from_thread(self.flash_widget_border, ID_POS_PANEL, "red")
+                self.call_from_thread(self.flash_widget_border, ID_DASH_POS_PANEL, "red")
                 
         self.last_position_tickets = current_tickets
 
@@ -1062,11 +1083,11 @@ class XiphosApp(App):
             ))
             
         try:
-            self.call_from_thread(self.query_one("#positions-panel", PositionsTable).update_rows, rows)
+            self.call_from_thread(self.query_one(ID_POS_PANEL, PositionsTable).update_rows, rows)
         except Exception:
             pass
         try:
-            self.call_from_thread(self.query_one("#dash-pos-panel", PositionsTable).update_rows, rows)
+            self.call_from_thread(self.query_one(ID_DASH_POS_PANEL, PositionsTable).update_rows, rows)
         except Exception:
             pass
 
@@ -1109,7 +1130,7 @@ class XiphosApp(App):
                 e50 = data.get("e50_dist", 0)
                 s200 = data.get("s200_dist", 0)
                 
-                fmt_d = lambda d: f"[green]+{d:.0f}[/]" if d > 0 else f"[red]{d:.0f}[/]" if d < 0 else "0"
+                def fmt_d(d): return f"[green]+{d:.0f}[/]" if d > 0 else f"[red]{d:.0f}[/]" if d < 0 else "0"
                 
                 mw_rows.append((
                     sym, 
@@ -1120,11 +1141,11 @@ class XiphosApp(App):
                 ))
                 
         try:
-            self.call_from_thread(self.query_one("#mw-panel", MarketWatchTable).update_rows, mw_rows)
+            self.call_from_thread(self.query_one(ID_MW_PANEL, MarketWatchTable).update_rows, mw_rows)
         except Exception:
             pass
         try:
-            self.call_from_thread(self.query_one("#dash-mw-panel", MarketWatchTable).update_rows, mw_rows)
+            self.call_from_thread(self.query_one(ID_DASH_MW_PANEL, MarketWatchTable).update_rows, mw_rows)
         except Exception:
             pass
 
@@ -1367,7 +1388,7 @@ class XiphosApp(App):
             
         if level in ("ERROR", "CRITICAL"):
             self.call_from_thread(self.trigger_alert, f"❌ Error: {record['message']}", "error")
-            self.call_from_thread(self.flash_widget_border, "#log-panel", "red")
+            self.call_from_thread(self.flash_widget_border, ID_LOG_PANEL, "red")
             self.call_from_thread(self.flash_widget_border, "#dash-log-panel", "red")
 
     def _should_display_log(self, level: str, message_text: str) -> bool:
@@ -1387,7 +1408,7 @@ class XiphosApp(App):
 
     def _reapply_log_filters(self) -> None:
         try:
-            log_panel = self.query_one("#log-panel", LogPanel)
+            log_panel = self.query_one(ID_LOG_PANEL, LogPanel)
             log_panel.clear()
             for item in self.log_history:
                 if self._should_display_log(item["level"], item["message"]):
@@ -1405,7 +1426,7 @@ class XiphosApp(App):
 
     def log_msg(self, text: str) -> None:
         try:
-            self.query_one("#log-panel", LogPanel).write(text)
+            self.query_one(ID_LOG_PANEL, LogPanel).write(text)
         except Exception:
             pass
         try:

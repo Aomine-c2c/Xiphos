@@ -116,7 +116,7 @@ interface TradingStore {
   ws: WebSocket | null;
   
   connectWebSocket: () => void;
-  sendCommand: (type: string, data?: any) => void;
+  sendCommand: (type: string, data?: unknown) => void;
   sendChatMessage: (text: string) => void;
   modifySL: (ticket: number, symbol: string, newSL: number) => void;
   modifyTP: (ticket: number, symbol: string, newTP: number) => void;
@@ -324,7 +324,7 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
               positions: data.positions.length > 0 ? data.positions : get().positions,
               orders: data.orders && data.orders.length > 0 ? data.orders : get().orders,
               marketWatch: data.market_watch && data.market_watch.length > 0
-                ? data.market_watch.map((m: any) => {
+                ? data.market_watch.map((m: MarketWatchItem) => {
                     const existing = get().marketWatch.find((x) => x.symbol === m.symbol);
                     const oldHistory = existing?.history || [m.price];
                     const newHistory = [...oldHistory, m.price].slice(-20);

@@ -17,7 +17,7 @@ export default function DecisionFeed() {
   // Determine line style based on content keywords to match mockup screenshots
   const getLineStyle = (message: string) => {
     if (message.toLowerCase().includes("blocked") || message.toLowerCase().includes("violate")) {
-      return "text-[#FF4D4D]"; // Critical/Blocked Red
+      return "text-xiphos-red"; // Critical/Blocked Red
     }
     if (message.toLowerCase().includes("warn") || message.toLowerCase().includes("released")) {
       return "text-[#ccd6e0]";
@@ -26,10 +26,10 @@ export default function DecisionFeed() {
   };
 
   return (
-    <div className="w-full h-full bg-[#0E1525] border border-slate-900/80 flex flex-col font-mono select-none overflow-hidden">
+    <div className="w-full h-full bg-xiphos-panel border border-slate-900/80 flex flex-col font-mono select-none overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 p-3 border-b border-slate-950 flex items-center bg-[#0a101b]/45">
-        <span className="text-[10px] font-black text-xiphos-blue uppercase tracking-widest">
+      <div className="flex-shrink-0 p-3 border-b border-slate-950 flex items-center bg-xiphos-bg/40">
+        <span className="text-[16px] font-black text-xiphos-blue uppercase tracking-widest">
           AI DECISION FEED
         </span>
       </div>
@@ -37,7 +37,7 @@ export default function DecisionFeed() {
       {/* Log list (scrollable) */}
       <div
         ref={logContainerRef}
-        className="flex-1 p-3.5 overflow-hidden space-y-1.5 bg-[#070B14]/40 text-[9px] leading-relaxed"
+        className="flex-1 p-3.5 overflow-hidden space-y-1.5 bg-xiphos-bg/40 text-[15px] leading-relaxed"
       >
         {logs.length === 0 ? (
           <div className="text-center py-10 text-slate-700 font-bold">
@@ -45,7 +45,7 @@ export default function DecisionFeed() {
           </div>
         ) : (
           logs.slice(-5).map((log, i) => (
-            <div key={i} className="flex gap-4 items-start font-mono">
+            <div key={`${log.timestamp}-${i}`} className="flex gap-4 items-start font-mono">
               <span className="text-[#425062] font-bold shrink-0">{log.timestamp}</span>
               <span className={`break-all ${getLineStyle(log.message)}`}>
                 {log.message}
@@ -56,10 +56,10 @@ export default function DecisionFeed() {
       </div>
 
       {/* View Full Log Button Box */}
-      <div className="flex-shrink-0 p-2 border-t border-slate-950/60 bg-[#0a101b]/20 flex justify-center">
+      <div className="flex-shrink-0 p-2 border-t border-slate-950/60 bg-xiphos-bg/20 flex justify-center">
         <button
           onClick={() => alert("Loading historical session logs...")}
-          className="px-6 py-1.5 border border-[#1e293b] hover:border-xiphos-blue/30 text-[#6f7e90] hover:text-white text-[8px] font-black tracking-widest uppercase rounded-sm transition-all cursor-pointer bg-slate-950/30"
+          className="px-6 py-1.5 border border-[#1e293b] hover:border-xiphos-blue/30 text-[#6f7e90] hover:text-white text-[14px] font-black tracking-widest uppercase rounded-sm transition-all cursor-pointer bg-slate-950/30"
         >
           VIEW FULL LOG
         </button>

@@ -19,31 +19,31 @@ export default function Sidebar() {
   };
 
   const getHeatmapColor = (val: string) => {
-    if (val === "-") return { bg: "bg-[#070B14]/40", text: "text-[#425062]" };
+    if (val === "-") return { bg: "bg-xiphos-bg/40", text: "text-[#425062]" };
     const num = parseInt(val);
     const absNum = Math.abs(num);
     
-    if (absNum >= 80) return { bg: "bg-[#FF4D4D]/15", text: "text-[#FF4D4D]" };
-    if (absNum >= 50) return { bg: "bg-[#FFB020]/15", text: "text-[#FFB020]" };
-    return { bg: "bg-[#00D26A]/10", text: "text-[#00D26A]" };
+    if (absNum >= 80) return { bg: "bg-xiphos-red/15", text: "text-xiphos-red" };
+    if (absNum >= 50) return { bg: "bg-yellow-500/15", text: "text-yellow-500" };
+    return { bg: "bg-xiphos-green/10", text: "text-xiphos-green" };
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-[#0E1525] border border-slate-900/80 rounded-sm overflow-hidden select-none font-mono">
+    <div className="flex flex-col w-full h-full bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm overflow-hidden select-none font-mono transition-all duration-300 hover:border-xiphos-blue/40">
       
       {/* Title Header */}
-      <div className="p-3 border-b border-slate-950 flex items-center justify-between bg-[#0a101b]/40 flex-shrink-0">
-        <span className="text-[14px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
+      <div className="p-3 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40 flex-shrink-0">
+        <span className="text-[20px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
           <Activity className="h-5 w-5 text-xiphos-blue" />
           GLOBAL CORRELATION MATRIX
         </span>
       </div>
 
       {/* Matrix Area */}
-      <div className="p-3 flex-1 flex flex-col justify-between min-h-0 bg-[#070B14]/20 relative">
+      <div className="p-3 flex-1 flex flex-col justify-between min-h-0 bg-xiphos-bg/20 relative">
         
         {/* Header Row */}
-        <div className="grid grid-cols-10 gap-1 text-center text-[10.5px] font-black text-[#6f7e90] uppercase mb-1">
+        <div className="grid grid-cols-10 gap-1 text-center text-[12.5px] font-black text-[#6f7e90] uppercase mb-1">
           <div /> {/* Empty top-left cell */}
           {heatmapAssets.map(asset => (
             <div key={asset} className="flex items-end justify-center pb-1">
@@ -59,7 +59,7 @@ export default function Sidebar() {
           {heatmapAssets.map((assetRow, r) => (
             <div key={assetRow} className="grid grid-cols-10 gap-1 items-stretch flex-1">
               {/* Row Label */}
-              <div className="text-[#8e9aa8] text-[11px] font-black flex items-center justify-end pr-2 uppercase">
+              <div className="text-[#8e9aa8] text-[17px] font-black flex items-center justify-end pr-2 uppercase">
                 {assetRow}
               </div>
               
@@ -76,7 +76,7 @@ export default function Sidebar() {
                     onMouseEnter={() => setHoveredCell({ r, c })}
                     onMouseLeave={() => setHoveredCell(null)}
                     className={`
-                      relative flex items-center justify-center text-[12px] font-black rounded-sm cursor-crosshair transition-all duration-200
+                      relative flex items-center justify-center text-[18px] font-black rounded-sm cursor-crosshair transition-all duration-200
                       ${bg} ${text} 
                       ${val !== "-" && isHovered ? "ring-1 ring-white/50 scale-110 z-10 shadow-[0_0_10px_rgba(255,255,255,0.1)]" : ""}
                       ${val !== "-" && isCrossHovered && !isHovered ? "brightness-150" : ""}
@@ -86,14 +86,14 @@ export default function Sidebar() {
                     
                     {/* Hover Telemetry Overlay */}
                     {isHovered && val !== "-" && (
-                      <div className="absolute top-1/2 left-full ml-2 -translate-y-1/2 bg-[#070B14] border border-slate-700 p-2.5 rounded-sm z-50 whitespace-nowrap shadow-xl pointer-events-none text-left">
-                        <div className="text-[9.5px] text-[#6f7e90] font-bold uppercase mb-0.5">CORRELATION FACTOR</div>
-                        <div className="text-[12px] text-white font-black flex items-center gap-1.5">
+                      <div className="absolute top-1/2 left-full ml-2 -translate-y-1/2 bg-xiphos-bg border border-slate-700 p-2.5 rounded-sm z-50 whitespace-nowrap shadow-xl pointer-events-none text-left">
+                        <div className="text-[11.5px] text-[#6f7e90] font-bold uppercase mb-0.5">CORRELATION FACTOR</div>
+                        <div className="text-[18px] text-white font-black flex items-center gap-1.5">
                           <span>{assetRow}</span>
                           <span className="text-[#425062]">×</span>
                           <span>{heatmapAssets[c]}</span>
                         </div>
-                        <div className={`text-[18px] font-black mt-1 ${text}`}>
+                        <div className={`text-[24px] font-black mt-1 ${text}`}>
                           {val}%
                         </div>
                       </div>
@@ -108,18 +108,18 @@ export default function Sidebar() {
       </div>
 
       {/* Legend Footer */}
-      <div className="p-2.5 border-t border-slate-950 flex items-center justify-between text-[11px] text-[#6f7e90] font-black bg-[#0a101b]/40 flex-shrink-0">
+      <div className="p-2.5 border-t border-slate-950 flex items-center justify-between text-[17px] text-[#6f7e90] font-black bg-xiphos-bg/40 flex-shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-[#00D26A]" />
+            <span className="h-2 w-2 rounded-sm bg-xiphos-green" />
             <span>&lt; 50% (SAFE)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-[#FFB020]" />
+            <span className="h-2 w-2 rounded-sm bg-yellow-500" />
             <span>50-79% (WARN)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-[#FF4D4D]" />
+            <span className="h-2 w-2 rounded-sm bg-xiphos-red" />
             <span>&gt; 80% (DANGER)</span>
           </div>
         </div>

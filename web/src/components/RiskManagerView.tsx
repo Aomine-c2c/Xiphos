@@ -42,12 +42,12 @@ export default function RiskManagerView() {
   ];
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2">
-      <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm flex flex-col overflow-hidden flex-1 min-h-0">
+    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2 transition-all duration-300 hover:border-xiphos-blue/40">
+      <div className="bg-[#0E1525]/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm flex flex-col overflow-hidden flex-1 min-h-0">
 
         {/* Header */}
         <div className="p-3.5 border-b border-slate-950 flex items-center bg-[#0a101b]/40 flex-shrink-0">
-          <span className="text-xs font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
+          <span className="text-3xl font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
             <Shield className="h-4 w-4" />
             RISK ALLOCATION & SEGREGATION PROFILE
           </span>
@@ -61,12 +61,12 @@ export default function RiskManagerView() {
 
             {/* Slot usage */}
             <div>
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">RISK SLOT USAGE</span>
+              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">RISK SLOT USAGE</span>
               <div className="flex items-end gap-2 mb-2">
-                <span className={`text-[30px] font-black leading-none ${slotPct > 75 ? "text-[#FF4D4D]" : slotPct > 50 ? "text-[#FFB020]" : "text-[#00D26A]"}`}>
+                <span className={`text-[36px] font-black leading-none ${slotPct > 75 ? "text-[#FF4D4D]" : slotPct > 50 ? "text-[#FFB020]" : "text-[#00D26A]"}`}>
                   {usedSlots}
                 </span>
-                <span className="text-[14px] text-[#425062] font-black mb-1">/ {maxRiskSlots}</span>
+                <span className="text-[20px] text-[#425062] font-black mb-1">/ {maxRiskSlots}</span>
               </div>
               <div className="h-3 w-full bg-slate-950 rounded-sm overflow-hidden border border-slate-900/50 mb-1">
                 <div className="h-full transition-all" style={{
@@ -74,33 +74,33 @@ export default function RiskManagerView() {
                   backgroundColor: slotPct > 75 ? "#FF4D4D" : slotPct > 50 ? "#FFB020" : "#00D26A"
                 }} />
               </div>
-              <div className="flex justify-between text-[8px] text-[#425062]">
+              <div className="flex justify-between text-[14px] text-[#425062]">
                 <span>0 SLOTS</span><span>MAX: {maxRiskSlots}</span>
               </div>
             </div>
 
             {/* Drawdown vs limit */}
             <div className="border-t border-slate-950 pt-3">
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">DRAWDOWN VS LIMIT</span>
+              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">DRAWDOWN VS LIMIT</span>
               <div className="flex items-end gap-2 mb-2">
-                <span className="text-[24px] font-black leading-none text-[#00D26A]">{currentDrawdown}%</span>
-                <span className="text-[11px] text-[#425062] font-bold mb-0.5">/ {drawdownLimit}%</span>
+                <span className="text-[30px] font-black leading-none text-[#00D26A]">{currentDrawdown}%</span>
+                <span className="text-[17px] text-[#425062] font-bold mb-0.5">/ {drawdownLimit}%</span>
               </div>
               <div className="h-3 w-full bg-slate-950 rounded-sm overflow-hidden border border-slate-900/50 mb-1">
                 <div className="h-full bg-[#00D26A] transition-all" style={{ width: `${drawdownPct}%` }} />
               </div>
-              <div className="flex justify-between text-[8px] text-[#425062]">
+              <div className="flex justify-between text-[14px] text-[#425062]">
                 <span>0%</span><span>LIMIT: {drawdownLimit}%</span>
               </div>
             </div>
 
             {/* Slot selector */}
             <div className="border-t border-slate-950 pt-3">
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">MAX SLOTS CONFIG</span>
+              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">MAX SLOTS CONFIG</span>
               <div className="flex gap-1">
                 {[2,3,4,5,6].map(n => (
                   <button key={n} onClick={() => setMaxRiskSlots(n)}
-                    className={`flex-1 py-1.5 text-[10px] font-black border rounded-sm cursor-pointer transition-all ${
+                    className={`flex-1 py-1.5 text-[16px] font-black border rounded-sm cursor-pointer transition-all ${
                       maxRiskSlots === n ? "bg-[#00A8FF]/10 border-[#00A8FF] text-[#00A8FF]" : "border-slate-900 text-[#6f7e90] hover:text-white"
                     }`}>{n}</button>
                 ))}
@@ -109,14 +109,39 @@ export default function RiskManagerView() {
 
             {/* Correlation threshold */}
             <div className="border-t border-slate-950 pt-3">
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">CORRELATION THRESHOLD</span>
+              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">CORRELATION THRESHOLD</span>
               <div className="flex gap-1">
                 {[50,60,70,80,90].map(p => (
                   <button key={p} onClick={() => setCorrelationLimit(p)}
-                    className={`flex-1 py-1.5 text-[9px] font-black border rounded-sm cursor-pointer transition-all ${
+                    className={`flex-1 py-1.5 text-[15px] font-black border rounded-sm cursor-pointer transition-all ${
                       correlationLimit === p ? "bg-[#FFB020]/10 border-[#FFB020] text-[#FFB020]" : "border-slate-900 text-[#6f7e90] hover:text-white"
                     }`}>{p}%</button>
                 ))}
+              </div>
+            </div>
+
+            {/* System Resources */}
+            <div className="border-t border-slate-950 pt-3">
+              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">SYSTEM RESOURCES</span>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <div className="flex justify-between text-[14px] font-bold text-[#8e9aa8] mb-1">
+                    <span>CPU LOAD</span>
+                    <span className="text-[#00A8FF]">24%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-950 rounded-sm overflow-hidden">
+                    <div className="h-full bg-[#00A8FF]" style={{ width: "24%" }} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between text-[14px] font-bold text-[#8e9aa8] mb-1">
+                    <span>RAM USAGE</span>
+                    <span className="text-[#FFB020]">48%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-slate-950 rounded-sm overflow-hidden">
+                    <div className="h-full bg-[#FFB020]" style={{ width: "48%" }} />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -124,7 +149,7 @@ export default function RiskManagerView() {
             <div className="border-t border-slate-950 pt-3 mt-auto">
               <button
                 onClick={() => alert("Safety lock engaged. System-wide entries suspended.")}
-                className="w-full py-2 bg-[#FF4D4D]/8 hover:bg-[#FF4D4D] hover:text-black border border-[#FF4D4D]/40 text-[#FF4D4D] text-[9px] font-black tracking-widest uppercase rounded-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                className="w-full py-2 bg-[#FF4D4D]/8 hover:bg-[#FF4D4D] hover:text-black border border-[#FF4D4D]/40 text-[#FF4D4D] text-[15px] font-black tracking-widest uppercase rounded-sm cursor-pointer transition-all flex items-center justify-center gap-1.5"
               >
                 <Lock className="h-3 w-3" /> LOCK SYSTEM ENTRIES
               </button>
@@ -137,13 +162,13 @@ export default function RiskManagerView() {
 
             {/* Per-symbol risk breakdown */}
             <div className="flex-1 min-h-0 flex flex-col">
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2 border-b border-slate-950 pb-1.5 flex-shrink-0">
+              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2 border-b border-slate-950 pb-1.5 flex-shrink-0">
                 PER-SYMBOL RISK BREAKDOWN
               </span>
               <div className="overflow-hidden flex-1 min-h-0">
-                <table className="w-full text-left text-[11px] border-collapse font-bold">
+                <table className="w-full text-left text-[17px] border-collapse font-bold">
                   <thead>
-                    <tr className="bg-slate-950/80 border-b border-slate-900 text-[#6f7e90] uppercase text-[9px]">
+                    <tr className="bg-slate-950/80 border-b border-slate-900 text-[#6f7e90] uppercase text-[15px]">
                       <th className="p-2.5 font-black">SYMBOL</th>
                       <th className="p-2.5 font-black">CORR GROUP</th>
                       <th className="p-2.5 font-black text-right">EXPOSURE</th>
@@ -154,16 +179,16 @@ export default function RiskManagerView() {
                   <tbody>
                     {symbolRiskData.map((row, idx) => (
                       <tr key={idx} className="border-b border-slate-950/60 hover:bg-[#070B14]/40 transition-colors">
-                        <td className="p-2.5 text-white font-black text-[12px]">{row.symbol}</td>
+                        <td className="p-2.5 text-white font-black text-[18px]">{row.symbol}</td>
                         <td className="p-2.5">
-                          <span className="px-2 py-0.5 text-[8px] font-black rounded-sm border border-[#00A8FF]/30 text-[#00A8FF] bg-[#00A8FF]/5 uppercase">
+                          <span className="px-2 py-0.5 text-[14px] font-black rounded-sm border border-[#00A8FF]/30 text-[#00A8FF] bg-[#00A8FF]/5 uppercase">
                             GROUP {row.group.replace("G","")}
                           </span>
                         </td>
                         <td className="p-2.5 text-right text-[#ccd6e0]">{row.exposure}</td>
                         <td className={`p-2.5 text-right font-black ${row.pnlPos ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>{row.pnl}</td>
                         <td className="p-2.5 text-center">
-                          <span className="px-2 py-0.5 text-[8px] font-black rounded-sm border border-[#00D26A]/30 text-[#00D26A] bg-[#00D26A]/5 uppercase">
+                          <span className="px-2 py-0.5 text-[14px] font-black rounded-sm border border-[#00D26A]/30 text-[#00D26A] bg-[#00D26A]/5 uppercase">
                             {row.status}
                           </span>
                         </td>
@@ -178,14 +203,14 @@ export default function RiskManagerView() {
             <div className="grid grid-cols-2 gap-4 flex-shrink-0">
               {/* Correlation guard */}
               <div className="bg-[#070B14]/40 border border-slate-900/60 rounded-sm p-3.5">
-                <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3">CORRELATION GUARD STATUS</span>
+                <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3">CORRELATION GUARD STATUS</span>
                 <div className="space-y-3">
                   {[
                     { label: "Group 1 (Currencies)", weight: currencyWeight, color: "#00A8FF" },
                     { label: "Group 2 (Metals)", weight: metalWeight, color: "#FFB020" },
                   ].map((item, idx) => (
                     <div key={idx}>
-                      <div className="flex justify-between text-[10px] font-bold text-[#8e9aa8] mb-1">
+                      <div className="flex justify-between text-[16px] font-bold text-[#8e9aa8] mb-1">
                         <span>{item.label}</span>
                         <span style={{ color: item.weight > correlationLimit ? "#FF4D4D" : item.color }} className="font-black">{item.weight}%</span>
                       </div>
@@ -195,7 +220,7 @@ export default function RiskManagerView() {
                           backgroundColor: item.weight > correlationLimit ? "#FF4D4D" : item.color
                         }} />
                       </div>
-                      <div className="text-[8px] text-[#425062] mt-0.5">LIMIT: {correlationLimit}%</div>
+                      <div className="text-[14px] text-[#425062] mt-0.5">LIMIT: {correlationLimit}%</div>
                     </div>
                   ))}
                 </div>
@@ -203,11 +228,11 @@ export default function RiskManagerView() {
 
               {/* Margin meters */}
               <div className="bg-[#070B14]/40 border border-slate-900/60 rounded-sm p-3.5">
-                <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3">MARGIN PROTECTION METERS</span>
+                <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3">MARGIN PROTECTION METERS</span>
                 <div className="space-y-3">
                   {marginMeters.map((item, idx) => (
                     <div key={idx}>
-                      <div className="flex justify-between text-[10px] font-bold text-[#8e9aa8] mb-1">
+                      <div className="flex justify-between text-[16px] font-bold text-[#8e9aa8] mb-1">
                         <span>{item.label}</span>
                         <span style={{ color: item.color }} className="font-black">{item.val}</span>
                       </div>
@@ -226,13 +251,13 @@ export default function RiskManagerView() {
       </div>
 
       {/* Footer */}
-      <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm p-3 flex-shrink-0">
-        <div className="flex items-center justify-between text-[10px] font-black">
+      <div className="bg-[#0E1525]/60 backdrop-blur-xl border border-[#00D26A]/20 shadow-[0_0_15px_rgba(0,210,106,0.05)] rounded-sm p-3 flex-shrink-0">
+        <div className="flex items-center justify-between text-[16px] font-black">
           <div className="flex items-center gap-2 text-[#00D26A]">
             <CheckCircle className="h-4 w-4" />
             <span>RISK ENGINE PASSIVE ALIGNMENT SECURED</span>
           </div>
-          <span className="text-[#8e9aa8] text-[9px]">
+          <span className="text-[#8e9aa8] text-[15px]">
             ACTIVE EXPOSURE: <span className="text-[#00A8FF] font-black">2.46% (SAFE)</span>
           </span>
         </div>

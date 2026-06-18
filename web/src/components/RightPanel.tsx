@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { ShieldAlert, Crosshair, Award } from "lucide-react";
+import { Award } from "lucide-react";
 
 export default function RightPanel() {
   const {
@@ -21,18 +21,18 @@ export default function RightPanel() {
   const riskBearingCount = positions.filter(p => p.risk_status === "RISK").length;
   const riskFreeCount = positions.filter(p => p.risk_status === "FREE").length;
 
-  // Evolve Typography: Title +40% (text-[11px] -> text-[15px])
-  // Section Headers +30% (text-[9px] -> text-[11px])
+  // Evolve Typography: Title +40% (text-[17px] -> text-[21px])
+  // Section Headers +30% (text-[15px] -> text-[17px])
   return (
     <div className="flex flex-col h-full overflow-hidden font-mono select-none bg-[#070B14]">
       
-      {/* Title Header (+40% scaled: text-[15px]) */}
+      {/* Title Header (+40% scaled: text-[21px]) */}
       <div className="flex-shrink-0 p-2.5 border-b border-slate-900/60 flex items-center justify-between bg-[#0a101b]/35">
-        <span className="text-[14.5px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
+        <span className="text-[16.5px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
           <Award className="h-4 w-4 text-xiphos-blue" />
           ACTIVE MISSION MONITOR ({positions.length})
         </span>
-        <div className="flex items-center gap-2 text-[9px] font-black">
+        <div className="flex items-center gap-2 text-[15px] font-black">
           <span className="px-2 py-0.5 border border-[#FF4D4D]/35 text-[#FF4D4D] bg-[#FF4D4D]/5 rounded-sm uppercase tracking-wide">
             RISK: {riskBearingCount}
           </span>
@@ -45,7 +45,7 @@ export default function RightPanel() {
       {/* Mission Cards List (Scrollable, limited to 3) */}
       <div className="flex-1 overflow-hidden p-2.5 space-y-2">
         {positions.length === 0 ? (
-          <div className="text-center py-20 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+          <div className="text-center py-20 text-slate-600 text-[17px] font-bold uppercase tracking-wider">
             [NO ACTIVE MISSION CARDS]
           </div>
         ) : (
@@ -88,23 +88,23 @@ export default function RightPanel() {
                 {/* Mission Card Header */}
                 <div className="flex justify-between items-center border-b border-slate-950 pb-1.5 mb-2.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[12px] font-black text-white">{pos.symbol}</span>
-                    <span className={`text-[8.5px] font-black px-1.5 py-0.2 rounded-sm leading-none ${
+                    <span className="text-[18px] font-black text-white">{pos.symbol}</span>
+                    <span className={`text-[10.5px] font-black px-1.5 py-0.2 rounded-sm leading-none ${
                       isBuy ? "bg-[#00D26A] text-black" : "bg-[#FF4D4D] text-white"
                     }`}>
                       {pos.type}
                     </span>
-                    <span className="text-[#6f7e90] text-[9.5px] font-bold">[{pos.ticket}]</span>
+                    <span className="text-[#6f7e90] text-[11.5px] font-bold">[{pos.ticket}]</span>
                   </div>
-                  <span className={`text-[12px] font-black ${
+                  <span className={`text-[18px] font-black ${
                     pos.profit >= 0 ? "text-[#00D26A]" : "text-[#FF4D4D]"
                   }`}>
                     {pos.profit >= 0 ? "+" : ""}${pos.profit.toFixed(2)}
                   </span>
                 </div>
 
-                {/* Mission Grid Details (+30% scaled labels: text-[9px] -> text-[11px]) */}
-                <div className="grid grid-cols-2 gap-2 text-[10.5px] text-[#8e9aa8]">
+                {/* Mission Grid Details (+30% scaled labels: text-[15px] -> text-[17px]) */}
+                <div className="grid grid-cols-2 gap-2 text-[12.5px] text-[#8e9aa8]">
                   <div className="space-y-0.5">
                     <div>
                       AGE: <span className="text-white font-bold">{tradeAge}</span>
@@ -137,7 +137,7 @@ export default function RightPanel() {
                     onClick={(e) => e.stopPropagation()}
                     className="absolute inset-0 bg-[#070b14]/95 flex flex-col justify-center items-center px-4 space-y-2.5 rounded-sm z-10"
                   >
-                    <span className="text-[9.5px] text-[#6f7e90] font-black tracking-wider uppercase">
+                    <span className="text-[11.5px] text-[#6f7e90] font-black tracking-wider uppercase">
                       MISSION CONTROLLER RUNTIME PIPELINE
                     </span>
                     <div className="flex gap-1.5 w-full max-w-[220px]">
@@ -146,7 +146,7 @@ export default function RightPanel() {
                           closePosition(pos.ticket, pos.symbol);
                           setActiveControlTicket(null);
                         }}
-                        className="flex-1 py-1.5 text-[9px] font-black bg-[#FF4D4D] text-black hover:bg-red-400 rounded-sm transition-all cursor-pointer"
+                        className="flex-1 py-1.5 text-[15px] font-black bg-[#FF4D4D] text-black hover:bg-red-400 rounded-sm transition-all cursor-pointer"
                       >
                         CLOSE
                       </button>
@@ -155,7 +155,7 @@ export default function RightPanel() {
                           partialClose(pos.ticket, pos.symbol);
                           setActiveControlTicket(null);
                         }}
-                        className="flex-1 py-1.5 text-[9px] font-black bg-[#FFB020] text-black hover:bg-amber-400 rounded-sm transition-all cursor-pointer"
+                        className="flex-1 py-1.5 text-[15px] font-black bg-[#FFB020] text-black hover:bg-amber-400 rounded-sm transition-all cursor-pointer"
                       >
                         50%
                       </button>
@@ -164,14 +164,14 @@ export default function RightPanel() {
                           breakeven(pos.ticket, pos.symbol);
                           setActiveControlTicket(null);
                         }}
-                        className="flex-1 py-1.5 text-[9px] font-black bg-[#00A8FF] text-black hover:bg-sky-400 rounded-sm transition-all cursor-pointer"
+                        className="flex-1 py-1.5 text-[15px] font-black bg-[#00A8FF] text-black hover:bg-sky-400 rounded-sm transition-all cursor-pointer"
                       >
                         BE
                       </button>
                     </div>
                     <button
                       onClick={() => setActiveControlTicket(null)}
-                      className="text-[9px] text-slate-500 hover:text-white underline cursor-pointer font-bold"
+                      className="text-[15px] text-slate-500 hover:text-white underline cursor-pointer font-bold"
                     >
                       Dismiss Actions
                     </button>

@@ -42,7 +42,7 @@ export default function SettingsView() {
     })();
   }, []);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     addLog("Updating platform configuration...");
     const payload = {
@@ -83,16 +83,16 @@ export default function SettingsView() {
 
   return (
     <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2">
-      <form onSubmit={handleSave} className="bg-[#0E1525] border border-slate-900/80 rounded-sm flex flex-col overflow-hidden flex-1 min-h-0">
+      <form onSubmit={handleSave} className="bg-xiphos-panel border border-slate-900/80 rounded-sm flex flex-col overflow-hidden flex-1 min-h-0">
 
         {/* Header */}
-        <div className="p-3.5 border-b border-slate-950 flex items-center justify-between bg-[#0a101b]/40 flex-shrink-0">
-          <span className="text-xs font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
+        <div className="p-3.5 border-b border-slate-950 flex items-center justify-between bg-[#0a101b]/40 shrink-0">
+          <span className="text-3xl font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
             <Settings className="h-4 w-4" />
             XIPHOS CONFIGURATION DIRECTORY
           </span>
           <button type="submit"
-            className="px-4 py-1.5 bg-[#00D26A] hover:bg-emerald-400 text-black text-[10px] font-black tracking-widest uppercase rounded-sm cursor-pointer transition-all flex items-center gap-1.5">
+            className="px-4 py-1.5 bg-xiphos-green hover:bg-emerald-400 text-black text-[16px] font-black tracking-widest uppercase rounded-sm cursor-pointer transition-all flex items-center gap-1.5">
             <Save className="h-3.5 w-3.5" /> SAVE CONFIG
           </button>
         </div>
@@ -102,25 +102,25 @@ export default function SettingsView() {
 
           {/* LEFT: System status */}
           <div className="col-span-3 border-r border-slate-900/60 p-4 flex flex-col gap-4 overflow-hidden">
-            <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block border-b border-slate-950 pb-1.5">
+            <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block border-b border-slate-950 pb-1.5">
               SYSTEM HEALTH STATUS
             </span>
 
             {systemStatuses.map(item => (
-              <div key={item.label} className={`bg-[#070B14]/40 border rounded-sm p-3 flex items-start justify-between gap-2 ${
-                item.ok ? "border-slate-900/60" : "border-[#FF4D4D]/30"
+              <div key={item.label} className={`bg-xiphos-bg/40 border rounded-sm p-3 flex items-start justify-between gap-2 ${
+                item.ok ? "border-slate-900/60" : "border-xiphos-red/30"
               }`}>
                 <div className="flex items-center gap-2">
-                  <item.icon className={`h-4 w-4 flex-shrink-0 ${item.ok ? "text-[#00D26A]" : "text-[#FF4D4D]"}`} />
+                  <item.icon className={`h-4 w-4 shrink-0 ${item.ok ? "text-xiphos-green" : "text-xiphos-red"}`} />
                   <div>
-                    <div className="text-[9px] text-[#6f7e90] font-black uppercase">{item.label}</div>
-                    <div className="text-[10px] text-[#425062]">{item.detail}</div>
+                    <div className="text-[15px] text-[#6f7e90] font-black uppercase">{item.label}</div>
+                    <div className="text-[16px] text-[#425062]">{item.detail}</div>
                   </div>
                 </div>
-                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-sm border uppercase flex-shrink-0 ${
+                <span className={`text-[14px] font-black px-1.5 py-0.5 rounded-sm border uppercase shrink-0 ${
                   item.ok
-                    ? "bg-[#00D26A]/5 border-[#00D26A]/30 text-[#00D26A]"
-                    : "bg-[#FF4D4D]/5 border-[#FF4D4D]/30 text-[#FF4D4D]"
+                    ? "bg-xiphos-green/5 border-xiphos-green/30 text-xiphos-green"
+                    : "bg-xiphos-red/5 border-xiphos-red/30 text-xiphos-red"
                 }`}>
                   {item.status}
                 </span>
@@ -129,13 +129,13 @@ export default function SettingsView() {
 
             {/* Console log */}
             <div className="border-t border-slate-950 pt-3 flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center gap-1.5 text-[9px] font-black text-xiphos-blue uppercase tracking-widest mb-2">
+              <div className="flex items-center gap-1.5 text-[15px] font-black text-xiphos-blue uppercase tracking-widest mb-2">
                 <Terminal className="h-3 w-3" />
                 <span>SETTINGS CONSOLE</span>
               </div>
               <div className="space-y-1 flex-1 min-h-0 overflow-hidden">
                 {consoleLogs.map((log, idx) => (
-                  <div key={idx} className="flex gap-1.5 text-[8px]">
+                  <div key={idx} className="flex gap-1.5 text-[14px]">
                     <span className="text-[#425062]">&gt;</span>
                     <span className="text-[#8e9aa8]">{log}</span>
                   </div>
@@ -148,27 +148,27 @@ export default function SettingsView() {
           <div className="col-span-9 p-4 flex flex-col gap-4 overflow-hidden">
 
             {/* Editable trading parameters */}
-            <div className="bg-[#070B14]/40 border border-slate-900/60 rounded-sm p-4 flex-shrink-0">
-              <span className="text-[9px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3 border-b border-slate-950 pb-1.5">
+            <div className="bg-xiphos-bg/40 border border-slate-900/60 rounded-sm p-4 shrink-0">
+              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-3 border-b border-slate-950 pb-1.5">
                 EXECUTION & TRADING RULES
               </span>
-              <div className="grid grid-cols-3 gap-4 text-[10px] text-[#8e9aa8]">
+              <div className="grid grid-cols-3 gap-4 text-[16px] text-[#8e9aa8]">
                 <div className="space-y-2">
-                  <label className="font-bold text-[9px] block">LOT SIZE</label>
-                  <input type="number" step="0.01" min="0.01" value={lotSize}
+                  <label htmlFor="lotSize" className="font-bold text-[15px] block">LOT SIZE</label>
+                  <input id="lotSize" title="Lot Size" type="number" step="0.01" min="0.01" value={lotSize}
                     onChange={e => setLotSize(Number(e.target.value))}
-                    className="w-full bg-[#070B14] border border-slate-900 text-white font-bold px-3 py-2 text-[11px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
+                    className="w-full bg-xiphos-bg border border-slate-900 text-white font-bold px-3 py-2 text-[17px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
                 </div>
                 <div className="space-y-2">
-                  <label className="font-bold text-[9px] block">MAX RISK TRADES</label>
-                  <input type="number" min="1" max="10" value={maxRiskTrades}
+                  <label htmlFor="maxRiskTrades" className="font-bold text-[15px] block">MAX RISK TRADES</label>
+                  <input id="maxRiskTrades" title="Max Risk Trades" type="number" min="1" max="10" value={maxRiskTrades}
                     onChange={e => setMaxRiskTrades(Number(e.target.value))}
-                    className="w-full bg-[#070B14] border border-slate-900 text-white font-bold px-3 py-2 text-[11px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
+                    className="w-full bg-xiphos-bg border border-slate-900 text-white font-bold px-3 py-2 text-[17px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
                 </div>
                 <div className="space-y-2">
-                  <label className="font-bold text-[9px] block">EXECUTION MODE</label>
-                  <select value={mode} onChange={e => setMode(e.target.value)}
-                    className="w-full bg-[#070B14] border border-slate-900 text-white font-bold px-3 py-2 text-[11px] outline-none focus:border-xiphos-blue rounded-sm transition-colors cursor-pointer">
+                  <label htmlFor="mode" className="font-bold text-[15px] block">EXECUTION MODE</label>
+                  <select id="mode" title="Execution Mode" value={mode} onChange={e => setMode(e.target.value)}
+                    className="w-full bg-xiphos-bg border border-slate-900 text-white font-bold px-3 py-2 text-[17px] outline-none focus:border-xiphos-blue rounded-sm transition-colors cursor-pointer">
                     <option value="DIRECT">DIRECT</option>
                     <option value="BRIDGE">BRIDGE</option>
                     <option value="AUTO">AUTO</option>
@@ -177,38 +177,38 @@ export default function SettingsView() {
                 {mode === "BRIDGE" && (
                   <>
                     <div className="space-y-2">
-                      <label className="font-bold text-[9px] block">BRIDGE HOST</label>
-                      <input type="text" value={bridgeHost} onChange={e => setBridgeHost(e.target.value)}
-                        className="w-full bg-[#070B14] border border-slate-900 text-white font-bold px-3 py-2 text-[11px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
+                      <label htmlFor="bridgeHost" className="font-bold text-[15px] block">BRIDGE HOST</label>
+                      <input id="bridgeHost" title="Bridge Host" type="text" value={bridgeHost} onChange={e => setBridgeHost(e.target.value)}
+                        className="w-full bg-xiphos-bg border border-slate-900 text-white font-bold px-3 py-2 text-[17px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
                     </div>
                     <div className="space-y-2">
-                      <label className="font-bold text-[9px] block">BRIDGE PORT</label>
-                      <input type="number" value={bridgePort} onChange={e => setBridgePort(Number(e.target.value))}
-                        className="w-full bg-[#070B14] border border-slate-900 text-white font-bold px-3 py-2 text-[11px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
+                      <label htmlFor="bridgePort" className="font-bold text-[15px] block">BRIDGE PORT</label>
+                      <input id="bridgePort" title="Bridge Port" type="number" value={bridgePort} onChange={e => setBridgePort(Number(e.target.value))}
+                        className="w-full bg-xiphos-bg border border-slate-900 text-white font-bold px-3 py-2 text-[17px] outline-none focus:border-xiphos-blue rounded-sm transition-colors" />
                     </div>
                   </>
                 )}
               </div>
-              <div className="mt-3 text-[8px] text-[#425062] border-t border-slate-950 pt-2.5">
+              <div className="mt-3 text-[14px] text-[#425062] border-t border-slate-950 pt-2.5">
                 ✓ Timeframe is statically locked to M30. Max Risk Trades must equal Risk Slots in the Sidebar.
               </div>
             </div>
 
             {/* Locked core strategy parameters */}
-            <div className="bg-[#070B14]/40 border border-slate-900/60 rounded-sm p-4 flex-1 min-h-0 flex flex-col">
-              <span className="text-[9px] text-[#FF4D4D] font-black uppercase tracking-wider block mb-3 border-b border-slate-950 pb-1.5 flex items-center gap-1.5 flex-shrink-0">
+            <div className="bg-xiphos-bg/40 border border-slate-900/60 rounded-sm p-4 flex-1 min-h-0 flex flex-col">
+              <span className="text-[15px] text-xiphos-red font-black uppercase tracking-wider block mb-3 border-b border-slate-950 pb-1.5 flex items-center gap-1.5 shrink-0">
                 <AlertTriangle className="h-3 w-3" />
                 LOCKED CORE STRATEGY PARAMETERS
               </span>
               <div className="grid grid-cols-3 gap-3 flex-1 min-h-0">
                 {lockedParams.map((param, idx) => (
                   <div key={idx} className="border border-slate-900/40 bg-slate-950/30 rounded-sm p-3">
-                    <div className="text-[8px] text-[#6f7e90] font-black uppercase tracking-wider mb-1.5">{param.label}</div>
-                    <div className="text-[15px] font-black text-slate-500">{param.value}</div>
+                    <div className="text-[14px] text-[#6f7e90] font-black uppercase tracking-wider mb-1.5">{param.label}</div>
+                    <div className="text-[21px] font-black text-slate-500">{param.value}</div>
                   </div>
                 ))}
               </div>
-              <div className="text-[8px] text-slate-600 leading-relaxed border-t border-slate-950 pt-2.5 mt-3 flex-shrink-0">
+              <div className="text-[14px] text-slate-600 leading-relaxed border-t border-slate-950 pt-2.5 mt-3 shrink-0">
                 ⚠ These parameters form the strategic foundation and cannot be modified via the client dashboard. Changes require direct config file access.
               </div>
             </div>
@@ -219,13 +219,13 @@ export default function SettingsView() {
       </form>
 
       {/* Footer */}
-      <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm p-3 flex-shrink-0">
-        <div className="flex items-center justify-between text-[10px] font-black">
-          <div className="flex items-center gap-2 text-[#00D26A]">
+      <div className="bg-xiphos-panel border border-slate-900/80 rounded-sm p-3 shrink-0">
+        <div className="flex items-center justify-between text-[16px] font-black">
+          <div className="flex items-center gap-2 text-xiphos-green">
             <CheckCircle className="h-4 w-4" />
             <span>XIPHOS CONFIGURATION DIRECTORY — SECURE RUNTIME MODE</span>
           </div>
-          <span className="text-[#8e9aa8] text-[9px]">
+          <span className="text-[#8e9aa8] text-[15px]">
             VERSION: <span className="text-white font-black">XIPHOS MISSION CORE v2.1.0</span>
           </span>
         </div>

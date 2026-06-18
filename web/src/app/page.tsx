@@ -6,7 +6,6 @@ import CenterPanel from "../components/CenterPanel";
 import ChatPanel from "../components/ChatPanel";
 import DecisionFeed from "../components/DecisionFeed";
 import DecisionCards from "../components/DecisionCards";
-import ConfidenceEngine from "../components/ConfidenceEngine";
 import RiskManagerView from "../components/RiskManagerView";
 import TradeManagerView from "../components/TradeManagerView";
 import SettingsView from "../components/SettingsView";
@@ -39,15 +38,15 @@ export default function Home() {
   }, [connectWebSocket]);
 
   const getTabClass = (tab: TabType) => {
-    const base = "flex items-center gap-1.5 px-4.5 h-full transition-all cursor-pointer border-b-2 text-[10px] font-black tracking-wider select-none";
+    const base = "flex items-center gap-1.5 px-4.5 h-full transition-all cursor-pointer border-b-2 text-[16px] font-black tracking-wider select-none";
     if (activeTab === tab) {
-      return `${base} bg-[#0E1525]/80 text-[#00A8FF] border-[#00A8FF]`;
+      return `${base} bg-xiphos-panel/80 text-xiphos-blue border-xiphos-blue`;
     }
     return `${base} hover:bg-slate-950/40 hover:text-white border-transparent text-[#6f7e90]`;
   };
 
   return (
-    <div className="h-screen max-h-screen flex flex-col bg-[#070B14] text-white font-mono select-none overflow-hidden scanline">
+    <div className="h-screen max-h-screen flex flex-col bg-xiphos-bg text-white font-mono select-none overflow-hidden scanline">
       
       {/* 1. TOP HEADER */}
       <Header />
@@ -133,94 +132,94 @@ export default function Home() {
       )}
 
       {/* 3. GLOBAL BOTTOM NAVIGATION BAR / FOOTER */}
-      <footer className="h-10 bg-[#070B14] border-t border-slate-900 flex items-center justify-between px-4 text-[10px] font-black tracking-wider text-[#6f7e90] shrink-0">
+      <footer className="h-10 bg-xiphos-bg border-t border-slate-900 flex items-center justify-between px-4 text-[16px] font-black tracking-wider text-[#6f7e90] shrink-0">
         
         {/* Left Side Tabs */}
         <div className="flex items-center h-full">
           
-          <div 
+          <button 
             onClick={() => setActiveTab("DASHBOARD")}
             className={getTabClass("DASHBOARD")}
           >
             <LayoutDashboard className="h-4 w-4" />
             <span>COMMAND CENTER</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("MARKETS")}
             className={getTabClass("MARKETS")}
           >
             <TrendingUp className="h-4 w-4" />
             <span>MARKETS</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("POSITIONS")}
             className={getTabClass("POSITIONS")}
           >
             <Briefcase className="h-4 w-4" />
             <span>POSITIONS</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("ORDERS")}
             className={getTabClass("ORDERS")}
           >
             <FileText className="h-4 w-4" />
             <span>ORDERS</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("RISK_MANAGER")}
             className={getTabClass("RISK_MANAGER")}
           >
             <Shield className="h-4 w-4" />
             <span>RISK MANAGER</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("TRADE_MANAGER")}
             className={getTabClass("TRADE_MANAGER")}
           >
             <Sliders className="h-4 w-4" />
             <span>TRADE MANAGER</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("ANALYTICS")}
             className={getTabClass("ANALYTICS")}
           >
             <BarChart3 className="h-4 w-4" />
             <span>ANALYTICS</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("REPORTS")}
             className={getTabClass("REPORTS")}
           >
             <FileSpreadsheet className="h-4 w-4" />
             <span>REPORTS</span>
-          </div>
+          </button>
 
-          <div 
+          <button 
             onClick={() => setActiveTab("SETTINGS")}
             className={getTabClass("SETTINGS")}
           >
             <Settings className="h-4 w-4" />
             <span>SETTINGS</span>
-          </div>
+          </button>
 
         </div>
 
         {/* Right Side Status & Slogan */}
         <div className="flex items-center gap-4.5 text-right">
           
-          <div className="flex items-center gap-1.5 text-[9px] font-bold">
+          <div className="flex items-center gap-1.5 text-[15px] font-bold">
             <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A] animate-pulse" />
             <span>Uptime: 2d 14h 32m</span>
           </div>
 
-          <span className="text-[9px] text-[#425062] font-black uppercase">
+          <span className="text-[15px] text-[#425062] font-black uppercase">
             XIPHOS MISSION CORE v2.1.0 - Built for Discipline. Engineered for Profit.
           </span>
 

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTradingStore } from "../store/useTradingStore";
 import { ShieldAlert, Info, X } from "lucide-react";
 
 interface NodeData {
@@ -17,7 +16,7 @@ interface NodeData {
 }
 
 export default function Battlefield() {
-  const { positions } = useTradingStore();
+  // Removed unused positions
   const [selectedNode, setSelectedNode] = useState<NodeData | null>(null);
 
   // Nodes position coordinates inside 260x110 viewport with extended telemetry
@@ -39,34 +38,34 @@ export default function Battlefield() {
   ];
 
   return (
-    <div className="bg-[#0E1525] border border-slate-900/80 rounded-sm flex flex-col overflow-hidden font-mono select-none relative h-full justify-between">
+    <div className="bg-xiphos-panel border border-slate-900/80 rounded-sm flex flex-col overflow-hidden font-mono select-none relative h-full justify-between">
       
       {/* Title Header */}
-      <div className="p-2.5 border-b border-slate-950 flex items-center justify-between bg-[#0a101b]/40 flex-shrink-0">
-        <span className="text-[14px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
+      <div className="p-2.5 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40 shrink-0">
+        <span className="text-[20px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
           MARKET COMMAND GRAPH
         </span>
-        <span className="text-[9px] bg-red-950/20 border border-red-900/50 text-[#FF4D4D] px-1.5 py-0.5 rounded-sm font-bold flex items-center gap-1">
+        <span className="text-[15px] bg-red-950/20 border border-red-900/50 text-xiphos-red px-1.5 py-0.5 rounded-sm font-bold flex items-center gap-1">
           <ShieldAlert className="h-3 w-3" /> SECURITY GATE ACTIVE
         </span>
       </div>
 
       {/* SVG network topology */}
-      <div className="p-2.5 flex-1 flex flex-col items-center justify-center bg-[#070B14]/30 relative min-h-0">
+      <div className="p-2.5 flex-1 flex flex-col items-center justify-center bg-xiphos-bg/30 relative min-h-0">
         
         <svg viewBox="0 0 260 110" className="w-full max-w-[280px] h-[110px] overflow-visible">
           {/* Links rendering */}
-          {links.map((link, idx) => {
+          {links.map((link) => {
             const fromNode = nodes.find((n) => n.id === link.source)!;
             const toNode = nodes.find((n) => n.id === link.target)!;
             const isThreat = link.type === "high-threat";
             const isHigh = link.type === "high";
-            const corrValue = parseInt(link.correlation);
+            const corrValue = Number.parseInt(link.correlation);
             // Dynamic edge thickness based on correlation (max ~3px, min 0.5px)
             const strokeThickness = Math.max(0.5, (corrValue / 100) * 3);
 
             return (
-              <g key={idx}>
+              <g key={`${link.source}-${link.target}`}>
                 <line
                   x1={fromNode.x}
                   y1={fromNode.y}
@@ -106,7 +105,7 @@ export default function Battlefield() {
           {/* Nodes rendering */}
           {nodes.map((node) => {
             const isSelected = selectedNode?.id === node.id;
-            const confValue = parseInt(node.confidence);
+            const confValue = Number.parseInt(node.confidence);
             // Dynamic node size based on confidence (max ~18, min 10)
             const nodeRadius = Math.max(10, (confValue / 100) * 18);
 
@@ -145,13 +144,13 @@ export default function Battlefield() {
 
         {/* Selected Node Telemetry HUD Overlay */}
         {selectedNode && (
-          <div className="absolute inset-0 bg-[#070b14]/95 border border-slate-900 rounded-sm p-2 flex flex-col justify-between z-10">
+          <div className="absolute inset-0 bg-xiphos-bg/95 border border-slate-900 rounded-sm p-2 flex flex-col justify-between z-10">
             <div className="flex items-center justify-between border-b border-slate-950 pb-1.5">
-              <span className="text-[11px] text-white font-black flex items-center gap-1">
+              <span className="text-[17px] text-white font-black flex items-center gap-1">
                 <Info className="h-3.5 w-3.5 text-xiphos-blue" />
                 HUD DATA: {selectedNode.name}
               </span>
-              <button
+              <button title="Close HUD"
                 onClick={() => setSelectedNode(null)}
                 className="text-slate-500 hover:text-white cursor-pointer"
               >
@@ -159,21 +158,21 @@ export default function Battlefield() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[9.5px] text-[#8e9aa8] py-1">
+            <div className="grid grid-cols-2 gap-2 text-[11.5px] text-[#8e9aa8] py-1">
               <div>
                 DIRECTION: <span className="text-white font-black">{selectedNode.direction}</span>
               </div>
               <div>
                 RANK: <span className="text-xiphos-blue font-black">{selectedNode.rank}</span>
               </div>
-              <div>
-                CONFIDENCE: <span className="text-[#00D26A] font-black">{selectedNode.confidence}%</span>
+              <div className="mb-1">
+                CONFIDENCE: <span className="text-xiphos-green font-black">{selectedNode.confidence}%</span>
               </div>
               <div>
                 RISK STATE: <span className="text-white font-bold">{selectedNode.status}</span>
               </div>
             </div>
-            <div className="text-[8px] text-[#6f7e90]">
+            <div className="text-[14px] text-[#6f7e90]">
               Click assets to probe active correlation linkages.
             </div>
           </div>
@@ -181,17 +180,17 @@ export default function Battlefield() {
       </div>
 
       {/* Legend Area */}
-      <div className="p-3 border-t border-slate-950 flex items-center justify-between text-[10px] text-[#6f7e90] font-black bg-[#0E1525] flex-shrink-0">
+      <div className="p-3 border-t border-slate-950 flex items-center justify-between text-[16px] text-[#6f7e90] font-black bg-xiphos-panel shrink-0">
         <div className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#FF4D4D]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-xiphos-red" />
           <span>BEARING</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green" />
           <span>FREE</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#FFB020]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-xiphos-orange" />
           <span>BLOCKED</span>
         </div>
       </div>

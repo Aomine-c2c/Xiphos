@@ -15,6 +15,16 @@ class CorrelationGuard:
         return None
 
     @staticmethod
+    def _is_pos_risk_bearing(pos) -> bool:
+        if pos.sl <= 0.0:
+            return True
+        if pos.type == mt5.ORDER_TYPE_BUY and pos.sl < pos.price_open:
+            return True
+        if pos.type == mt5.ORDER_TYPE_SELL and pos.sl > pos.price_open:
+            return True
+        return False
+
+    @staticmethod
     def get_blocking_positions(symbol: str, magic_filter=None) -> list:
         """
         Finds risk-bearing positions from OTHER assets in the same bucket.
@@ -26,30 +36,17 @@ class CorrelationGuard:
             return []
 
         positions = mt5.positions_get()
-        if positions is None:
+        if not positions:
             return []
 
         blocking_positions = []
         for pos in positions:
-            # We only care about other assets in the exact same bucket
-            if pos.symbol in bucket and pos.symbol != symbol:
-                if magic_filter is not None and pos.magic not in magic_filter:
-                    continue
-
-                is_risk_bearing = False
-                
-                # Naked trades are considered risk-bearing
-                if pos.sl == 0.0:
-                    is_risk_bearing = True
-                elif pos.type == mt5.ORDER_TYPE_BUY:
-                    if pos.sl < pos.price_open:
-                        is_risk_bearing = True
-                elif pos.type == mt5.ORDER_TYPE_SELL:
-                    if pos.sl > pos.price_open:
-                        is_risk_bearing = True
-
-                if is_risk_bearing:
-                    blocking_positions.append(pos)
+            if pos.symbol not in bucket or pos.symbol == symbol:
+                continue
+            if magic_filter is not None and pos.magic not in magic_filter:
+                continue
+            if CorrelationGuard._is_pos_risk_bearing(pos):
+                blocking_positions.append(pos)
 
         return blocking_positions
 

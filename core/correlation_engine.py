@@ -32,24 +32,41 @@ class CorrelationEngine:
         # Fallback to cache (even if stale) or empty
         return self.cache
 
+    def _fetch_prices(self) -> Dict[str, List[float]]:
+        prices = {}
+        for sym in self.symbols:
+            rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H1, 0, 500)
+            if rates is not None and len(rates) > 0:
+                prices[sym] = [r['close'] for r in rates]
+            else:
+                prices[sym] = [0.0] * 500
+                logger.warning(f"No historical data fetched for {sym} to compute correlation.")
+        return prices
+
+    def _build_result_matrix(self, corr_df: pd.DataFrame) -> Dict[str, Dict[str, str]]:
+        result_matrix = {}
+        for r_sym in self.symbols:
+            result_matrix[r_sym] = {}
+            for c_sym in self.symbols:
+                if r_sym not in corr_df.index or c_sym not in corr_df.columns or r_sym == c_sym:
+                    result_matrix[r_sym][c_sym] = "-"
+                else:
+                    val = corr_df.loc[r_sym, c_sym]
+                    if pd.isna(val):
+                        result_matrix[r_sym][c_sym] = "-"
+                    else:
+                        pct = int(round(val * 100))
+                        result_matrix[r_sym][c_sym] = str(pct)
+        return result_matrix
+
     def _compute_matrix(self) -> Dict[str, Dict[str, str]]:
         # Need MT5 to be connected
         if mt5.terminal_info() is None:
             return {}
 
-        prices = {}
-        # Fetch last 500 H1 bars for stability
-        for sym in self.symbols:
-            rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H1, 0, 500)
-            if rates is not None and len(rates) > 0:
-                # rates is a numpy array of tuples, we just need the 'close' price
-                prices[sym] = [r['close'] for r in rates]
-            else:
-                # Pad with zeros if no data to avoid breaking the 9x9 matrix shape
-                prices[sym] = [0.0] * 500
-                logger.warning(f"No historical data fetched for {sym} to compute correlation.")
+        prices = self._fetch_prices()
                 
-        # Make sure all arrays are the same length (they should be unless something is very wrong)
+        # Make sure all arrays are the same length
         min_len = min((len(v) for v in prices.values()), default=0)
         if min_len == 0:
             return {}
@@ -60,27 +77,7 @@ class CorrelationEngine:
         df = pd.DataFrame(prices)
         corr_df = df.corr(method='pearson')
         
-        result_matrix = {}
-        
-        for r_sym in self.symbols:
-            result_matrix[r_sym] = {}
-            for c_sym in self.symbols:
-                if r_sym not in corr_df.index or c_sym not in corr_df.columns:
-                    result_matrix[r_sym][c_sym] = "-"
-                    continue
-                    
-                if r_sym == c_sym:
-                    result_matrix[r_sym][c_sym] = "-"
-                else:
-                    val = corr_df.loc[r_sym, c_sym]
-                    if pd.isna(val):
-                        result_matrix[r_sym][c_sym] = "-"
-                    else:
-                        # Scale to percentage integer
-                        pct = int(round(val * 100))
-                        result_matrix[r_sym][c_sym] = str(pct)
-                        
-        return result_matrix
+        return self._build_result_matrix(corr_df)
 
 # Global singleton instance
 correlation_engine = CorrelationEngine()

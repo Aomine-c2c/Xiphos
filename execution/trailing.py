@@ -1,8 +1,32 @@
 from bridge.proxy import mt5
-from core.config import settings
+
 from core.logger import log
 from indicators.moving_averages import get_m30_indicators
 from execution.orders import modify_sl
+
+def _get_new_sl(pos, ind_data, symbol_info):
+    new_sl = None
+    if pos.magic == 135001:
+        new_sl = ind_data['ema_medium']
+    elif pos.magic == 135002:
+        new_sl = ind_data['sma_slow']
+    if new_sl is None:
+        return None
+    return round(float(new_sl), symbol_info.digits)
+
+def _trail_buy_position(pos, new_sl, stoplevel):
+    if new_sl > pos.sl:
+        tick = mt5.symbol_info_tick(pos.symbol)
+        if tick and new_sl < (tick.bid - stoplevel):
+            log.info(f"Trailing SL for {pos.symbol} BUY (Magic {pos.magic}) upward to {new_sl}")
+            modify_sl(pos.ticket, pos.symbol, new_sl)
+
+def _trail_sell_position(pos, new_sl, stoplevel):
+    if pos.sl <= 0.0 or new_sl < pos.sl:
+        tick = mt5.symbol_info_tick(pos.symbol)
+        if tick and new_sl > (tick.ask + stoplevel):
+            log.info(f"Trailing SL for {pos.symbol} SELL (Magic {pos.magic}) downward to {new_sl}")
+            modify_sl(pos.ticket, pos.symbol, new_sl)
 
 def trail_positions():
     """
@@ -23,40 +47,17 @@ def trail_positions():
         if not ind_data:
             continue
             
-        new_sl = None
-        
-        if pos.magic == 135001:
-            # Trail behind EMA50
-            new_sl = ind_data['ema_medium']
-        elif pos.magic == 135002:
-            # Trail behind SMA200
-            new_sl = ind_data['sma_slow']
-            
-        if new_sl is None:
-            continue
-            
-        # Get point sizes to avoid "Invalid Stops" errors (round to symbol digits)
         symbol_info = mt5.symbol_info(pos.symbol)
         if not symbol_info:
             continue
+
+        new_sl = _get_new_sl(pos, ind_data, symbol_info)
+        if new_sl is None:
+            continue
             
-        new_sl = round(float(new_sl), symbol_info.digits)
         stoplevel = symbol_info.trade_stops_level * symbol_info.point
         
-        # Check direction and ensure risk never widens
         if pos.type == mt5.ORDER_TYPE_BUY:
-            # Move SL upward only
-            if new_sl > pos.sl:
-                # Ensure new_sl is at least stoplevel below current price
-                tick = mt5.symbol_info_tick(pos.symbol)
-                if tick and new_sl < (tick.bid - stoplevel):
-                    log.info(f"Trailing SL for {pos.symbol} BUY (Magic {pos.magic}) upward to {new_sl}")
-                    modify_sl(pos.ticket, pos.symbol, new_sl)
+            _trail_buy_position(pos, new_sl, stoplevel)
         elif pos.type == mt5.ORDER_TYPE_SELL:
-            # Move SL downward only
-            if pos.sl == 0.0 or new_sl < pos.sl:
-                # Ensure new_sl is at least stoplevel above current price
-                tick = mt5.symbol_info_tick(pos.symbol)
-                if tick and new_sl > (tick.ask + stoplevel):
-                    log.info(f"Trailing SL for {pos.symbol} SELL (Magic {pos.magic}) downward to {new_sl}")
-                    modify_sl(pos.ticket, pos.symbol, new_sl)
+            _trail_sell_position(pos, new_sl, stoplevel)

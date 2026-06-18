@@ -5,13 +5,23 @@ class RiskSlotManager:
     GLOBAL_LIMIT = 4 # Kept for backward compatibility, but actual calculations use settings
 
     @staticmethod
+    def _is_risk_bearing(pos) -> bool:
+        if pos.sl <= 0.0:
+            return True
+        if pos.type == mt5.ORDER_TYPE_BUY:
+            return pos.sl < pos.price_open
+        if pos.type == mt5.ORDER_TYPE_SELL:
+            return pos.sl > pos.price_open
+        return False
+
+    @staticmethod
     def _evaluate_positions(magic_filter=None):
         """
         Internal helper to evaluate all positions and categorize them into risk-bearing and risk-free.
         If magic_filter is provided (list of ints), only trades matching those magic numbers are evaluated.
         """
         positions = mt5.positions_get()
-        if positions is None:
+        if not positions:
             return [], []
 
         risk_bearing = []
@@ -21,21 +31,10 @@ class RiskSlotManager:
             if magic_filter is not None and pos.magic not in magic_filter:
                 continue
 
-            # Naked trades (no SL) are considered inherently risk-bearing
-            if pos.sl == 0.0:
+            if RiskSlotManager._is_risk_bearing(pos):
                 risk_bearing.append(pos)
-                continue
-
-            if pos.type == mt5.ORDER_TYPE_BUY:
-                if pos.sl < pos.price_open:
-                    risk_bearing.append(pos)
-                else:
-                    risk_free.append(pos)
-            elif pos.type == mt5.ORDER_TYPE_SELL:
-                if pos.sl > pos.price_open:
-                    risk_bearing.append(pos)
-                else:
-                    risk_free.append(pos)
+            else:
+                risk_free.append(pos)
 
         return risk_bearing, risk_free
 

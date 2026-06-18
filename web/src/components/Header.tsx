@@ -2,15 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { Shield, Radio, Activity, Terminal } from "lucide-react";
+import { Radio, Activity } from "lucide-react";
 
 export default function Header() {
   const {
-    connected,
-    botRunning,
-    mt5Connected,
     apiLatency,
-    account,
     connectWebSocket
   } = useTradingStore();
 
@@ -41,7 +37,7 @@ export default function Header() {
   }, [connectWebSocket]);
 
   return (
-    <header className="h-[56px] bg-[#070B14] border-b border-slate-900/80 flex items-center justify-between px-4 select-none font-mono">
+    <header className="h-[56px] bg-[#070B14]/70 backdrop-blur-md border-b border-xiphos-blue/30 shadow-[0_0_15px_rgba(0,168,255,0.15)] flex items-center justify-between px-4 select-none font-mono relative z-50">
       
       {/* Left Title & Cyborg Logo */}
       <div className="flex items-center gap-3">
@@ -53,17 +49,17 @@ export default function Header() {
           </svg>
         </div>
         <div className="flex flex-col leading-none">
-          <span className="text-sm font-black text-white tracking-widest">XIPHOS</span>
-          <span className="text-[8px] text-xiphos-blue font-bold tracking-widest mt-0.5">AI TRADING COMMAND CENTER</span>
+          <span className="text-3xl font-black text-white tracking-widest">XIPHOS</span>
+          <span className="text-[14px] text-xiphos-blue font-bold tracking-widest mt-0.5">AI TRADING COMMAND CENTER</span>
         </div>
       </div>
 
       {/* Center Metrics & Status Badges */}
-      <div className="flex items-center gap-6 text-[10px] text-xiphos-muted">
+      <div className="flex items-center gap-6 text-[16px] text-xiphos-muted">
         
         {/* System Status */}
         <div className="flex flex-col items-center">
-          <span className="text-[8px] text-slate-500 font-bold">SYSTEM STATUS</span>
+          <span className="text-[14px] text-slate-500 font-bold">SYSTEM STATUS</span>
           <div className="flex items-center gap-1 mt-0.5">
             <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green animate-pulse" />
             <span className="text-xiphos-green font-bold uppercase">ACTIVE</span>
@@ -72,7 +68,7 @@ export default function Header() {
 
         {/* Market Scan */}
         <div className="flex flex-col items-center">
-          <span className="text-[8px] text-slate-500 font-bold">MARKET SCAN</span>
+          <span className="text-[14px] text-slate-500 font-bold">MARKET SCAN</span>
           <div className="flex items-center gap-1 mt-0.5">
             <Activity className="h-3 w-3 text-xiphos-green" />
             <span className="text-xiphos-green font-bold uppercase">RUNNING</span>
@@ -81,7 +77,7 @@ export default function Header() {
 
         {/* Ping */}
         <div className="flex flex-col items-center">
-          <span className="text-[8px] text-slate-500 font-bold">PING</span>
+          <span className="text-[14px] text-slate-500 font-bold">PING</span>
           <div className="flex items-center gap-1 mt-0.5">
             <Radio className="h-3 w-3 text-xiphos-green" />
             <span className="text-xiphos-green font-bold">{apiLatency} ms</span>
@@ -90,19 +86,19 @@ export default function Header() {
 
         {/* Broker */}
         <div className="flex flex-col">
-          <span className="text-[8px] text-slate-500 font-bold">BROKER</span>
+          <span className="text-[14px] text-slate-500 font-bold">BROKER</span>
           <span className="text-white font-bold mt-0.5">Deriv MT5</span>
         </div>
 
         {/* Server Time */}
         <div className="flex flex-col">
-          <span className="text-[8px] text-slate-500 font-bold">SERVER TIME</span>
+          <span className="text-[14px] text-slate-500 font-bold">SERVER TIME</span>
           <span className="text-white font-bold mt-0.5">{time}</span>
         </div>
 
         {/* Timeframe */}
         <div className="flex flex-col">
-          <span className="text-[8px] text-slate-500 font-bold">TIMEFRAME</span>
+          <span className="text-[14px] text-slate-500 font-bold">TIMEFRAME</span>
           <span className="text-white font-bold mt-0.5">M30</span>
         </div>
 
@@ -111,8 +107,8 @@ export default function Header() {
       {/* Right Core Details */}
       <div className="flex items-center gap-4 text-right">
         <div className="flex flex-col">
-          <span className="text-[10px] text-xiphos-blue font-bold tracking-wider leading-none">XIPHOS CORE v2.1.0</span>
-          <span className="text-[8px] text-slate-500 font-bold leading-none mt-0.5">Build: 2025.05.20</span>
+          <span className="text-[16px] text-xiphos-blue font-bold tracking-wider leading-none">XIPHOS CORE v2.1.0</span>
+          <span className="text-[14px] text-slate-500 font-bold leading-none mt-0.5">Build: 2025.05.20</span>
         </div>
       </div>
 
