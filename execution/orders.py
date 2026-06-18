@@ -64,7 +64,7 @@ def _get_supported_filling_modes(filling_bitmask, symbol):
         supported = [(mode, name) for mode, name, _ in all_modes]
     return supported
 
-def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume, sl_price):
+def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume, sl_price, magic, sig=None):
     for filling_mode, filling_name in supported_modes:
         request["type_filling"] = filling_mode
         check = mt5.order_check(request)
@@ -73,18 +73,37 @@ def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume
         elif check.retcode != 0:
             continue
 
+        start_time = time.perf_counter()
         result = _retry_wrapper(mt5.order_send, request)
+        latency_ms = (time.perf_counter() - start_time) * 1000
+
         if result:
             with db.get_connection() as conn:
                 conn.execute("""
                     INSERT INTO executions (ticket, action, details)
                     VALUES (?, ?, ?)
                 """, (result.order, "OPEN", f"{type_str} {symbol} at {result.price} (SL: {sl_price})"))
-            log.info(f"Trade successfully opened! Ticket: {result.order}")
+                
+                sma_200 = float(sig['ind_data']['sma_slow']) if sig and 'ind_data' in sig else 0.0
+                fast_ema = float(sig['ind_data']['ema_fast']) if sig and 'ind_data' in sig else 0.0
+                medium_ema = float(sig['ind_data']['ema_medium']) if sig and 'ind_data' in sig else 0.0
+                dist_sma = float(sig.get('distance', 0.0)) if sig else 0.0
+                proj_risk = float(sig.get('projected_risk', 0.0)) if sig else 0.0
+
+                conn.execute("""
+                    INSERT INTO trades (
+                        ticket, symbol, type, magic, volume, entry_price, sl_price, status,
+                        mfe, mae, sma_200, fast_ema, medium_ema, distance_to_sma, projected_risk, latency_ms
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    result.order, symbol, type_str, magic, float(volume), result.price, float(sl_price), "OPEN",
+                    0.0, 0.0, sma_200, fast_ema, medium_ema, dist_sma, proj_risk, latency_ms
+                ))
+            log.info(f"Trade successfully opened! Ticket: {result.order} (Latency: {latency_ms:.2f}ms)")
             return result
     return None
 
-def open_trade(symbol: str, type_str: str, volume: float, sl_price: float, magic: int):
+def open_trade(symbol: str, type_str: str, volume: float, sl_price: float, magic: int, sig: dict = None):
     if not _validate_trade_safety(symbol, sl_price): return None
     price, filling_bitmask = _get_trade_price_and_stoplevel(symbol, type_str, sl_price)
     if price is None: return None
@@ -97,7 +116,7 @@ def open_trade(symbol: str, type_str: str, volume: float, sl_price: float, magic
         "price": price, "sl": float(sl_price), "deviation": 20,
         "magic": magic, "comment": "Xiphos Framework", "type_time": mt5.ORDER_TIME_GTC,
     }
-    return _execute_order_with_modes(request, supported, symbol, type_str, volume, sl_price)
+    return _execute_order_with_modes(request, supported, symbol, type_str, volume, sl_price, magic, sig)
 
 
 def modify_sl(ticket: int, symbol: str, new_sl: float):

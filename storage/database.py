@@ -51,6 +51,23 @@ class Database:
                 )
             """)
             
+            # Deep Analytics Schema Migrations
+            new_columns = [
+                ("mfe", "REAL DEFAULT 0.0"),
+                ("mae", "REAL DEFAULT 0.0"),
+                ("sma_200", "REAL DEFAULT 0.0"),
+                ("fast_ema", "REAL DEFAULT 0.0"),
+                ("medium_ema", "REAL DEFAULT 0.0"),
+                ("distance_to_sma", "REAL DEFAULT 0.0"),
+                ("projected_risk", "REAL DEFAULT 0.0"),
+                ("latency_ms", "REAL DEFAULT 0.0"),
+            ]
+            for col_name, col_type in new_columns:
+                try:
+                    cursor.execute(f"ALTER TABLE trades ADD COLUMN {col_name} {col_type}")
+                except sqlite3.OperationalError:
+                    pass # Column already exists
+            
             # Signals Table
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS signals (

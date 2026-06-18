@@ -1,5 +1,6 @@
 import time
 import datetime
+import zlib
 from bridge.proxy import mt5
 from core.config import settings
 from core.logger import log
@@ -13,8 +14,18 @@ from strategies.trend_following import evaluate_signal
 from risk.RiskSlotManager import RiskSlotManager
 from risk.CorrelationGuard import CorrelationGuard
 from risk.SignalPriorityEngine import SignalPriorityEngine
-
 from rich.live import Live
+
+def generate_magic(symbol: str, role_id: int) -> int:
+    bucket_id = 99
+    for i, (name, symbols) in enumerate(settings.correlation_groups.items()):
+        if symbol in symbols:
+            bucket_id = i + 1
+            break
+            
+    asset_id = zlib.crc32(symbol.encode('utf-8')) % 1000
+    # Format: 13 (Bot) | Bucket (2 digits) | Asset (3 digits) | Role (1 digit)
+    return int(f"13{bucket_id:02d}{asset_id:03d}{role_id}")
 
 last_processed_candles = {}
 
@@ -62,10 +73,10 @@ def _evaluate_gate_2():
     last_cycle_data["gates"]["gate_2_details"] = f"{blocked_count} BLOCKED" if blocked_count > 0 else "NO BLOCK"
 
 def _gather_signals() -> list:
-    all_symbols = []
-    for bucket in settings.correlation_groups.values():
-        all_symbols.extend(bucket)
-        
+    # Dynamically pull all symbols
+    symbols = mt5.symbols_get()
+    all_symbols = [s.name for s in symbols] if symbols else []
+    
     signals = []
     for sym in all_symbols:
         info = mt5.symbol_info(sym)
@@ -114,6 +125,21 @@ def _build_ranked_signal_payload(ranked_signals) -> list:
     } for i, sig in enumerate(ranked_signals)]
 
 def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) -> int:
+    ind = sig["ind_data"]
+    atr = ind.get("atr_14", 0)
+    atr_buffer = 1.5 * atr
+    
+    sl_a = ind["ema_medium"]
+    sl_b = ind["sma_slow"]
+    
+    # Apply ATR Buffer
+    if sig["type"] == "BUY":
+        sl_a -= atr_buffer
+        sl_b -= atr_buffer
+    else:
+        sl_a += atr_buffer
+        sl_b += atr_buffer
+    
     sym = sig["symbol"]
     typ = sig["type"]
     
@@ -126,29 +152,39 @@ def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) 
     if bucket_name in session_blocked_buckets:
         log.info(f"Skipping {sym} - bucket {bucket_name} was dynamically blocked in this exact cycle.")
         return 0
+        
+    # Time-of-Day Filter (Fiat Kill Zone)
+    sess = settings.session_filter
+    if sess.enabled and bucket_name not in sess.exempt_groups:
+        current_hour = datetime.datetime.now(datetime.timezone.utc).hour
+        if not (sess.start_hour <= current_hour < sess.end_hour):
+            log.info(f"Skipping {sym} - outside allowed fiat session ({current_hour} UTC is not between {sess.start_hour}-{sess.end_hour}).")
+            return 0
     
     open_count = open_counts.get(sym, 0)
     if open_count >= 2:
         log.info(f"Skipping {sym} - 2 or more trades already open.")
         return 0
         
-    if CorrelationGuard.is_bucket_blocked(sym, magic_filter=[135001, 135002]):
+    if CorrelationGuard.is_bucket_blocked(sym):
         return 0
         
     slots_consumed = 0
+    magic_a = generate_magic(sym, 1)
+    magic_b = generate_magic(sym, 2)
         
     # Trade A (Scalper)
     if open_count < 2 and slots_available > 0:
-        sl_scalper = round(float(sig['ind_data']['sma_slow']), 5)
-        res_a = open_trade(sym, typ, 0.01, sl_scalper, 135001)
+        sl_scalper = round(float(sl_a), 5)
+        res_a = open_trade(sym, typ, 0.01, sl_scalper, magic_a, sig=sig)
         if res_a:
             open_count += 1
             slots_consumed += 1
     
     # Trade B (Runner)
     if open_count < 2 and slots_available > slots_consumed:
-        sl_runner = round(float(sig['ind_data']['sma_slow']), 5)
-        res_b = open_trade(sym, typ, 0.01, sl_runner, 135002)
+        sl_runner = round(float(sl_b), 5)
+        res_b = open_trade(sym, typ, 0.01, sl_runner, magic_b, sig=sig)
         if res_b:
             open_count += 1
             slots_consumed += 1

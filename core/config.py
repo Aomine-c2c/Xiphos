@@ -23,6 +23,12 @@ class IndicatorsConfig(BaseModel):
     medium_ema: int
     slow_sma: int
 
+class SessionFilterConfig(BaseModel):
+    enabled: bool = True
+    start_hour: int = 8
+    end_hour: int = 16
+    exempt_groups: List[str] = []
+
 class LoggingConfig(BaseModel):
     level: str
     rotation: str
@@ -36,6 +42,7 @@ class Settings(BaseModel):
     trading: TradingConfig
     magic_numbers: MagicNumbersConfig
     indicators: IndicatorsConfig
+    session_filter: SessionFilterConfig
     correlation_groups: Dict[str, List[str]]
     logging: LoggingConfig
     database: DatabaseConfig

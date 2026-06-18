@@ -45,11 +45,11 @@ import os
 
 CURRENT_VERSION = "v2.0.0"
 
-ID_POS_PANEL = ID_POS_PANEL
-ID_DASH_POS_PANEL = ID_DASH_POS_PANEL
-ID_LOG_PANEL = ID_LOG_PANEL
-ID_MW_PANEL = ID_MW_PANEL
-ID_DASH_MW_PANEL = ID_DASH_MW_PANEL
+ID_POS_PANEL = "#positions-panel"
+ID_DASH_POS_PANEL = "#dash-pos-panel"
+ID_LOG_PANEL = "#log-panel"
+ID_MW_PANEL = "#mw-panel"
+ID_DASH_MW_PANEL = "#dash-mw-panel"
 
 # ── Process Resource Tracking ──────────────────────────────────────────────────
 
@@ -1289,6 +1289,12 @@ class XiphosApp(App):
                 self.call_from_thread(self.query_one("#metrics-label", Label).update, m_text)
             except Exception:
                 pass
+            time.sleep(3) # Initial delay to let MT5 connect
+            # Trigger an immediate trade cycle on startup so it trades right away
+            try:
+                process_m30_cycle()
+            except Exception as e:
+                self.call_from_thread(self.log_msg, f"[bold red]Startup cycle failed: {e}[/bold red]")
             
             # 4. Cumulative P&L chart
             history_30 = state_manager.get_trade_history(limit=30)
@@ -1383,13 +1389,16 @@ class XiphosApp(App):
         if len(self.log_history) > 1000:
             self.log_history.pop(0)
             
-        if self._should_display_log(level, record['message']):
-            self.call_from_thread(self.log_msg, text)
-            
-        if level in ("ERROR", "CRITICAL"):
-            self.call_from_thread(self.trigger_alert, f"❌ Error: {record['message']}", "error")
-            self.call_from_thread(self.flash_widget_border, ID_LOG_PANEL, "red")
-            self.call_from_thread(self.flash_widget_border, "#dash-log-panel", "red")
+        try:
+            if self._should_display_log(level, record['message']):
+                self.call_from_thread(self.log_msg, text)
+                
+            if level in ("ERROR", "CRITICAL"):
+                self.call_from_thread(self.trigger_alert, f"❌ Error: {record['message']}", "error")
+                self.call_from_thread(self.flash_widget_border, ID_LOG_PANEL, "red")
+                self.call_from_thread(self.flash_widget_border, "#dash-log-panel", "red")
+        except RuntimeError:
+            pass  # App is no longer running
 
     def _should_display_log(self, level: str, message_text: str) -> bool:
         if self.current_log_level != "ALL":

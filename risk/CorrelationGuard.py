@@ -43,6 +43,8 @@ class CorrelationGuard:
         for pos in positions:
             if pos.symbol not in bucket or pos.symbol == symbol:
                 continue
+            if pos.magic <= 0:
+                continue
             if magic_filter is not None and pos.magic not in magic_filter:
                 continue
             if CorrelationGuard._is_pos_risk_bearing(pos):

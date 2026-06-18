@@ -134,127 +134,26 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   apiLatency: 18, // 18 ms to match mockup
   
   account: {
-    balance: 100.00,
-    equity: 127.45,
-    margin_free: 95.50,
-    margin_level: 540.0,
-    profit: 27.45
+    balance: 0.0,
+    equity: 0.0,
+    margin_free: 0.0,
+    margin_level: 0.0,
+    profit: 0.0
   },
   
-  // Open Positions populated matching the mockup exactly
-  positions: [
-    {
-      ticket: 108530,
-      symbol: "EURUSD",
-      type: "BUY",
-      volume: 0.01,
-      price_open: 1.08530,
-      price_current: 1.08945,
-      sl: 1.08230,
-      tp: 1.09200,
-      profit: 4.95,
-      role: "Scalper/Runner",
-      risk_status: "RISK",
-      scalper_pnl: 3.10,
-      runner_pnl: 1.85,
-      comment: "EMA50 / SMA200"
-    },
-    {
-      ticket: 240820,
-      symbol: "XAUUSD",
-      type: "BUY",
-      volume: 0.01,
-      price_open: 2408.20,
-      price_current: 2412.65,
-      sl: 2350.80,
-      tp: 2450.00,
-      profit: 9.39,
-      role: "Scalper/Runner",
-      risk_status: "FREE",
-      scalper_pnl: 5.92,
-      runner_pnl: 3.47,
-      comment: "SMA200"
-    },
-    {
-      ticket: 108230,
-      symbol: "EURUSD",
-      type: "BUY",
-      volume: 0.01,
-      price_open: 1.08230,
-      price_current: 1.08945,
-      sl: 1.08310,
-      tp: 1.09200,
-      profit: 0.00,
-      role: "Scalper/Runner",
-      risk_status: "FREE",
-      scalper_pnl: 0.00,
-      runner_pnl: 0.00,
-      comment: "BE"
-    },
-    {
-      ticket: 31620,
-      symbol: "XAGUSD",
-      type: "BUY",
-      volume: 0.01,
-      price_open: 31.620,
-      price_current: 31.845,
-      sl: 30.120,
-      tp: 33.000,
-      profit: 1.80,
-      role: "Scalper/Runner",
-      risk_status: "FREE",
-      scalper_pnl: 1.12,
-      runner_pnl: 0.68,
-      comment: "SMA200"
-    }
-  ],
+  positions: [],
 
-  orders: [
-    { ticket: 509210, symbol: "EURUSD", type: "BUY_LIMIT", volume: 0.02, price_open: 1.08120, sl: 1.07800, tp: 1.09000, comment: "Core Limit" },
-    { ticket: 509211, symbol: "XAUUSD", type: "SELL_LIMIT", volume: 0.01, price_open: 2425.00, sl: 2435.00, tp: 2400.00, comment: "Resistance check" }
-  ],
+  orders: [],
 
-  // Market Watch Overview (M30) matching mockup
-  marketWatch: [
-    { symbol: "EURUSD", price: 1.08945, e13_dist: 120, e50_dist: 350, s200_dist: 715, signal: "BUY", change: "+0.35%", history: [1.085, 1.086, 1.087, 1.089, 1.08945] },
-    { symbol: "GBPUSD", price: 1.27430, e13_dist: 150, e50_dist: 410, s200_dist: 890, signal: "BUY", change: "+0.28%", history: [1.270, 1.271, 1.272, 1.273, 1.27430] },
-    { symbol: "XAUUSD", price: 2412.65, e13_dist: 1200, e50_dist: 3100, s200_dist: 6185, signal: "BUY", change: "+1.12%", history: [2390, 2395, 2400, 2408, 2412.65] },
-    { symbol: "XAGUSD", price: 31.845, e13_dist: 250, e50_dist: 850, s200_dist: 1725, signal: "BUY", change: "+0.87%", history: [31.2, 31.4, 31.5, 31.7, 31.845] }
-  ],
+  marketWatch: [],
 
-  // Gate Validation Matrix matching mockup
-  gates: {
-    gate_1_risk_slot: "PASS",
-    gate_1_details: "Risk slots available",
-    gate_2_correlation: "PASS",
-    gate_2_details: "No correlation conflict",
-    gate_3_fan_alignment: "PASS",
-    gate_3_details: "Price > EMA13 > EMA50 > SMA200",
-    gate_4_priority_filter: "PASS",
-    gate_4_details: "Ranked by lowest projected risk",
-    gate_5_hard_sl: "PASS",
-    gate_5_details: "SL at SMA200 (1.08230)"
-  },
+  gates: {},
 
-  // Opportunities Scanner matching mockup
-  rankedSignals: [
-    { priority: 1, symbol: "XAUUSD", direction: "BUY", price: 2412.65, sma200: 2350.00, distance: 6185, projected_risk: 1.24, status: "APPROVED" },
-    { priority: 2, symbol: "EURUSD", direction: "BUY", price: 1.08945, sma200: 1.08230, distance: 715, projected_risk: 1.23, status: "APPROVED" },
-    { priority: 3, symbol: "GBPUSD", direction: "BUY", price: 1.27430, sma200: 1.26540, distance: 890, projected_risk: 1.78, status: "PENDING" },
-    { priority: 4, symbol: "XAGUSD", direction: "BUY", price: 31.845, sma200: 30.120, distance: 1725, projected_risk: 1.72, status: "PENDING" }
-  ],
+  rankedSignals: [],
 
-  lastCycleTime: "2025-05-20 14:30:00", // To match mockup
-  systemStats: { cpu: 22.4, memory: 345.2 },
-  
-  // Live Decision Feed log items matching mockup
-  logs: [
-    { timestamp: "14:30:00", level: "INFO", message: "EURUSD passed all 5 gates. Signal ranked #2. Executing...", formatted: "14:30:00 | INFO     | EURUSD passed all 5 gates. Signal ranked #2. Executing..." },
-    { timestamp: "14:29:59", level: "INFO", message: "XAUUSD passed all 5 gates. Signal ranked #1. Executing...", formatted: "14:29:59 | INFO     | XAUUSD passed all 5 gates. Signal ranked #1. Executing..." },
-    { timestamp: "14:29:58", level: "WARN", message: "GBPUSD blocked by Correlation Guard (Group 1).", formatted: "14:29:58 | WARN     | GBPUSD blocked by Correlation Guard (Group 1)." },
-    { timestamp: "14:29:57", level: "INFO", message: "XAGUSD passed all 5 gates. Signal ranked #4.", formatted: "14:29:57 | INFO     | XAGUSD passed all 5 gates. Signal ranked #4." },
-    { timestamp: "14:29:56", level: "INFO", message: "Risk slot released by EURUSD (breakeven reached).", formatted: "14:29:56 | INFO     | Risk slot released by EURUSD (breakeven reached)." }
-  ],
+  lastCycleTime: "--:--:--",
+  systemStats: { cpu: 0.0, memory: 0.0 },
+  logs: [],
 
   // Chat conversation matching mockup
   chatMessages: [
@@ -321,8 +220,8 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
               mt5Connected: data.mt5_connected,
               apiLatency: data.api_latency || get().apiLatency,
               account: data.account || get().account,
-              positions: data.positions.length > 0 ? data.positions : get().positions,
-              orders: data.orders && data.orders.length > 0 ? data.orders : get().orders,
+              positions: data.positions || [],
+              orders: data.orders || [],
               marketWatch: data.market_watch && data.market_watch.length > 0
                 ? data.market_watch.map((m: MarketWatchItem) => {
                     const existing = get().marketWatch.find((x) => x.symbol === m.symbol);
@@ -344,8 +243,8 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
                     };
                   })
                 : get().marketWatch,
-              rankedSignals: data.ranked_signals.length > 0 ? data.ranked_signals : get().rankedSignals,
-              gates: Object.keys(data.gates || {}).length > 0 ? data.gates : get().gates,
+              rankedSignals: data.ranked_signals || [],
+              gates: data.gates || {},
               lastCycleTime: data.last_cycle_time || get().lastCycleTime,
               systemStats: data.system_stats || get().systemStats,
               correlationMatrix: data.correlation_matrix || get().correlationMatrix,

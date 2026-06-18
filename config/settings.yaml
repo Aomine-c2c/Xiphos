@@ -5,7 +5,7 @@ execution:
 
 trading:
   timeframe: "M30"
-  max_risk_trades: 4
+  max_risk_trades: 999
   lot_size: 0.01
 
 magic_numbers:
@@ -17,42 +17,36 @@ indicators:
   medium_ema: 50
   slow_sma: 200
 
+session_filter:
+  enabled: true
+  start_hour: 8
+  end_hour: 16
+  exempt_groups:
+    - group_2_jump_indices
+    - group_3_tactical_indices
+    - group_4_dex_indices
+
 correlation_groups:
-  group_1_majors:
-    - EURUSD
-    - GBPUSD
-    - AUDUSD
-    - USDJPY
-  group_2_metals:
-    - XAUUSD
-    - XAGUSD
-  group_3_exotics:
-    - EURJPY
-    - GBPJPY
-    - USDCAD
-    - USDCHF
-  group_4_crypto:
-    - BTCUSD
-    - ETHUSD
-    - LTCUSD
-  group_5_volatility:
-    - Volatility 10 Index
-    - Volatility 25 Index
-    - Volatility 50 Index
-    - Volatility 75 Index
-    - Volatility 100 Index
-  group_6_crash_boom:
-    - Crash 1000 Index
-    - Boom 1000 Index
-    - Crash 500 Index
-    - Boom 500 Index
-  group_7_jump_step:
-    - Step Index
-    - Jump 10 Index
-    - Jump 25 Index
-    - Jump 50 Index
+  group_1_soft_commodities:
+    - CoffeeRobu
+    - Cocoa
+    - CoffeeArab
+  group_2_jump_indices:
     - Jump 75 Index
-    - Jump 100 Index
+    - Jump 10 Index
+  group_3_tactical_indices:
+    - Gold MACO Short Term Index
+    - Silver MACO Short Term Index
+    - Silver MACO Long Term Index
+    - EURUSD MACO Long Term Index
+  group_4_dex_indices:
+    - DEX 1500 DOWN Index
+  group_5_metals_and_spreads:
+    - XAUUSD.s
+    - XAUUSD
+    - XAUEUR
+    - XAGEUR
+    - XAGUSD
 
 logging:
   level: "INFO"

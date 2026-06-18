@@ -265,13 +265,17 @@ def _compile_positions_data():
     positions = mt5.positions_get() or []
     pos_list = []
     for pos in positions:
+        if pos.magic <= 0:
+            continue
+            
         typ = "BUY" if pos.type == mt5.ORDER_TYPE_BUY else "SELL"
-        if pos.magic == settings.magic_numbers.scalper:
+        role_id = pos.magic % 10
+        if role_id == 1:
             role = "Scalper"
-        elif pos.magic == settings.magic_numbers.runner:
+        elif role_id == 2:
             role = "Runner"
         else:
-            role = str(pos.magic)
+            role = f"Algo-{role_id}"
         is_free = pos.sl > 0 and ((pos.type == mt5.ORDER_TYPE_BUY and pos.sl >= pos.price_open) or (pos.type == mt5.ORDER_TYPE_SELL and pos.sl <= pos.price_open))
         pos_list.append({
             "ticket": pos.ticket, "symbol": pos.symbol, "type": typ,
@@ -370,9 +374,8 @@ async def periodical_websocket_broadcaster():
             pass
         await asyncio.sleep(1.0)
 
-# Websocket endpoint
-@app.websocket("/ws")
-async def _handle_bot_commands(cmd_type: str):
+# Websocket endpoint helper
+def _handle_bot_commands(cmd_type: str):
     if cmd_type == "start_bot":
         start_bot_execution()
     elif cmd_type == "stop_bot":

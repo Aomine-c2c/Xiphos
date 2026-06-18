@@ -1,9 +1,17 @@
 import pandas as pd
 import MetaTrader5 as mt5
 from core.logger import log
-from core.config import settings
+import numpy as np
 
 _indicator_cache = {}
+
+def calculate_atr(df, period=14):
+    df = df.copy()
+    df['H-L'] = df['high'] - df['low']
+    df['H-C'] = np.abs(df['high'] - df['close'].shift(1))
+    df['L-C'] = np.abs(df['low'] - df['close'].shift(1))
+    df['TR'] = df[['H-L', 'H-C', 'L-C']].max(axis=1)
+    return df['TR'].rolling(window=period).mean()
 
 def get_m30_indicators(symbol: str, count: int = 250):
     """ Fetch M30 candles and calculate indicators using native pandas, with caching """
@@ -25,6 +33,7 @@ def get_m30_indicators(symbol: str, count: int = 250):
         
     df = pd.DataFrame(rates)
     df['time'] = pd.to_datetime(df['time'], unit='s')
+    df = df.set_index('time')
     
     # Calculate indicators using native pandas (no external TA library needed)
     fast = 13
@@ -34,19 +43,15 @@ def get_m30_indicators(symbol: str, count: int = 250):
     df['ema_fast'] = df['close'].ewm(span=fast, adjust=False).mean()
     df['ema_medium'] = df['close'].ewm(span=medium, adjust=False).mean()
     df['sma_slow'] = df['close'].rolling(window=slow).mean()
+    df['atr_14'] = calculate_atr(df)
     
-    df.dropna(subset=['ema_fast', 'ema_medium', 'sma_slow'], inplace=True)
+    df = df.dropna(subset=['ema_fast', 'ema_medium', 'sma_slow', 'atr_14'])
     
     if df.empty:
         return None
         
-    # The cron scheduler runs exactly on M30 close, so the last complete candle is the previous index.
-    # Actually, MT5 copy_rates_from_pos(0, N) gets the CURRENT unfinished candle at index -1.
-    # "Never use unfinished candles." -> We must use iloc[-2] (the last completed candle).
-    if len(df) < 2:
-        return None
-        
-    last_completed = df.iloc[-2]
+    last_closed_time = int(df.index[-1].timestamp())
+    last_completed = df.iloc[-1]
     
     result = {
         "symbol": symbol,
@@ -54,7 +59,8 @@ def get_m30_indicators(symbol: str, count: int = 250):
         "close": last_completed['close'],
         "ema_fast": last_completed['ema_fast'],
         "ema_medium": last_completed['ema_medium'],
-        "sma_slow": last_completed['sma_slow']
+        "sma_slow": last_completed['sma_slow'],
+        "atr_14": last_completed['atr_14']
     }
     
     _indicator_cache[symbol] = {'time': last_closed_time, 'data': result}
