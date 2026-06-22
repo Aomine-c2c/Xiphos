@@ -236,10 +236,14 @@ def _handle_entry_query(text_lower: str):
 
 def query_vincent_ai(text: str) -> str:
     text_lower = text.lower()
-    if res := _handle_skipped_query(text_lower): return res
-    if res := _handle_risk_query(text_lower): return res
-    if res := _handle_ranked_query(text_lower): return res
-    if res := _handle_entry_query(text_lower): return res
+    if res := _handle_skipped_query(text_lower):
+        return res
+    if res := _handle_risk_query(text_lower):
+        return res
+    if res := _handle_ranked_query(text_lower):
+        return res
+    if res := _handle_entry_query(text_lower):
+        return res
     
     return (
         "Vincent AI: I am the XIPHOS AI Command Assistant. You can ask me:\n"
@@ -287,10 +291,14 @@ def _compile_positions_data():
     return pos_list
 
 def _get_order_type_str(ord_type):
-    if ord_type == mt5.ORDER_TYPE_BUY_LIMIT: return "BUY_LIMIT"
-    if ord_type == mt5.ORDER_TYPE_SELL_LIMIT: return "SELL_LIMIT"
-    if ord_type == mt5.ORDER_TYPE_BUY_STOP: return "BUY_STOP"
-    if ord_type == mt5.ORDER_TYPE_SELL_STOP: return "SELL_STOP"
+    if ord_type == mt5.ORDER_TYPE_BUY_LIMIT:
+        return "BUY_LIMIT"
+    if ord_type == mt5.ORDER_TYPE_SELL_LIMIT:
+        return "SELL_LIMIT"
+    if ord_type == mt5.ORDER_TYPE_BUY_STOP:
+        return "BUY_STOP"
+    if ord_type == mt5.ORDER_TYPE_SELL_STOP:
+        return "SELL_STOP"
     return str(ord_type)
 
 def _compile_orders_data():
@@ -313,7 +321,8 @@ def _compile_market_watch_data():
         
     for sym in all_symbols[:15]:
         tick = mt5.symbol_info_tick(sym)
-        if not tick: continue
+        if not tick:
+            continue
         ind_data = get_m30_indicators(sym)
         e13 = e50 = s200 = 0.0
         s_info = mt5.symbol_info(sym)
@@ -447,9 +456,41 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception:
         if websocket in _web_sockets:
             _web_sockets.remove(websocket)
-    except Exception:
-        if websocket in _web_sockets:
-            _web_sockets.remove(websocket)
+
+@app.get("/api/chart/{symbol}")
+async def get_chart_data(symbol: str):
+    # Fetch 250 M30 candles
+    rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M30, 0, 250)
+    if rates is None or len(rates) == 0:
+        return {"error": "No data found for symbol"}
+        
+    import pandas as pd
+    df = pd.DataFrame(rates)
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+    
+    # Calculate MAs
+    df['ema_fast'] = df['close'].ewm(span=13, adjust=False).mean()
+    df['ema_medium'] = df['close'].ewm(span=50, adjust=False).mean()
+    df['sma_slow'] = df['close'].rolling(window=200).mean()
+    
+    df.fillna(0, inplace=True)
+    
+    # Convert to TradingView format
+    candles = []
+    for _, row in df.iterrows():
+        unix_time = int(row['time'].timestamp())
+        candles.append({
+            "time": unix_time,
+            "open": row['open'],
+            "high": row['high'],
+            "low": row['low'],
+            "close": row['close'],
+            "ema_fast": row['ema_fast'],
+            "ema_medium": row['ema_medium'],
+            "sma_slow": row['sma_slow']
+        })
+        
+    return {"symbol": symbol, "data": candles}
 
 # Helper execution functions for WebSocket calls
 def close_all_positions():

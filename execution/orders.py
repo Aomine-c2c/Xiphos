@@ -69,6 +69,7 @@ def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume
         request["type_filling"] = filling_mode
         check = mt5.order_check(request)
         if check is None:
+            # Failed to check order, ignore
             pass
         elif check.retcode != 0:
             continue
@@ -102,11 +103,53 @@ def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume
             log.info(f"Trade successfully opened! Ticket: {result.order} (Latency: {latency_ms:.2f}ms)")
             return result
     return None
+def calculate_dynamic_lot(symbol: str, entry_price: float, sl_price: float, risk_percent: float) -> float:
+    account = mt5.account_info()
+    if not account:
+        return 0.01
+        
+    risk_amount = account.equity * (risk_percent / 100.0)
+    
+    sym_info = mt5.symbol_info(symbol)
+    if not sym_info:
+        return 0.01
+        
+    order_type = mt5.ORDER_TYPE_BUY if sl_price < entry_price else mt5.ORDER_TYPE_SELL
+    
+    loss_for_1_lot = mt5.order_calc_profit(order_type, symbol, 1.0, entry_price, sl_price)
+    
+    if loss_for_1_lot is None or loss_for_1_lot >= 0:
+        tick_value = sym_info.trade_tick_value
+        tick_size = sym_info.trade_tick_size
+        if tick_size == 0 or tick_value == 0:
+            return 0.01
+        price_diff = abs(entry_price - sl_price)
+        loss_for_1_lot = -(price_diff / tick_size) * tick_value
+        
+    if loss_for_1_lot == 0:
+        return 0.01
+        
+    calc_lots = risk_amount / abs(loss_for_1_lot)
+    
+    min_vol = sym_info.volume_min
+    max_vol = sym_info.volume_max
+    step_vol = sym_info.volume_step
+    
+    calc_lots = (calc_lots // step_vol) * step_vol
+    
+    if calc_lots < min_vol:
+        calc_lots = min_vol
+    if calc_lots > max_vol:
+        calc_lots = max_vol
+        
+    return round(calc_lots, 2)
 
 def open_trade(symbol: str, type_str: str, volume: float, sl_price: float, magic: int, sig: dict = None):
-    if not _validate_trade_safety(symbol, sl_price): return None
+    if not _validate_trade_safety(symbol, sl_price):
+        return None
     price, filling_bitmask = _get_trade_price_and_stoplevel(symbol, type_str, sl_price)
-    if price is None: return None
+    if price is None:
+        return None
     supported = _get_supported_filling_modes(filling_bitmask, symbol)
     
     order_type = mt5.ORDER_TYPE_BUY if type_str == "BUY" else mt5.ORDER_TYPE_SELL

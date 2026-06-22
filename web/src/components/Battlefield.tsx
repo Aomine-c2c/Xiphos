@@ -64,6 +64,10 @@ export default function Battlefield() {
             // Dynamic edge thickness based on correlation (max ~3px, min 0.5px)
             const strokeThickness = Math.max(0.5, (corrValue / 100) * 3);
 
+            let textColor = "#6f7e90";
+            if (isThreat) textColor = "#FF4D4D";
+            else if (isHigh) textColor = "#FFB020";
+
             return (
               <g key={`${link.source}-${link.target}`}>
                 <line
@@ -92,7 +96,7 @@ export default function Battlefield() {
                   x={(fromNode.x + toNode.x) / 2}
                   y={(fromNode.y + toNode.y) / 2 + 3.5}
                   textAnchor="middle"
-                  fill={isThreat ? "#FF4D4D" : isHigh ? "#FFB020" : "#6f7e90"}
+                  fill={textColor}
                   fontSize="7.5"
                   fontWeight="black"
                 >

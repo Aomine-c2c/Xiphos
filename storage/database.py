@@ -52,15 +52,17 @@ class Database:
             """)
             
             # Deep Analytics Schema Migrations
+            REAL_DEFAULT_0 = "REAL DEFAULT 0.0"
             new_columns = [
-                ("mfe", "REAL DEFAULT 0.0"),
-                ("mae", "REAL DEFAULT 0.0"),
-                ("sma_200", "REAL DEFAULT 0.0"),
-                ("fast_ema", "REAL DEFAULT 0.0"),
-                ("medium_ema", "REAL DEFAULT 0.0"),
-                ("distance_to_sma", "REAL DEFAULT 0.0"),
-                ("projected_risk", "REAL DEFAULT 0.0"),
-                ("latency_ms", "REAL DEFAULT 0.0"),
+                ("mfe", REAL_DEFAULT_0),
+                ("mae", REAL_DEFAULT_0),
+                ("sma_200", REAL_DEFAULT_0),
+                ("fast_ema", REAL_DEFAULT_0),
+                ("medium_ema", REAL_DEFAULT_0),
+                ("distance_to_sma", REAL_DEFAULT_0),
+                ("projected_risk", REAL_DEFAULT_0),
+                ("latency_ms", REAL_DEFAULT_0),
+                ("holding_time_mins", REAL_DEFAULT_0)
             ]
             for col_name, col_type in new_columns:
                 try:

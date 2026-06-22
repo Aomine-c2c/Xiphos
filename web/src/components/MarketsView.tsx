@@ -6,11 +6,13 @@ import { TrendingUp, Search, Activity, ChevronRight } from "lucide-react";
 import Battlefield from "./Battlefield";
 import Sidebar from "./Sidebar";
 import MarketRadar from "./MarketRadar";
+import TradingChart from "./TradingChart";
 
 export default function MarketsView() {
   const { marketWatch } = useTradingStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
   const filteredMarkets = marketWatch.filter((m) =>
     m.symbol.toLowerCase().includes(searchQuery.toLowerCase())
@@ -60,7 +62,7 @@ export default function MarketsView() {
       <div className="bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm flex flex-col overflow-hidden flex-1 min-h-0">
 
         {/* Header */}
-        <div className="p-3.5 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40 flex-shrink-0">
+        <div className="p-3.5 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40 shrink-0">
           <span className="text-3xl font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-2">
             <Activity className="h-4 w-4 animate-pulse" />
             XIPHOS REAL-TIME LIQUIDITY & SIGNAL MATRIX
@@ -100,8 +102,8 @@ export default function MarketsView() {
             <div className="grid grid-cols-3 gap-4 shrink-0">
               {[
                 { label: "BULLISH (BUY)", count: buyCount, colorClass: "text-xiphos-green", colorHex: "#00D26A" },
-                { label: "BEARISH (SELL)", count: sellCount, colorClass: "text-[#FF4D4D]", colorHex: "#FF4D4D" },
-                { label: "NEUTRAL / FLAT", count: neutralCount, colorClass: "text-[#FFB020]", colorHex: "#FFB020" },
+                { label: "BEARISH (SELL)", count: sellCount, colorClass: "text-xiphos-red", colorHex: "#FF4D4D" },
+                { label: "NEUTRAL / FLAT", count: neutralCount, colorClass: "text-xiphos-orange", colorHex: "#FFB020" },
               ].map(item => (
                 <div key={item.label} className="bg-xiphos-bg/40 border border-slate-900/60 rounded-sm p-3">
                   <div className="flex items-center justify-between mb-2">
@@ -118,7 +120,7 @@ export default function MarketsView() {
               ))}
             </div>
 
-            <div className="flex items-center justify-between mt-1 border-b border-slate-950 pb-1.5 flex-shrink-0">
+            <div className="flex items-center justify-between mt-1 border-b border-slate-950 pb-1.5 shrink-0">
               <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block">
                 MARKET WATCH MATRIX ({filteredMarkets.length})
               </span>
@@ -133,11 +135,18 @@ export default function MarketsView() {
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <table className="w-full text-left text-[17px] border-collapse font-bold">
-                <thead>
-                  <tr className="bg-slate-950/80 border-b border-slate-900 text-[#6f7e90] uppercase text-[15px] select-none">
-                    <th className="p-2.5 font-black">SYMBOL</th>
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              {selectedSymbol && (
+                <div className="w-full h-1/2 border-b border-slate-900 mb-2 p-2">
+                  <div className="text-[14px] text-xiphos-blue font-black mb-1">M30 CHART FOR {selectedSymbol}</div>
+                  <TradingChart symbol={selectedSymbol} />
+                </div>
+              )}
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left text-[17px] border-collapse font-bold">
+                  <thead>
+                    <tr className="bg-slate-950/80 border-b border-slate-900 text-[#6f7e90] uppercase text-[15px] select-none">
+                      <th className="p-2.5 font-black">SYMBOL</th>
                     <th className="p-2.5 font-black text-right">PRICE (BID)</th>
                     <th className="p-2.5 font-black text-right">24H DELTA</th>
                     <th className="p-2.5 font-black text-right">E13 GAP</th>
@@ -151,7 +160,11 @@ export default function MarketsView() {
                   {paginatedMarkets.map((item) => {
                     const isUp = item.change ? !item.change.startsWith("-") : true;
                     return (
-                      <tr key={item.symbol} className="border-b border-slate-950 hover:bg-xiphos-bg/40 transition-colors">
+                      <tr 
+                        key={item.symbol} 
+                        onClick={() => setSelectedSymbol(item.symbol === selectedSymbol ? null : item.symbol)}
+                        className={`border-b border-slate-950 hover:bg-xiphos-bg/40 transition-colors cursor-pointer ${selectedSymbol === item.symbol ? 'bg-xiphos-blue/10' : ''}`}
+                      >
                         <td className="p-2.5 text-white text-[18px] font-black tracking-wider">
                           <div className="flex items-center gap-1.5">
                             <ChevronRight className="h-3.5 w-3.5 text-xiphos-blue" />
@@ -161,22 +174,22 @@ export default function MarketsView() {
                         <td className="p-2.5 text-right font-black text-white text-[18px]">
                           {item.price.toFixed(item.symbol.includes("USD") && !item.symbol.startsWith("X") ? 5 : 3)}
                         </td>
-                        <td className={`p-2.5 text-right font-black text-[18px] ${isUp ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>
+                        <td className={`p-2.5 text-right font-black text-[18px] ${isUp ? "text-xiphos-green" : "text-xiphos-red"}`}>
                           {item.change || "0.00%"}
                         </td>
-                        <td className={`p-2.5 text-right text-[17px] ${item.e13_dist >= 0 ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>
+                        <td className={`p-2.5 text-right text-[17px] ${item.e13_dist >= 0 ? "text-xiphos-green" : "text-xiphos-red"}`}>
                           {item.e13_dist >= 0 ? "+" : ""}{Math.round(item.e13_dist)} pts
                         </td>
-                        <td className={`p-2.5 text-right text-[17px] ${item.e50_dist >= 0 ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>
+                        <td className={`p-2.5 text-right text-[17px] ${item.e50_dist >= 0 ? "text-xiphos-green" : "text-xiphos-red"}`}>
                           {item.e50_dist >= 0 ? "+" : ""}{Math.round(item.e50_dist)} pts
                         </td>
-                        <td className={`p-2.5 text-right text-[17px] ${item.s200_dist >= 0 ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>
+                        <td className={`p-2.5 text-right text-[17px] ${item.s200_dist >= 0 ? "text-xiphos-green" : "text-xiphos-red"}`}>
                           {item.s200_dist >= 0 ? "+" : ""}{Math.round(item.s200_dist)} pts
                         </td>
                         <td className="p-2.5">
                           <span className={`px-2 py-0.5 text-[15px] font-black rounded-sm border uppercase ${
-                            item.signal === "BUY" ? "bg-[#00D26A]/5 text-[#00D26A] border-[#00D26A]/45"
-                            : item.signal === "SELL" ? "bg-[#FF4D4D]/5 text-[#FF4D4D] border-[#FF4D4D]/45"
+                            item.signal === "BUY" ? "bg-xiphos-green/5 text-xiphos-green border-xiphos-green/45"
+                            : item.signal === "SELL" ? "bg-xiphos-red/5 text-xiphos-red border-xiphos-red/45"
                             : "bg-transparent text-[#6f7e90] border-slate-900"
                           }`}>
                             {item.signal === "BUY" ? "BULLISH FAN" : item.signal === "SELL" ? "BEARISH FAN" : "NEUTRAL/FLAT"}
@@ -193,21 +206,22 @@ export default function MarketsView() {
                 </tbody>
               </table>
             </div>
+            </div>
           </div>
 
         </div>
       </div>
 
       {/* Footer */}
-      <div className="bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm p-3 flex-shrink-0">
+      <div className="bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm p-3 shrink-0">
         <div className="flex items-center justify-between text-[16px] font-black">
           <div className="flex items-center gap-2 text-xiphos-blue">
             <TrendingUp className="h-4 w-4" />
             <span>M30 TIME FRAME SYSTEM SCAN — CORRELATION CATEGORIES: GROUP 1 (CURRENCIES), GROUP 2 (METALS)</span>
           </div>
           <div className="flex items-center gap-1.5 text-[#8e9aa8]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A] animate-pulse" />
-            <span className="text-[15px]">REALTIME · <span className="text-[#00A8FF]">{marketWatch.length} ASSETS</span></span>
+            <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green animate-pulse" />
+            <span className="text-[15px]">REALTIME · <span className="text-xiphos-blue">{marketWatch.length} ASSETS</span></span>
           </div>
         </div>
       </div>

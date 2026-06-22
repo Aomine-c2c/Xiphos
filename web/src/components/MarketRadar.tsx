@@ -9,14 +9,14 @@ export default function MarketRadar() {
 
   const getDistColor = (dist: number) => {
     const d = Math.abs(dist);
-    if (d > 500) return "text-[#FF4D4D]";
-    if (d > 200) return "text-[#FFB020]";
-    return "text-[#00D26A]";
+    if (d > 500) return "text-xiphos-red";
+    if (d > 200) return "text-xiphos-orange";
+    return "text-xiphos-green";
   };
 
   const getSignalClass = (signal: string) => {
-    if (signal === "BUY") return "bg-[#00D26A]/10 border-[#00D26A]/45 text-[#00D26A]";
-    if (signal === "SELL") return "bg-[#FF4D4D]/10 border-[#FF4D4D]/45 text-[#FF4D4D]";
+    if (signal === "BUY") return "bg-xiphos-green/10 border-xiphos-green/45 text-xiphos-green";
+    if (signal === "SELL") return "bg-xiphos-red/10 border-xiphos-red/45 text-xiphos-red";
     return "bg-[#425062]/10 border-[#425062]/45 text-[#425062]";
   };
 

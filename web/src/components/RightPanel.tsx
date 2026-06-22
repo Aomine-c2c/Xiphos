@@ -24,19 +24,19 @@ export default function RightPanel() {
   // Evolve Typography: Title +40% (text-[17px] -> text-[21px])
   // Section Headers +30% (text-[15px] -> text-[17px])
   return (
-    <div className="flex flex-col h-full overflow-hidden font-mono select-none bg-[#070B14]">
+    <div className="flex flex-col h-full overflow-hidden font-mono select-none bg-xiphos-bg">
       
       {/* Title Header (+40% scaled: text-[21px]) */}
-      <div className="flex-shrink-0 p-2.5 border-b border-slate-900/60 flex items-center justify-between bg-[#0a101b]/35">
+      <div className="shrink-0 p-2.5 border-b border-slate-900/60 flex items-center justify-between bg-[#0a101b]/35">
         <span className="text-[16.5px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
           <Award className="h-4 w-4 text-xiphos-blue" />
           ACTIVE MISSION MONITOR ({positions.length})
         </span>
         <div className="flex items-center gap-2 text-[15px] font-black">
-          <span className="px-2 py-0.5 border border-[#FF4D4D]/35 text-[#FF4D4D] bg-[#FF4D4D]/5 rounded-sm uppercase tracking-wide">
+          <span className="px-2 py-0.5 border border-xiphos-red/35 text-xiphos-red bg-xiphos-red/5 rounded-sm uppercase tracking-wide">
             RISK: {riskBearingCount}
           </span>
-          <span className="px-2 py-0.5 border border-[#00D26A]/35 text-[#00D26A] bg-[#00D26A]/5 rounded-sm uppercase tracking-wide">
+          <span className="px-2 py-0.5 border border-xiphos-green/35 text-xiphos-green bg-xiphos-green/5 rounded-sm uppercase tracking-wide">
             FREE: {riskFreeCount}
           </span>
         </div>
@@ -81,7 +81,7 @@ export default function RightPanel() {
               <div
                 key={pos.ticket}
                 onClick={() => toggleControls(pos.ticket)}
-                className={`border rounded-sm p-3.5 relative bg-[#0E1525] transition-all duration-300 cursor-pointer hover:border-slate-800 ${
+                className={`border rounded-sm p-3.5 relative bg-xiphos-panel transition-all duration-300 cursor-pointer hover:border-slate-800 ${
                   isRiskFree ? "border-emerald-950/45" : "border-red-950/45"
                 }`}
               >
@@ -90,14 +90,14 @@ export default function RightPanel() {
                   <div className="flex items-center gap-1.5">
                     <span className="text-[18px] font-black text-white">{pos.symbol}</span>
                     <span className={`text-[10.5px] font-black px-1.5 py-0.2 rounded-sm leading-none ${
-                      isBuy ? "bg-[#00D26A] text-black" : "bg-[#FF4D4D] text-white"
+                      isBuy ? "bg-xiphos-green text-black" : "bg-xiphos-red text-white"
                     }`}>
                       {pos.type}
                     </span>
                     <span className="text-[#6f7e90] text-[11.5px] font-bold">[{pos.ticket}]</span>
                   </div>
                   <span className={`text-[18px] font-black ${
-                    pos.profit >= 0 ? "text-[#00D26A]" : "text-[#FF4D4D]"
+                    pos.profit >= 0 ? "text-xiphos-green" : "text-xiphos-red"
                   }`}>
                     {pos.profit >= 0 ? "+" : ""}${pos.profit.toFixed(2)}
                   </span>
@@ -121,10 +121,10 @@ export default function RightPanel() {
                       CURRENT RR: <span className="text-white font-bold">{rr}</span>
                     </div>
                     <div>
-                      HEALTH: <span className="text-[#00D26A] font-bold">{healthScore}%</span>
+                      HEALTH: <span className="text-xiphos-green font-bold">{healthScore}%</span>
                     </div>
                     <div>
-                      PROTECT: <span className={`font-black ${isRiskFree ? "text-[#00D26A]" : "text-[#FF4D4D]"}`}>
+                      PROTECT: <span className={`font-black ${isRiskFree ? "text-xiphos-green" : "text-xiphos-red"}`}>
                         {isRiskFree ? (pos.comment === "BE" ? "BE LOCKED" : "TRAILING") : "RISK ACTIVE"}
                       </span>
                     </div>
@@ -146,7 +146,7 @@ export default function RightPanel() {
                           closePosition(pos.ticket, pos.symbol);
                           setActiveControlTicket(null);
                         }}
-                        className="flex-1 py-1.5 text-[15px] font-black bg-[#FF4D4D] text-black hover:bg-red-400 rounded-sm transition-all cursor-pointer"
+                        className="flex-1 py-1.5 text-[15px] font-black bg-xiphos-red text-black hover:bg-red-400 rounded-sm transition-all cursor-pointer"
                       >
                         CLOSE
                       </button>
@@ -155,7 +155,7 @@ export default function RightPanel() {
                           partialClose(pos.ticket, pos.symbol);
                           setActiveControlTicket(null);
                         }}
-                        className="flex-1 py-1.5 text-[15px] font-black bg-[#FFB020] text-black hover:bg-amber-400 rounded-sm transition-all cursor-pointer"
+                        className="flex-1 py-1.5 text-[15px] font-black bg-xiphos-orange text-black hover:bg-amber-400 rounded-sm transition-all cursor-pointer"
                       >
                         50%
                       </button>
@@ -164,7 +164,7 @@ export default function RightPanel() {
                           breakeven(pos.ticket, pos.symbol);
                           setActiveControlTicket(null);
                         }}
-                        className="flex-1 py-1.5 text-[15px] font-black bg-[#00A8FF] text-black hover:bg-sky-400 rounded-sm transition-all cursor-pointer"
+                        className="flex-1 py-1.5 text-[15px] font-black bg-xiphos-blue text-black hover:bg-sky-400 rounded-sm transition-all cursor-pointer"
                       >
                         BE
                       </button>

@@ -81,7 +81,8 @@ def run_backtest():
             for t in open_trades:
                 sym = t['symbol']
                 df30 = m30_data[sym]
-                if current_time not in df30.index: continue
+                if current_time not in df30.index:
+                    continue
                 
                 row = df30.loc[current_time]
                 
@@ -129,14 +130,17 @@ def run_backtest():
                 active_buckets.add(bucket_map[sym])
                 
         for sym, df30 in m30_data.items():
-            if current_time not in df30.index: continue
+            if current_time not in df30.index:
+                continue
             
             # Use the PREVIOUS closed candle for signal evaluation to match live bot
             pos_idx = df30.index.get_loc(current_time)
-            if pos_idx < 1: continue
+            if pos_idx < 1:
+                continue
             
             prev_candle = df30.iloc[pos_idx - 1]
-            if pd.isna(prev_candle['sma_slow']): continue
+            if pd.isna(prev_candle['sma_slow']):
+                continue
             
             close = prev_candle['close']
             ema13 = prev_candle['ema_fast']
@@ -150,7 +154,8 @@ def run_backtest():
             elif close < ema13 and ema13 < ema50 and ema50 < sma200:
                 signal = "SELL"
                 
-            if signal == "NONE": continue
+            if signal == "NONE":
+                continue
             
             # Check gates
             bucket = bucket_map[sym]
@@ -162,12 +167,15 @@ def run_backtest():
                 if not (sess.get('start_hour', 8) <= current_hour < sess.get('end_hour', 16)):
                     continue
             
-            if bucket in active_buckets: continue  # Gate 2: Correlation
+            if bucket in active_buckets:
+                continue  # Gate 2: Correlation
             
-            if open_counts.get(sym, 0) >= 2: continue
+            if open_counts.get(sym, 0) >= 2:
+                continue
             
             dist = abs(close - sma200) / point
-            if dist > 8000: continue  # Gate 5 max risk approx
+            if dist > 8000:
+                continue  # Gate 5 max risk approx
             
             # Execute Trade A and B
             current_price = df30.loc[current_time, 'open'] # Fill at open of current candle
@@ -189,7 +197,8 @@ def run_backtest():
         # 3. Trail SL for active trades at the close of M30
         for t in open_trades:
             sym = t['symbol']
-            if current_time not in m30_data[sym].index: continue
+            if current_time not in m30_data[sym].index:
+                continue
             candle = m30_data[sym].loc[current_time]
             
             if t['role'] == 'Scalper':
@@ -209,15 +218,11 @@ def run_backtest():
                         new_sl = t['entry_price']
                 
             # Trail logic
-            if t['type'] == 'BUY' and new_sl > t['sl']:
-                t['sl'] = new_sl
-            elif t['type'] == 'SELL' and new_sl < t['sl']:
+            if (t['type'] == 'BUY' and new_sl > t['sl']) or (t['type'] == 'SELL' and new_sl < t['sl']):
                 t['sl'] = new_sl
                 
             # Update risk-bearing status
-            if t['type'] == 'BUY' and t['sl'] >= t['entry_price']:
-                t['is_risk_bearing'] = False
-            elif t['type'] == 'SELL' and t['sl'] <= t['entry_price']:
+            if (t['type'] == 'BUY' and t['sl'] >= t['entry_price']) or (t['type'] == 'SELL' and t['sl'] <= t['entry_price']):
                 t['is_risk_bearing'] = False
 
     # Force close remaining
@@ -231,7 +236,7 @@ def run_backtest():
         t['status'] = 'CLOSED_END'
         trade_history.append(t)
         
-    print(f"\n--- Backtest Complete ---")
+    print("\n--- Backtest Complete ---")
     print(f"Total Trades: {len(trade_history)}")
     
     if len(trade_history) > 0:

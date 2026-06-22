@@ -32,7 +32,7 @@ export default function Sidebar() {
     <div className="flex flex-col w-full h-full bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm overflow-hidden select-none font-mono transition-all duration-300 hover:border-xiphos-blue/40">
       
       {/* Title Header */}
-      <div className="p-3 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40 flex-shrink-0">
+      <div className="p-3 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40 shrink-0">
         <span className="text-[20px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
           <Activity className="h-5 w-5 text-xiphos-blue" />
           GLOBAL CORRELATION MATRIX
@@ -108,7 +108,7 @@ export default function Sidebar() {
       </div>
 
       {/* Legend Footer */}
-      <div className="p-2.5 border-t border-slate-950 flex items-center justify-between text-[17px] text-[#6f7e90] font-black bg-xiphos-bg/40 flex-shrink-0">
+      <div className="p-2.5 border-t border-slate-950 flex items-center justify-between text-[17px] text-[#6f7e90] font-black bg-xiphos-bg/40 shrink-0">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-sm bg-xiphos-green" />

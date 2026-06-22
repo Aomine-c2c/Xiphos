@@ -6,40 +6,26 @@ from execution.orders import modify_sl
 from storage.database import db
 
 def _get_new_sl(pos, ind_data, symbol_info):
-    new_sl = None
+    """
+    Asymmetrical trailing stop logic:
+      Scalper (role 1) — trails the 50 EMA: exits when intermediate trend breaks
+      Runner  (role 2) — trails the 200 SMA: holds until macro trend completely reverses
+
+    The SL only ever moves in the trade's favour (never widens).
+    No ATR buffer. No breakeven override. Let it ride.
+    """
     role_id = pos.magic % 10
-    atr_buffer = 1.5 * ind_data.get('atr_14', 0)
-    
-    # Calculate base SL based on role
+
     if role_id == 1:
-        base_sl = ind_data['ema_medium']
+        trail_level = ind_data['ema_medium']  # 50 EMA
     elif role_id == 2:
-        base_sl = ind_data['sma_slow']
+        trail_level = ind_data['sma_slow']    # 200 SMA
     else:
         return None
 
-    # Apply ATR Buffer to the trailing MA
-    if pos.type == mt5.ORDER_TYPE_BUY:
-        new_sl = base_sl - atr_buffer
-    elif pos.type == mt5.ORDER_TYPE_SELL:
-        new_sl = base_sl + atr_buffer
+    new_sl = round(float(trail_level), symbol_info.digits)
+    return new_sl
 
-    # Breakeven overrides for Role 2
-    if role_id == 2:
-        if pos.type == mt5.ORDER_TYPE_BUY:
-            if ind_data['ema_medium'] > pos.price_open:
-                new_sl = ind_data['ema_medium'] - atr_buffer
-            elif ind_data['ema_fast'] > pos.price_open:
-                new_sl = pos.price_open
-        elif pos.type == mt5.ORDER_TYPE_SELL:
-            if ind_data['ema_medium'] < pos.price_open:
-                new_sl = ind_data['ema_medium'] + atr_buffer
-            elif ind_data['ema_fast'] < pos.price_open:
-                new_sl = pos.price_open
-                
-    if new_sl is None:
-        return None
-    return round(float(new_sl), symbol_info.digits)
 
 def _trail_buy_position(pos, new_sl, stoplevel):
     if new_sl > pos.sl:

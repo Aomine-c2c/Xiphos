@@ -50,6 +50,7 @@ ID_DASH_POS_PANEL = "#dash-pos-panel"
 ID_LOG_PANEL = "#log-panel"
 ID_MW_PANEL = "#mw-panel"
 ID_DASH_MW_PANEL = "#dash-mw-panel"
+ID_DASH_LOG_PANEL = "#dash-log-panel"
 
 # ── Process Resource Tracking ──────────────────────────────────────────────────
 
@@ -557,7 +558,8 @@ class SystemPerformancePanel(Static):
             disk_pct = 0.0
             total_gb = used_gb = 0.0
             
-        make_bar = lambda p: "█" * int(p/10) + "░" * (10 - int(p/10))
+        def make_bar(p):
+            return "█" * int(p/10) + "░" * (10 - int(p/10))
         
         text = (
             f"CPU Usage:      {make_bar(cpu_pct)} [bold cyan]{cpu_pct:.1f}%[/bold cyan]\n"
@@ -1018,11 +1020,12 @@ class XiphosApp(App):
             slots_us  = settings.trading.max_risk_trades - slots_av
             sl_c      = "green" if slots_av > 0 else "red"
         else:
+            DIM_NA = "[dim]N/A[/dim]"
             conn_str = "[bold red]● OFFLINE[/bold red]"
-            bal_str = "[dim]N/A[/dim]"
-            eq_str = "[dim]N/A[/dim]"
-            mg_str = "[dim]N/A[/dim]"
-            pnl_str = "[dim]N/A[/dim]"
+            bal_str = DIM_NA
+            eq_str = DIM_NA
+            mg_str = DIM_NA
+            pnl_str = DIM_NA
             slots_us = 0
             slots_av = 0
             sl_c = "red"
@@ -1071,11 +1074,12 @@ class XiphosApp(App):
             pnl_c = "green" if pnl >= 0 else "red"
             typ = "BUY" if pos.type == mt5.ORDER_TYPE_BUY else "SELL"
             typ_c = "green" if typ == "BUY" else "red"
-            role = (
-                "Scalper" if pos.magic == settings.magic_numbers.scalper
-                else "Runner" if pos.magic == settings.magic_numbers.runner
-                else str(pos.magic)
-            )
+            if pos.magic == settings.magic_numbers.scalper:
+                role = "Scalper"
+            elif pos.magic == settings.magic_numbers.runner:
+                role = "Runner"
+            else:
+                role = str(pos.magic)
             risk_label = "[bold green]FREE[/bold green]" if pos.sl > 0 and ((pos.type == mt5.ORDER_TYPE_BUY and pos.sl >= pos.price_open) or (pos.type == mt5.ORDER_TYPE_SELL and pos.sl <= pos.price_open)) else "[bold red]RISK[/bold red]"
             rows.append((
                 pos.ticket, pos.symbol, f"[{typ_c}]{typ}[/{typ_c}]", f"{pos.price_open:.5f}",
@@ -1130,7 +1134,12 @@ class XiphosApp(App):
                 e50 = data.get("e50_dist", 0)
                 s200 = data.get("s200_dist", 0)
                 
-                def fmt_d(d): return f"[green]+{d:.0f}[/]" if d > 0 else f"[red]{d:.0f}[/]" if d < 0 else "0"
+                def fmt_d(d):
+                    if d > 0:
+                        return f"[green]+{d:.0f}[/]"
+                    if d < 0:
+                        return f"[red]{d:.0f}[/]"
+                    return "0"
                 
                 mw_rows.append((
                     sym, 
@@ -1396,7 +1405,7 @@ class XiphosApp(App):
             if level in ("ERROR", "CRITICAL"):
                 self.call_from_thread(self.trigger_alert, f"❌ Error: {record['message']}", "error")
                 self.call_from_thread(self.flash_widget_border, ID_LOG_PANEL, "red")
-                self.call_from_thread(self.flash_widget_border, "#dash-log-panel", "red")
+                self.call_from_thread(self.flash_widget_border, ID_DASH_LOG_PANEL, "red")
         except RuntimeError:
             pass  # App is no longer running
 
@@ -1492,7 +1501,8 @@ class XiphosApp(App):
             return
         pos = pos[0]
         tick = mt5.symbol_info_tick(symbol)
-        if not tick: return
+        if not tick:
+            return
         
         action = mt5.TRADE_ACTION_DEAL
         if pos.type == mt5.ORDER_TYPE_BUY:
@@ -1578,7 +1588,8 @@ class XiphosApp(App):
             return
             
         tick = mt5.symbol_info_tick(symbol)
-        if not tick: return
+        if not tick:
+            return
         
         action = mt5.TRADE_ACTION_DEAL
         if pos.type == mt5.ORDER_TYPE_BUY:
@@ -1629,7 +1640,8 @@ class XiphosApp(App):
         closed = 0
         for pos in positions:
             tick = mt5.symbol_info_tick(pos.symbol)
-            if not tick: continue
+            if not tick:
+                continue
             
             action = mt5.TRADE_ACTION_DEAL
             if pos.type == mt5.ORDER_TYPE_BUY:

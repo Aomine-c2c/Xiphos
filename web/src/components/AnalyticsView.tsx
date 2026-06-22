@@ -137,7 +137,7 @@ export default function AnalyticsView() {
               <div className="space-y-2">
                 <div className="flex justify-between text-[16px] font-bold text-[#8e9aa8]">
                   <span>SCALPER (A)</span>
-                  <span className="text-[#00D26A] font-black">{scalperPct}%</span>
+                  <span className="text-xiphos-green font-black">{scalperPct}%</span>
                 </div>
                 <div className="flex justify-between text-[16px] font-bold text-[#8e9aa8]">
                   <span>RUNNER (B)</span>
@@ -169,7 +169,7 @@ export default function AnalyticsView() {
           {/* RIGHT: History Log (7/12) */}
           <div className="col-span-7 flex flex-col min-h-0 shrink-0">
             {/* Table Header */}
-            <div className="bg-[#070B14]/40 border border-slate-900/60 rounded-sm p-3.5 flex-shrink-0 h-[175px]">
+            <div className="bg-xiphos-bg/40 border border-slate-900/60 rounded-sm p-3.5 shrink-0 h-[175px]">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider">HISTORICAL EQUITY GROWTH CURVE</span>
                 <span className="text-xiphos-green font-black text-[17px]">$127.45 USD</span>
@@ -181,7 +181,7 @@ export default function AnalyticsView() {
 
             {/* Trade history table */}
             <div className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center justify-between mb-2 border-b border-slate-950 pb-1.5 flex-shrink-0">
+              <div className="flex items-center justify-between mb-2 border-b border-slate-950 pb-1.5 shrink-0">
                 <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider">
                   TRADE HISTORY LOG
                 </span>

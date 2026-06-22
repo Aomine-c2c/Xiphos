@@ -53,14 +53,23 @@ def get_m30_indicators(symbol: str, count: int = 250):
     last_closed_time = int(df.index[-1].timestamp())
     last_completed = df.iloc[-1]
     
+    # Need the previous bar to detect the 13 EMA crossover (current vs previous)
+    prev_bar = df.iloc[-2]
+
     result = {
         "symbol": symbol,
         "time": int(last_completed.name.timestamp()) if isinstance(last_completed.name, pd.Timestamp) else last_closed_time,
-        "close": last_completed['close'],
-        "ema_fast": last_completed['ema_fast'],
-        "ema_medium": last_completed['ema_medium'],
-        "sma_slow": last_completed['sma_slow'],
-        "atr_14": last_completed['atr_14']
+        # Current (most recently closed) bar
+        "close":        last_completed['close'],
+        "low":          last_completed['low'],
+        "high":         last_completed['high'],
+        "ema_fast":     last_completed['ema_fast'],
+        "ema_medium":   last_completed['ema_medium'],
+        "sma_slow":     last_completed['sma_slow'],
+        "atr_14":       last_completed['atr_14'],
+        # Previous bar — required for crossover detection
+        "prev_close":    prev_bar['close'],
+        "prev_ema_fast": prev_bar['ema_fast'],
     }
     
     _indicator_cache[symbol] = {'time': last_closed_time, 'data': result}

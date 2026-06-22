@@ -28,7 +28,7 @@ export default function DecisionFeed() {
   return (
     <div className="w-full h-full bg-xiphos-panel border border-slate-900/80 flex flex-col font-mono select-none overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 p-3 border-b border-slate-950 flex items-center bg-xiphos-bg/40">
+      <div className="shrink-0 p-3 border-b border-slate-950 flex items-center bg-xiphos-bg/40">
         <span className="text-[16px] font-black text-xiphos-blue uppercase tracking-widest">
           AI DECISION FEED
         </span>
@@ -56,7 +56,7 @@ export default function DecisionFeed() {
       </div>
 
       {/* View Full Log Button Box */}
-      <div className="flex-shrink-0 p-2 border-t border-slate-950/60 bg-xiphos-bg/20 flex justify-center">
+      <div className="shrink-0 mb-2.5 p-2 border-t border-slate-950/60 bg-xiphos-bg/20 flex justify-center">
         <button
           onClick={() => alert("Loading historical session logs...")}
           className="px-6 py-1.5 border border-[#1e293b] hover:border-xiphos-blue/30 text-[#6f7e90] hover:text-white text-[14px] font-black tracking-widest uppercase rounded-sm transition-all cursor-pointer bg-slate-950/30"

@@ -26,7 +26,7 @@ export default function PositionsView() {
   const paginatedPositions = positions.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
   return (
-    <div className="flex flex-col h-full bg-[#070B14] font-mono select-none overflow-hidden gap-4">
+    <div className="flex flex-col h-full bg-xiphos-bg font-mono select-none overflow-hidden gap-4">
       {/* Title Header */}
       <div className="p-3 border-b border-slate-900 flex items-center justify-between bg-xiphos-panel/60 backdrop-blur-xl shrink-0">
         <span className="text-[20px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-2">
@@ -67,7 +67,7 @@ export default function PositionsView() {
               </div>
             </div>
 
-            <div className="bg-[#070B14]/50 border border-slate-900 rounded-sm p-3">
+            <div className="bg-xiphos-bg/50 border border-slate-900 rounded-sm p-3">
               <div className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2">
                 BUCKET ALLOCATION
               </div>

@@ -37,7 +37,7 @@ export default function Header() {
   }, [connectWebSocket]);
 
   return (
-    <header className="h-[56px] bg-[#070B14]/70 backdrop-blur-md border-b border-xiphos-blue/30 shadow-[0_0_15px_rgba(0,168,255,0.15)] flex items-center justify-between px-4 select-none font-mono relative z-50">
+    <header className="h-[56px] bg-xiphos-bg/70 backdrop-blur-md border-b border-xiphos-blue/30 shadow-[0_0_15px_rgba(0,168,255,0.15)] flex items-center justify-between px-4 select-none font-mono relative z-50">
       
       {/* Left Title & Cyborg Logo */}
       <div className="flex items-center gap-3">

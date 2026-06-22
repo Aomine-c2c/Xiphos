@@ -14,7 +14,10 @@ from strategies.trend_following import evaluate_signal
 from risk.RiskSlotManager import RiskSlotManager
 from risk.CorrelationGuard import CorrelationGuard
 from risk.SignalPriorityEngine import SignalPriorityEngine
+from state_manager import StateManager
 from rich.live import Live
+
+state_manager = StateManager()
 
 def generate_magic(symbol: str, role_id: int) -> int:
     bucket_id = 99
@@ -73,9 +76,10 @@ def _evaluate_gate_2():
     last_cycle_data["gates"]["gate_2_details"] = f"{blocked_count} BLOCKED" if blocked_count > 0 else "NO BLOCK"
 
 def _gather_signals() -> list:
-    # Dynamically pull all symbols
-    symbols = mt5.symbols_get()
-    all_symbols = [s.name for s in symbols] if symbols else []
+    # Only scan symbols explicitly defined in settings.yaml correlation_groups
+    all_symbols = []
+    for group_symbols in settings.correlation_groups.values():
+        all_symbols.extend(group_symbols)
     
     signals = []
     for sym in all_symbols:
@@ -126,22 +130,19 @@ def _build_ranked_signal_payload(ranked_signals) -> list:
 
 def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) -> int:
     ind = sig["ind_data"]
-    atr = ind.get("atr_14", 0)
-    atr_buffer = 1.5 * atr
+    typ = sig["type"]
     
-    sl_a = ind["ema_medium"]
-    sl_b = ind["sma_slow"]
-    
-    # Apply ATR Buffer
-    if sig["type"] == "BUY":
-        sl_a -= atr_buffer
-        sl_b -= atr_buffer
+    # === ASYMMETRICAL STOP LOSS ===
+    # Scalper SL: candle extreme (tight = "lose pennies")   → trails 50 EMA
+    # Runner  SL: 200 SMA (wide = let it breathe)           → trails 200 SMA until macro trend dies
+    if typ == "BUY":
+        sl_a = ind["low"]       # Scalper — candle low
+        sl_b = ind["sma_slow"]  # Runner  — 200 SMA
     else:
-        sl_a += atr_buffer
-        sl_b += atr_buffer
+        sl_a = ind["high"]      # Scalper — candle high
+        sl_b = ind["sma_slow"]  # Runner  — 200 SMA
     
     sym = sig["symbol"]
-    typ = sig["type"]
     
     bucket_name = None
     for name, symbols in settings.correlation_groups.items():
@@ -172,22 +173,44 @@ def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) 
     slots_consumed = 0
     magic_a = generate_magic(sym, 1)
     magic_b = generate_magic(sym, 2)
-        
+    
+    tick = mt5.symbol_info_tick(sym)
+    if tick:
+        entry_price = tick.ask if typ == "BUY" else tick.bid
+    else:
+        entry_price = ind["close"]
+    
+    # HARDCODED FIX: 0.01 Fixed Lot
+    lot_a = 0.01
+    lot_b = 0.01
+    
+    order_type = mt5.ORDER_TYPE_BUY if typ == "BUY" else mt5.ORDER_TYPE_SELL
+    
     # Trade A (Scalper)
     if open_count < 2 and slots_available > 0:
         sl_scalper = round(float(sl_a), 5)
-        res_a = open_trade(sym, typ, 0.01, sl_scalper, magic_a, sig=sig)
-        if res_a:
-            open_count += 1
-            slots_consumed += 1
+        # HARD RISK CAP: Reject if risk > $10.00
+        risk_a = mt5.order_calc_profit(order_type, sym, lot_a, entry_price, sl_scalper)
+        if risk_a is not None and abs(risk_a) > 10.0:
+            log.warning(f"Skipping {sym} Scalper - Stop Loss distance too large (Risk: ${abs(risk_a):.2f} > $10 Cap)")
+        else:
+            res_a = open_trade(sym, typ, lot_a, sl_scalper, magic_a, sig=sig)
+            if res_a:
+                open_count += 1
+                slots_consumed += 1
     
     # Trade B (Runner)
     if open_count < 2 and slots_available > slots_consumed:
         sl_runner = round(float(sl_b), 5)
-        res_b = open_trade(sym, typ, 0.01, sl_runner, magic_b, sig=sig)
-        if res_b:
-            open_count += 1
-            slots_consumed += 1
+        # HARD RISK CAP: Reject if risk > $10.00
+        risk_b = mt5.order_calc_profit(order_type, sym, lot_b, entry_price, sl_runner)
+        if risk_b is not None and abs(risk_b) > 10.0:
+            log.warning(f"Skipping {sym} Runner - Stop Loss distance too large (Risk: ${abs(risk_b):.2f} > $10 Cap)")
+        else:
+            res_b = open_trade(sym, typ, lot_b, sl_runner, magic_b, sig=sig)
+            if res_b:
+                open_count += 1
+                slots_consumed += 1
 
     if slots_consumed > 0:
         last_processed_candles[sym] = sig['ind_data'].get('time', 0)
@@ -219,6 +242,10 @@ def process_m30_cycle():
     _evaluate_gate_2()
     
     positions = mt5.positions_get()
+    
+    # Sync database with MT5 reality
+    state_manager.reconcile(positions)
+    
     open_counts = {}
     if positions:
         for p in positions:

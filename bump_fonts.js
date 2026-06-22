@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 function walk(dir) {
     let results = [];
@@ -7,12 +7,10 @@ function walk(dir) {
     list.forEach(file => {
         file = path.join(dir, file);
         const stat = fs.statSync(file);
-        if (stat && stat.isDirectory()) {
+        if (stat?.isDirectory()) {
             results = results.concat(walk(file));
-        } else {
-            if (file.endsWith('.tsx') || file.endsWith('.ts')) {
-                results.push(file);
-            }
+        } else if (file.endsWith('.tsx') || file.endsWith('.ts')) {
+            results.push(file);
         }
     });
     return results;
@@ -25,7 +23,7 @@ files.forEach(file => {
     
     // Bump text-[Xpx] by 2px
     content = content.replace(/text-\[(\d+)px\]/g, (match, p1) => {
-        const val = parseInt(p1, 10);
+        const val = Number.parseInt(p1, 10);
         return `text-[${val + 2}px]`;
     });
     // Bump standard text sizes

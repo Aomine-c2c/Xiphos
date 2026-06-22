@@ -5,7 +5,7 @@ import React from "react";
 export default function ConfidenceEngine() {
   return (
     <div className="bg-xiphos-panel border border-slate-900/80 rounded-sm p-4 font-mono select-none h-full flex flex-col justify-between">
-      <div className="flex-shrink-0 mb-2.5">
+      <div className="shrink-0 mb-2.5">
         <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block">
           AI CONFIDENCE ENGINE
         </span>
@@ -47,7 +47,7 @@ export default function ConfidenceEngine() {
                 cx="32"
                 cy="32"
                 r="25"
-                className="stroke-[#00D26A] fill-none"
+                className="stroke-xiphos-green fill-none"
                 strokeWidth="4"
                 strokeDasharray={157}
                 strokeDashoffset={157 - (0.92 * 157)}

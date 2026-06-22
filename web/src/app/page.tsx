@@ -215,7 +215,7 @@ export default function Home() {
         <div className="flex items-center gap-4.5 text-right">
           
           <div className="flex items-center gap-1.5 text-[15px] font-bold">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#00D26A] animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green animate-pulse" />
             <span>Uptime: 2d 14h 32m</span>
           </div>
 

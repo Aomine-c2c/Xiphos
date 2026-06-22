@@ -24,22 +24,21 @@ export default function ChatPanel() {
   ];
 
   const recommendations = [
-    { id: "DIR-001", symbol: "EURUSD", type: "BUY LIMIT", price: 1.08900, tp: 1.09200, sl: 1.08230, status: "READY", confidence: 92 },
-    { id: "DIR-002", symbol: "XAUUSD", type: "BUY STOP", price: 2408.20, tp: 2450.00, sl: 2390.00, status: "READY", confidence: 88 }
+    { id: "DIR-001", symbol: "EURUSD", type: "BUY LIMIT", price: 1.089, tp: 1.092, sl: 1.0823, status: "READY", confidence: 92 },
+    { id: "DIR-002", symbol: "XAUUSD", type: "BUY STOP", price: 2408.2, tp: 2450, sl: 2390, status: "READY", confidence: 88 }
   ];
 
   return (
     <div className="w-full h-full bg-xiphos-panel border border-slate-900/80 flex flex-col font-mono select-none overflow-hidden rounded-sm">
       
       {/* Header */}
-      <div className="flex-shrink-0 p-2.5 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40">
+      <div className="shrink-0 p-2.5 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40">
         <span className="text-[21px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
           <Award className="h-4 w-4 text-xiphos-blue" />
           CHIEF TRADING OFFICER
         </span>
         <span className="flex items-center gap-1.5 text-[15px] font-bold text-xiphos-green uppercase">
-          <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green animate-pulse" />
-          CTO ACTIVE
+          <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green animate-pulse" />{' '}CTO ACTIVE
         </span>
       </div>
 
@@ -51,7 +50,7 @@ export default function ChatPanel() {
           <img src="/cyborg.png" alt="" className="object-cover object-right h-full" />
         </div>
         
-        <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block p-2.5 border-b border-slate-950/60 flex-shrink-0 z-10">
+        <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block p-2.5 border-b border-slate-950/60 shrink-0 z-10">
           LIVE INTELLIGENCE & RISK FEED
         </span>
         
@@ -59,11 +58,18 @@ export default function ChatPanel() {
           {feedItems.slice(-5).map((item, idx) => {
             const isWarn = item.type === "WARN";
             const isCrit = item.type === "CRITICAL";
-            const color = isCrit ? "text-xiphos-red" : isWarn ? "text-yellow-500" : "text-xiphos-blue";
-            const bg = isCrit ? "bg-xiphos-red/5 border-xiphos-red/20" : isWarn ? "bg-yellow-500/5 border-yellow-500/20" : "bg-xiphos-blue/5 border-xiphos-blue/20";
+            let color = "text-xiphos-blue";
+            let bg = "bg-xiphos-blue/5 border-xiphos-blue/20";
+            if (isCrit) {
+              color = "text-xiphos-red";
+              bg = "bg-xiphos-red/5 border-xiphos-red/20";
+            } else if (isWarn) {
+              color = "text-yellow-500";
+              bg = "bg-yellow-500/5 border-yellow-500/20";
+            }
             
             return (
-              <div key={idx} className={`p-2 border rounded-sm flex items-start gap-2.5 ${bg}`}>
+              <div key={`${item.time}-${idx}`} className={`p-2 border rounded-sm flex items-start gap-2.5 ${bg}`}>
                 <div className={`mt-0.5 ${color}`}>
                   {isCrit || isWarn ? <AlertTriangle className="h-3.5 w-3.5" /> : <span className="text-[16px] font-black opacity-80">&gt;</span>}
                 </div>
@@ -82,7 +88,7 @@ export default function ChatPanel() {
 
       {/* BOTTOM HALF: Structured Recommendation Cards */}
       <div className="flex-[0.45] flex flex-col min-h-0 bg-xiphos-bg/60">
-        <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block p-2.5 border-b border-slate-950/60 flex-shrink-0">
+        <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block p-2.5 border-b border-slate-950/60 shrink-0">
           CTO ACTION DIRECTIVES
         </span>
         

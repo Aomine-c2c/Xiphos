@@ -7,6 +7,7 @@ trading:
   timeframe: "M30"
   max_risk_trades: 999
   lot_size: 0.01
+  risk_percent: 1.0
 
 magic_numbers:
   scalper: 135001
@@ -22,31 +23,35 @@ session_filter:
   start_hour: 8
   end_hour: 16
   exempt_groups:
-    - group_2_jump_indices
-    - group_3_tactical_indices
-    - group_4_dex_indices
+    - group_1_dfx_indices      # 24/7 synthetic indices
+    - group_2_jump_indices     # 24/7 synthetic indices
+    - group_3_dex_indices      # 24/7 synthetic indices
+    - group_5_volatility       # 24/7 synthetic indices
 
 correlation_groups:
-  group_1_soft_commodities:
-    - CoffeeRobu
-    - Cocoa
-    - CoffeeArab
+  # ── Tier 1: Elite performers (PF > 3.0) ─────────────────────────────────
+  group_1_dfx_indices:
+    - USDJPY DFX 20 Index   # PF=10.57x | best overall
+    - USDJPY DFX 10 Index   # PF=4.22x
+    - AUDUSD DFX 10 Index   # PF=5.83x
+
+  # ── Tier 2: Strong performers (PF 2.0-3.5) ───────────────────────────────
   group_2_jump_indices:
-    - Jump 75 Index
-    - Jump 10 Index
-  group_3_tactical_indices:
-    - Gold MACO Short Term Index
-    - Silver MACO Short Term Index
-    - Silver MACO Long Term Index
-    - EURUSD MACO Long Term Index
-  group_4_dex_indices:
-    - DEX 1500 DOWN Index
-  group_5_metals_and_spreads:
-    - XAUUSD.s
-    - XAUUSD
-    - XAUEUR
-    - XAGEUR
-    - XAGUSD
+    - Jump 10 Index         # PF=3.42x
+    - Jump 50 Index         # PF=2.55x
+    - Jump 75 Index         # PF=2.21x
+
+  # ── Tier 3: Solid performers (PF 1.5-2.0) ────────────────────────────────
+  group_3_dex_indices:
+    - DEX 900 DOWN Index    # PF=2.63x
+    - DEX 1500 DOWN Index   # PF=1.78x
+
+  # ── Tier 4: Moderate performers (PF 1.0-1.5) ─────────────────────────────
+  group_4_metals:
+    - XAGUSD               # PF=3.76x | high avg win but low frequency
+
+  group_5_volatility:
+    - Volatility 75 Index  # PF=2.03x
 
 logging:
   level: "INFO"

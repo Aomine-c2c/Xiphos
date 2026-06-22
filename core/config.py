@@ -13,6 +13,7 @@ class TradingConfig(BaseModel):
     timeframe: str
     max_risk_trades: int
     lot_size: float
+    risk_percent: float = 1.0
 
 class MagicNumbersConfig(BaseModel):
     scalper: int
