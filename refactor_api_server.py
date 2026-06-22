@@ -4,8 +4,9 @@ with open("api_server.py", "r", encoding="utf-8") as f:
     content = f.read()
 
 # 1. query_vincent_ai replacement
-vincent_old = re.search(r"def query_vincent_ai\(text: str\) -> str:[\s\S]*?(?=# Active state compilation helper)", content)
-if vincent_old:
+vincent_start = content.find("def query_vincent_ai(text: str) -> str:")
+vincent_end = content.find("# Active state compilation helper", vincent_start)
+if vincent_start != -1 and vincent_end != -1:
     vincent_new = """def _handle_skipped_query(text_lower: str):
     if "skipped" in text_lower or "skip" in text_lower or "block" in text_lower:
         gates = last_cycle_data.get("gates", {})
@@ -20,14 +21,6 @@ if vincent_old:
                 "An active risk-bearing position already exists within the same asset class category. "
                 "Xiphos prevents opening multiple risk-bearing positions in highly correlated symbols to avoid systemic risk clustering."
             )
-        if gates.get("gate_3_fan_alignment") == "FAIL":
-            return (
-                "Vincent AI: No trades were entered because the system did not detect a valid Moving Average Fan Alignment (Gate 3). "
-                "For a valid BUY signal, we require: Close > EMA13 > EMA50 > SMA200. "
-                "For a valid SELL signal: Close < EMA13 < EMA50 < SMA200. The filters are strictly locked."
-            )
-        return (
-            "Vincent AI: I've scanned the recent evaluation log. If a trade was skipped, it was due to safety gates. "
             "Currently, the system is monitoring all 5 gates. Gate 1 (Risk Slots) and Gate 2 (Correlation) are our primary risk inhibitors."
         )
     return None
@@ -80,13 +73,12 @@ def query_vincent_ai(text: str) -> str:
         "- 'What are the strongest setups right now?'\\n"
         "- 'Why did we enter these positions?'"
     )
-
-"""
-    content = content[:vincent_old.start()] + vincent_new + content[vincent_old.end():]
-
+\"\"\"
+    content = content[:vincent_start] + vincent_new + content[vincent_end:]
 # 2. compile_system_state replacement
-state_old = re.search(r"def compile_system_state\(\):[\s\S]*?(?=# Periodical update dispatcher loop)", content)
-if state_old:
+state_start = content.find("def compile_system_state():")
+state_end = content.find("# Periodical update dispatcher loop", state_start)
+if state_start != -1 and state_end != -1:
     state_new = """def _compile_account_data(account):
     if not account:
         return {"balance": 0.0, "equity": 0.0, "margin_free": 0.0, "margin_level": 0.0, "profit": 0.0}
@@ -193,11 +185,14 @@ def compile_system_state():
     }
 
 """
-    content = content[:state_old.start()] + state_new + content[state_old.end():]
+    content = content[:state_start] + state_new + content[state_end:]
 
 # 3. websocket_handler refactoring
-ws_old = re.search(r"def websocket_endpoint.*?except Exception:.*?_web_sockets\.remove\(websocket\)", content, re.DOTALL)
-if ws_old:
+ws_start = content.find("def websocket_endpoint")
+ws_end = content.find("_web_sockets.remove(websocket)", ws_start)
+if ws_end != -1:
+    ws_end += len("_web_sockets.remove(websocket)")
+if ws_start != -1 and ws_end != -1:
     ws_new = """def _handle_bot_commands(cmd_type: str):
     if cmd_type == "start_bot":
         start_bot_execution()
@@ -270,7 +265,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception:
         if websocket in _web_sockets:
             _web_sockets.remove(websocket)"""
-    content = content[:ws_old.start()] + ws_new + content[ws_old.end():]
+    content = content[:ws_start] + ws_new + content[ws_end:]
 
 # 4. save_web_settings async file writing
 content = re.sub(r'def save_web_settings\(req_settings: dict\):\n.*?with open\("config/settings\.yaml", "w"\) as f:\n.*?yaml\.dump\(req_settings, f\)', 
