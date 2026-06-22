@@ -4,7 +4,7 @@ with open("api_server.py", "r", encoding="utf-8") as f:
     content = f.read()
 
 # 1. query_vincent_ai replacement
-vincent_old = re.search(r"def query_vincent_ai\(text: str\) -> str:.*?(?=# Active state compilation helper)", content, re.DOTALL)
+vincent_old = re.search(r"def query_vincent_ai\(text: str\) -> str:[\s\S]*?(?=# Active state compilation helper)", content)
 if vincent_old:
     vincent_new = """def _handle_skipped_query(text_lower: str):
     if "skipped" in text_lower or "skip" in text_lower or "block" in text_lower:
@@ -85,7 +85,7 @@ def query_vincent_ai(text: str) -> str:
     content = content[:vincent_old.start()] + vincent_new + content[vincent_old.end():]
 
 # 2. compile_system_state replacement
-state_old = re.search(r"def compile_system_state\(\):.*?(?=# Periodical update dispatcher loop)", content, re.DOTALL)
+state_old = re.search(r"def compile_system_state\(\):[\s\S]*?(?=# Periodical update dispatcher loop)", content)
 if state_old:
     state_new = """def _compile_account_data(account):
     if not account:

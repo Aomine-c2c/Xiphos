@@ -7,6 +7,7 @@ logger = setup_logger()
 
 class StateManager:
     def __init__(self):
+        # No state initialization required; uses static DB connection
         pass
 
     def get_open_trades(self):
@@ -25,20 +26,23 @@ class StateManager:
                 }
         return open_trades
 
+    def _get_trade_closure_details(self, ticket):
+        profit = 0.0
+        close_time = datetime.now()
+        deals = mt5.history_deals_get(position=int(ticket))
+        if deals:
+            for d in deals:
+                if d.entry == mt5.DEAL_ENTRY_OUT:
+                    profit += d.profit
+                    close_time = datetime.fromtimestamp(d.time)
+        else:
+            logger.warning(f"No history found for closed trade {ticket}. Defaulting profit to 0.")
+        return profit, close_time
+
     def _mark_closed_trades(self, cursor, open_trades, mt5_tickets):
         for ticket in open_trades.keys():
             if ticket not in mt5_tickets:
-                profit = 0.0
-                close_time = datetime.now()
-                deals = mt5.history_deals_get(position=int(ticket))
-                if deals:
-                    for d in deals:
-                        if d.entry == mt5.DEAL_ENTRY_OUT:
-                            profit += d.profit
-                            close_time = datetime.fromtimestamp(d.time)
-                else:
-                    logger.warning(f"No history found for closed trade {ticket}. Defaulting profit to 0.")
-                    
+                profit, close_time = self._get_trade_closure_details(ticket)
                 cursor.execute("""
                     UPDATE trades 
                     SET status = 'CLOSED', profit = ?, close_time = ? 
@@ -84,6 +88,17 @@ class StateManager:
                 UPDATE trades SET sl_price = ? WHERE ticket = ? AND status = 'OPEN'
             """, (new_sl, int(ticket)))
 
+    def _calculate_sharpe(self, profits, total):
+        if total <= 1:
+            return 0.0
+        import math
+        avg_profit = sum(profits) / total
+        variance = sum((p - avg_profit) ** 2 for p in profits) / (total - 1)
+        std_dev = math.sqrt(variance)
+        if std_dev > 0:
+            return (avg_profit / std_dev) * math.sqrt(504)
+        return 0.0
+
     def _calculate_metrics_from_rows(self, rows):
         total = len(rows)
         wins = 0
@@ -125,14 +140,7 @@ class StateManager:
         else:
             profit_factor = 0.0
         
-        sharpe = 0.0
-        if total > 1:
-            import math
-            avg_profit = sum(profits) / total
-            variance = sum((p - avg_profit) ** 2 for p in profits) / (total - 1)
-            std_dev = math.sqrt(variance)
-            if std_dev > 0:
-                sharpe = (avg_profit / std_dev) * math.sqrt(504)
+        sharpe = self._calculate_sharpe(profits, total)
 
         return {
             "total_trades": total,
