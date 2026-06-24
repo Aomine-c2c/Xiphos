@@ -64,14 +64,34 @@ def _get_supported_filling_modes(filling_bitmask, symbol):
         supported = [(mode, name) for mode, name, _ in all_modes]
     return supported
 
+def _record_trade_in_db(result, symbol, type_str, volume, sl_price, magic, sig, latency_ms):
+    with db.get_connection() as conn:
+        conn.execute("""
+            INSERT INTO executions (ticket, action, details)
+            VALUES (?, ?, ?)
+        """, (result.order, "OPEN", f"{type_str} {symbol} at {result.price} (SL: {sl_price})"))
+        
+        sma_200 = float(sig['ind_data']['sma_slow']) if sig and 'ind_data' in sig else 0.0
+        fast_ema = float(sig['ind_data']['ema_fast']) if sig and 'ind_data' in sig else 0.0
+        medium_ema = float(sig['ind_data']['ema_medium']) if sig and 'ind_data' in sig else 0.0
+        dist_sma = float(sig.get('distance', 0.0)) if sig else 0.0
+        proj_risk = float(sig.get('projected_risk', 0.0)) if sig else 0.0
+
+        conn.execute("""
+            INSERT INTO trades (
+                ticket, symbol, type, magic, volume, entry_price, sl_price, status,
+                mfe, mae, sma_200, fast_ema, medium_ema, distance_to_sma, projected_risk, latency_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            result.order, symbol, type_str, magic, float(volume), result.price, float(sl_price), "OPEN",
+            0.0, 0.0, sma_200, fast_ema, medium_ema, dist_sma, proj_risk, latency_ms
+        ))
+
 def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume, sl_price, magic, sig=None):
     for filling_mode, filling_name in supported_modes:
         request["type_filling"] = filling_mode
         check = mt5.order_check(request)
-        if check is None:
-            # Failed to check order, ignore
-            pass
-        elif check.retcode != 0:
+        if check is None or check.retcode != 0:
             continue
 
         start_time = time.perf_counter()
@@ -79,27 +99,7 @@ def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume
         latency_ms = (time.perf_counter() - start_time) * 1000
 
         if result:
-            with db.get_connection() as conn:
-                conn.execute("""
-                    INSERT INTO executions (ticket, action, details)
-                    VALUES (?, ?, ?)
-                """, (result.order, "OPEN", f"{type_str} {symbol} at {result.price} (SL: {sl_price})"))
-                
-                sma_200 = float(sig['ind_data']['sma_slow']) if sig and 'ind_data' in sig else 0.0
-                fast_ema = float(sig['ind_data']['ema_fast']) if sig and 'ind_data' in sig else 0.0
-                medium_ema = float(sig['ind_data']['ema_medium']) if sig and 'ind_data' in sig else 0.0
-                dist_sma = float(sig.get('distance', 0.0)) if sig else 0.0
-                proj_risk = float(sig.get('projected_risk', 0.0)) if sig else 0.0
-
-                conn.execute("""
-                    INSERT INTO trades (
-                        ticket, symbol, type, magic, volume, entry_price, sl_price, status,
-                        mfe, mae, sma_200, fast_ema, medium_ema, distance_to_sma, projected_risk, latency_ms
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    result.order, symbol, type_str, magic, float(volume), result.price, float(sl_price), "OPEN",
-                    0.0, 0.0, sma_200, fast_ema, medium_ema, dist_sma, proj_risk, latency_ms
-                ))
+            _record_trade_in_db(result, symbol, type_str, volume, sl_price, magic, sig, latency_ms)
             log.info(f"Trade successfully opened! Ticket: {result.order} (Latency: {latency_ms:.2f}ms)")
             return result
     return None

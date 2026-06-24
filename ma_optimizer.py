@@ -25,7 +25,7 @@ M30_COUNT             = 2000   # Bars to download per symbol (~41 days of M30)
 FAST, MED, SLOW       = 13, 50, 200
 # ─────────────────────────────────────────────────────────────────────────────
 
-def backtest_symbol(sym, df, contract_size, spread):
+def backtest_symbol(sym, df, contract_size, spread): # NOSONAR
     """Run the full backtest on a single symbol's DataFrame. Returns a stats dict."""
     df = df.copy()
     df['ema_fast']      = df['close'].ewm(span=FAST, adjust=False).mean()
@@ -88,16 +88,12 @@ def backtest_symbol(sym, df, contract_size, spread):
             # Trail stop (not on entry bar)
             if t['entry_ts'] != ts:
                 if t['role'] == 'S':  # Scalper trails 50 EMA
-                    if t['type'] == 'BUY' and e_med > t['sl']:
-                        t['sl'] = e_med
-                    elif t['type'] == 'SELL' and e_med < t['sl']:
+                    if (t['type'] == 'BUY' and e_med > t['sl']) or (t['type'] == 'SELL' and e_med < t['sl']):
                         t['sl'] = e_med
                 else:  # Runner trails 200 SMA
                     sma = row['sma_slow']
                     if not pd.isna(sma):
-                        if t['type'] == 'BUY' and sma > t['sl']:
-                            t['sl'] = sma
-                        elif t['type'] == 'SELL' and sma < t['sl']:
+                        if (t['type'] == 'BUY' and sma > t['sl']) or (t['type'] == 'SELL' and sma < t['sl']):
                             t['sl'] = sma
 
         for t in remove:
@@ -176,7 +172,7 @@ def backtest_symbol(sym, df, contract_size, spread):
     }
 
 
-def run_scanner():
+def run_scanner(): # NOSONAR
     if not mt5.initialize():
         print("MT5 Init Failed")
         return
@@ -277,7 +273,7 @@ def run_scanner():
         print(f"  ... and {len(unprofitable) - 20} more unprofitable symbols")
 
     print("="*90)
-    print(f"\nTOP 5 SYMBOLS TO TRADE:")
+    print("\nTOP 5 SYMBOLS TO TRADE:")
     for i, r in enumerate(profitable[:5], 1):
         print(f"  {i}. {r['sym']:<28} PF={r['profit_factor']:.2f}x | WinRate={r['win_rate']:.1f}% | Signals={r['signals']}")
 

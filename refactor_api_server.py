@@ -73,12 +73,13 @@ def query_vincent_ai(text: str) -> str:
         "- 'What are the strongest setups right now?'\\n"
         "- 'Why did we enter these positions?'"
     )
-\"\"\"
+"""
     content = content[:vincent_start] + vincent_new + content[vincent_end:]
 # 2. compile_system_state replacement
 state_start = content.find("def compile_system_state():")
 state_end = content.find("# Periodical update dispatcher loop", state_start)
 if state_start != -1 and state_end != -1:
+
     state_new = """def _compile_account_data(account):
     if not account:
         return {"balance": 0.0, "equity": 0.0, "margin_free": 0.0, "margin_level": 0.0, "profit": 0.0}

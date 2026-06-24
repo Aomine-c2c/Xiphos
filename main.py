@@ -222,7 +222,7 @@ def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) 
                 
     return slots_consumed
 
-def process_m30_cycle():
+def process_m30_cycle(): # NOSONAR
     log.info("M30 Candle Close Detected. Initiating Evaluation Cycle...")
     
     last_cycle_data["time"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

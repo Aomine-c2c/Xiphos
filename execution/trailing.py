@@ -41,6 +41,28 @@ def _trail_sell_position(pos, new_sl, stoplevel):
             log.info(f"Trailing SL for {pos.symbol} SELL (Magic {pos.magic}) downward to {new_sl}")
             modify_sl(pos.ticket, pos.symbol, new_sl)
 
+def _sync_position_to_db(pos):
+    with db.get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT ticket FROM trades WHERE ticket = ?", (pos.ticket,))
+        if not cursor.fetchone():
+            conn.execute("""
+                INSERT INTO trades (
+                    ticket, symbol, type, magic, volume, entry_price, sl_price, status,
+                    mfe, mae, sma_200, fast_ema, medium_ema, distance_to_sma, projected_risk, latency_ms
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                pos.ticket, pos.symbol, "BUY" if pos.type == mt5.ORDER_TYPE_BUY else "SELL", 
+                pos.magic, float(pos.volume), pos.price_open, float(pos.sl), "OPEN",
+                pos.profit, pos.profit, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+            ))
+        else:
+            conn.execute("""
+                UPDATE trades 
+                SET mfe = MAX(mfe, ?), mae = MIN(mae, ?)
+                WHERE ticket = ?
+            """, (pos.profit, pos.profit, pos.ticket))
+
 def trail_positions():
     """
     Trails SL for active positions.
@@ -56,28 +78,7 @@ def trail_positions():
         if pos.magic <= 0:
             continue
 
-        # Sync missing trades and update MFE/MAE
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT ticket FROM trades WHERE ticket = ?", (pos.ticket,))
-            if not cursor.fetchone():
-                conn.execute("""
-                    INSERT INTO trades (
-                        ticket, symbol, type, magic, volume, entry_price, sl_price, status,
-                        mfe, mae, sma_200, fast_ema, medium_ema, distance_to_sma, projected_risk, latency_ms
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    pos.ticket, pos.symbol, "BUY" if pos.type == mt5.ORDER_TYPE_BUY else "SELL", 
-                    pos.magic, float(pos.volume), pos.price_open, float(pos.sl), "OPEN",
-                    pos.profit, pos.profit, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-                ))
-            else:
-                conn.execute("""
-                    UPDATE trades 
-                    SET mfe = MAX(mfe, ?), mae = MIN(mae, ?)
-                    WHERE ticket = ?
-                """, (pos.profit, pos.profit, pos.ticket))
-            
+        _sync_position_to_db(pos)
 
         ind_data = get_m30_indicators(pos.symbol, count=250)
         if not ind_data:

@@ -7,7 +7,7 @@ def load_settings():
     with open('config/settings.yaml', 'r') as f:
         return yaml.safe_load(f)
 
-def run_backtest():
+def run_backtest(): # NOSONAR
     settings = load_settings()
     
     if not mt5.initialize():

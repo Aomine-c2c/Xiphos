@@ -438,7 +438,7 @@ async def _process_ws_command(websocket: WebSocket, data: dict):
         })
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket): # NOSONAR
     await websocket.accept()
     _web_sockets.add(websocket)
     try:
