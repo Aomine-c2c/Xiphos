@@ -2,12 +2,11 @@
 
 import React from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { Radio, Play } from "lucide-react";
+import { Radio, Play, Activity, Target } from "lucide-react";
 
 export default function CenterPanel() {
   const { sendCommand, rankedSignals, gates } = useTradingStore();
 
-  // Dynamically select the highest-priority approved signal from store as Hero Target
   const heroSignal = rankedSignals.find((s) => s.status === "APPROVED") || rankedSignals[0] || {
     symbol: "EURUSD",
     direction: "BUY",
@@ -32,121 +31,132 @@ export default function CenterPanel() {
     { label: "CLOSED", status: "PENDING", desc: "Target" }
   ];
 
-  // Evolve Typography: Metrics +60%, Titles +40%, Section Headers +30%
   return (
-    <div className="flex flex-col gap-3.5 w-full h-full justify-between">
+    <div className="flex flex-col gap-6 w-full h-full justify-between">
       
-      {/* 1. SIGNAL INTELLIGENCE COMMAND CORE (HERO DECISION PANEL) */}
-      <div className="bg-xiphos-panel border border-slate-900/80 rounded-sm flex flex-col overflow-hidden font-mono select-none flex-1 min-h-0">
+      {/* 1. SIGNAL INTELLIGENCE COMMAND CORE */}
+      <div className="glass-panel flex flex-col overflow-hidden flex-1 min-h-0">
         
-        {/* Title Header (+40% Font Scaling: text-[16px] -> text-[20px]) */}
-        <div className="p-3.5 border-b border-slate-950 flex items-center justify-between bg-[#0a101b]/40 shrink-0">
-          <span className="text-[20px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-2">
-            <Radio className="h-4 w-4 text-xiphos-blue animate-pulse" />
-            XIPHOS HERO DECISION INTEL CORE
+        {/* Title Header */}
+        <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)] flex items-center justify-between shrink-0">
+          <span className="text-lg font-bold text-white uppercase tracking-widest flex items-center gap-3">
+            <Radio className="h-5 w-5 text-xiphos-purple animate-pulse glow-purple" />
+            <span className="glow-purple">XIPHOS HERO DECISION CORE</span>
           </span>
-          <span className="text-[17px] text-[#8e9aa8] font-bold">
-            LATENCY: <span className="text-xiphos-green">12ms</span>
+          <span className="text-sm text-xiphos-muted font-semibold tracking-widest flex items-center gap-2">
+            LATENCY: <span className="text-xiphos-cyan glow-cyan">12ms</span>
           </span>
         </div>
 
         {/* Hero Grid layout */}
-        <div className="p-4.5 grid grid-cols-12 gap-4 items-stretch flex-1 min-h-0">
+        <div className="p-6 grid grid-cols-12 gap-6 items-stretch flex-1 min-h-0">
           
-          {/* Left Hero Core Block: Main display of target decisions */}
-          <div className="col-span-7 bg-xiphos-bg/40 border border-slate-900/60 rounded-sm p-4 flex flex-col justify-between min-h-0 overflow-hidden">
+          {/* Left Hero Core Block */}
+          <div className="col-span-7 glass-card p-6 flex flex-col justify-between min-h-0 overflow-hidden relative group">
+            {/* Ambient background glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-xiphos-purple/10 rounded-full blur-[80px] -z-10 group-hover:bg-xiphos-purple/20 transition-all duration-700"></div>
+
             <div>
-              <span className="text-[17px] text-[#6f7e90] font-black tracking-widest block uppercase leading-none mb-1.5">
-                ACTIVE HERO TARGET SETUP
-              </span>
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-4 h-4 text-xiphos-muted" />
+                <span className="text-sm text-xiphos-muted font-bold tracking-widest uppercase">
+                  ACTIVE HERO TARGET
+                </span>
+              </div>
               
-              <div className="flex items-baseline gap-3">
-                {/* Symbol Title (+40% scaled: text-3xl) */}
-                <span className="text-3xl font-black text-white leading-none tracking-wide">{heroSignal.symbol}</span>
-                {/* Direction (+60% scaled: text-[22px]) */}
-                <span className={`text-[22px] font-black px-2.5 py-0.5 rounded-sm leading-none ${
-                  heroSignal.direction === "BUY" ? "bg-xiphos-green text-black" : "bg-xiphos-red text-white"
+              <div className="flex items-baseline gap-4 mt-2">
+                <span className="text-5xl font-black text-white tracking-tight">{heroSignal.symbol}</span>
+                <span className={`text-xl font-bold px-3 py-1 rounded-md shadow-lg ${
+                  heroSignal.direction === "BUY" ? "bg-xiphos-emerald/20 text-xiphos-emerald border border-xiphos-emerald/50 glow-emerald" : "bg-xiphos-crimson/20 text-xiphos-crimson border border-xiphos-crimson/50 glow-crimson"
                 }`}>
                   {heroSignal.direction}
                 </span>
               </div>
             </div>
 
-            {/* Huge Metrics Display Area (+60% scaled) */}
-            <div className="my-2.5 py-3 border-y border-slate-950 flex items-center justify-between gap-4">
-              <div className="space-y-0.5">
-                <span className="text-[15px] text-[#6f7e90] font-black block uppercase tracking-wider">CONFIDENCE</span>
-                {/* Massive Confidence text (+60% scaled: text-[58px]) */}
-                <span className="text-[58px] font-black text-xiphos-blue leading-none tracking-tighter">92%</span>
+            {/* Huge Metrics Display Area */}
+            <div className="my-6 py-6 border-y border-[rgba(255,255,255,0.05)] flex items-center justify-between gap-6">
+              <div className="space-y-1">
+                <span className="text-sm text-xiphos-muted font-bold block uppercase tracking-widest">KRONOS CONFIDENCE</span>
+                <span className="text-6xl font-black text-xiphos-gold leading-none tracking-tighter glow-gold">92%</span>
               </div>
-              <div className="space-y-0.5 text-right">
-                <span className="text-[15px] text-[#6f7e90] font-black block uppercase tracking-wider">PROJECTED RISK</span>
-                {/* Massive Risk text (+60% scaled: text-[36px]) */}
-                <span className="text-[36px] font-black text-white leading-none">
+              <div className="space-y-1 text-right">
+                <span className="text-sm text-xiphos-muted font-bold block uppercase tracking-widest">PROJECTED RISK</span>
+                <span className="text-4xl font-black text-white leading-none">
                   {heroSignal.projected_risk.toFixed(2)}%
                 </span>
               </div>
             </div>
 
             {/* Live Ticks Summary */}
-            <div className="text-[16px] text-[#8e9aa8] grid grid-cols-3 gap-2">
-              <div>
-                PRICE: <span className="text-white font-bold">{heroSignal.price.toFixed(5)}</span>
+            <div className="text-sm text-xiphos-muted grid grid-cols-3 gap-4 font-mono">
+              <div className="bg-[rgba(11,15,23,0.5)] p-3 rounded-lg border border-[rgba(255,255,255,0.02)]">
+                <span className="block text-[10px] uppercase mb-1">PRICE</span>
+                <span className="text-white font-bold text-lg">{heroSignal.price.toFixed(5)}</span>
               </div>
-              <div className="text-center">
-                SMA200: <span className="text-white">{heroSignal.sma200.toFixed(5)}</span>
+              <div className="bg-[rgba(11,15,23,0.5)] p-3 rounded-lg border border-[rgba(255,255,255,0.02)]">
+                <span className="block text-[10px] uppercase mb-1">SMA200</span>
+                <span className="text-white font-bold text-lg">{heroSignal.sma200.toFixed(5)}</span>
               </div>
-              <div className="text-right">
-                GAP: <span className="text-xiphos-blue font-bold">{heroSignal.distance} pts</span>
+              <div className="bg-[rgba(11,15,23,0.5)] p-3 rounded-lg border border-[rgba(255,255,255,0.02)]">
+                <span className="block text-[10px] uppercase mb-1">GAP</span>
+                <span className="text-xiphos-cyan font-bold text-lg glow-cyan">{heroSignal.distance} pts</span>
               </div>
             </div>
           </div>
 
           {/* Right Core block: Validation Gates & Action Dispatcher */}
-          <div className="col-span-5 flex flex-col justify-between gap-3 min-h-0">
+          <div className="col-span-5 flex flex-col justify-between gap-6 min-h-0">
             
             {/* Validation Matrix Box */}
-            <div className="bg-xiphos-bg/40 border border-slate-900/60 rounded-sm p-3.5 space-y-1.5 flex-1 min-h-0 overflow-hidden">
-              <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block border-b border-slate-950 pb-1 mb-1">
-                GATE VALIDATION MATRIX
-              </span>
-              {[
-                { id: 1, name: "RISK SLOTS", status: gates.gate_1_risk_slot || "PASS" },
-                { id: 2, name: "CORRELATION", status: gates.gate_2_correlation || "PASS" },
-                { id: 3, name: "FAN ALIGN", status: gates.gate_3_fan_alignment || "PASS" },
-                { id: 4, name: "PRIORITY", status: gates.gate_4_priority_filter || "PASS" },
-                { id: 5, name: "HARD SL", status: gates.gate_5_hard_sl || "PASS" }
-              ].map((g) => (
-                <div
-                  key={g.id}
-                  className="flex items-center justify-between text-[11.5px] border border-slate-950 p-1.5 rounded-sm bg-slate-950/20 leading-none"
-                >
-                  <div className="flex items-center gap-1">
-                    <span className="text-xiphos-blue font-black text-[9.5px]">G{g.id}</span>
-                    <span className="font-bold text-white uppercase">{g.name}</span>
+            <div className="glass-card p-5 space-y-3 flex-1 min-h-0 overflow-hidden relative">
+              <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-3 mb-3">
+                <Activity className="w-4 h-4 text-xiphos-purple" />
+                <span className="text-sm text-white font-bold uppercase tracking-widest">
+                  NEURAL GATES
+                </span>
+              </div>
+              
+              <div className="space-y-2">
+                {[
+                  { id: 1, name: "RISK SLOTS", status: gates.gate_1_risk_slot || "PASS" },
+                  { id: 2, name: "CORRELATION", status: gates.gate_2_correlation || "PASS" },
+                  { id: 3, name: "FAN ALIGN", status: gates.gate_3_fan_alignment || "PASS" },
+                  { id: 4, name: "PRIORITY", status: gates.gate_4_priority_filter || "PASS" },
+                  { id: 5, name: "HARD SL", status: gates.gate_5_hard_sl || "PASS" }
+                ].map((g) => (
+                  <div
+                    key={g.id}
+                    className="flex items-center justify-between text-xs border border-[rgba(255,255,255,0.05)] p-2.5 rounded-lg bg-[rgba(11,15,23,0.6)] leading-none transition-colors hover:bg-[rgba(11,15,23,0.8)]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-md bg-xiphos-purple/20 text-xiphos-purple font-bold text-[10px]">G{g.id}</span>
+                      <span className="font-semibold text-xiphos-muted uppercase tracking-wider">{g.name}</span>
+                    </div>
+                    <span className={`font-bold tracking-widest flex items-center ${
+                      g.status === "PASS" ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"
+                    }`}>
+                      {g.status === "PASS" ? "VERIFIED" : "BLOCKED"}
+                    </span>
                   </div>
-                  <span className={`font-black text-[14px] flex items-center ${
-                    g.status === "PASS" ? "text-xiphos-green" : "text-xiphos-red"
-                  }`}>
-                    {g.status === "PASS" ? "✓ PASS" : "✗ BLOCKED"}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Action Dispatcher Box */}
-            <div className="bg-xiphos-bg/40 border border-slate-900/60 rounded-sm p-3 flex flex-col items-center text-center justify-between shrink-0">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="h-2 w-2 rounded-full bg-xiphos-green animate-pulse" />
-                <span className="text-[16px] text-xiphos-green font-black uppercase tracking-wider">
-                  STATUS: READY TO FIRE
+            <div className="glass-card p-5 flex flex-col items-center text-center justify-between shrink-0 border-xiphos-purple/30 bg-xiphos-purple/5 shadow-[0_0_20px_rgba(139,92,246,0.05)]">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="h-2 w-2 rounded-full bg-xiphos-emerald animate-ping absolute" />
+                <span className="h-2 w-2 rounded-full bg-xiphos-emerald relative z-10" />
+                <span className="text-sm text-xiphos-emerald font-bold uppercase tracking-widest glow-emerald">
+                  SYSTEM READY TO FIRE
                 </span>
               </div>
               <button
                 onClick={handleForceExecute}
-                className="w-full py-2 bg-xiphos-blue hover:bg-sky-400 text-black text-[16px] font-black tracking-widest uppercase rounded-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_0_8px_rgba(0,168,255,0.15)]"
+                className="w-full py-3.5 bg-xiphos-purple/20 hover:bg-xiphos-purple border border-xiphos-purple text-white text-sm font-bold tracking-widest uppercase rounded-lg transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:shadow-[0_0_25px_rgba(139,92,246,0.6)] group"
               >
-                <Play className="h-3.5 w-3.5 fill-current" /> EXECUTE DISPATCH
+                <Play className="h-4 w-4 fill-current group-hover:scale-110 transition-transform" /> EXECUTE OVERRIDE
               </button>
             </div>
 
@@ -154,35 +164,35 @@ export default function CenterPanel() {
         </div>
       </div>
 
-      {/* 2. TRADE LIFECYCLE TRACKER (+30% Font Scaling: text-[15px] -> text-[18px]) */}
-      <div className="bg-xiphos-panel border border-slate-900/80 rounded-sm p-3.5 font-mono select-none shrink-0">
-        <span className="text-[18px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2.5 leading-none">
-          XIPHOS AUTOMATED LIFECYCLE PIPELINE
+      {/* 2. TRADE LIFECYCLE TRACKER */}
+      <div className="glass-panel p-5 shrink-0">
+        <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest block mb-4">
+          XIPHOS AUTOMATED PIPELINE
         </span>
 
-        <div className="flex items-center justify-between text-[17px] font-black leading-none">
+        <div className="flex items-center justify-between text-sm font-bold tracking-wider">
           {lifecycleSteps.map((step) => {
             const isCompleted = step.status === "COMPLETED";
             const isActive = step.status === "ACTIVE";
 
-            let classes = "border-slate-900 text-[#425062]";
+            let classes = "border-[rgba(255,255,255,0.1)] text-xiphos-muted bg-[rgba(11,15,23,0.5)]";
             if (isCompleted) {
-              classes = "border-xiphos-green/45 text-xiphos-green bg-xiphos-green/5";
+              classes = "border-xiphos-cyan/50 text-xiphos-cyan bg-xiphos-cyan/10 glow-cyan shadow-[0_0_10px_rgba(76,201,240,0.2)]";
             } else if (isActive) {
-              classes = "border-xiphos-blue text-xiphos-blue bg-xiphos-blue/5";
+              classes = "border-xiphos-purple/50 text-white bg-xiphos-purple/20 glow-purple shadow-[0_0_15px_rgba(139,92,246,0.3)] scale-105";
             }
 
             return (
               <React.Fragment key={step.label}>
-                <div className="flex flex-col items-center">
-                  <span className={`px-2.5 py-1 rounded-sm border text-[16px] tracking-wide font-black ${classes}`}>
+                <div className="flex flex-col items-center transition-all duration-300">
+                  <span className={`px-4 py-2 rounded-lg border ${classes}`}>
                     {step.label}
                   </span>
                 </div>
                 
                 {step.label !== "CLOSED" && (
-                  <span className={`text-[17px] font-bold ${
-                    isCompleted ? "text-xiphos-green" : "text-[#425062]"
+                  <span className={`text-lg font-bold ${
+                    isCompleted ? "text-xiphos-cyan glow-cyan" : "text-[rgba(255,255,255,0.1)]"
                   }`}>
                     ➔
                   </span>

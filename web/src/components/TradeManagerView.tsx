@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sliders, ShieldCheck, Terminal } from "lucide-react";
-
+import { Sliders, ShieldCheck, Terminal, Cpu } from "lucide-react";
 import { useTradingStore } from "../store/useTradingStore";
+import { motion } from "framer-motion";
 
 export default function TradeManagerView() {
   const { logs } = useTradingStore();
@@ -11,8 +11,8 @@ export default function TradeManagerView() {
   const [runnerActive, setRunnerActive] = useState(true);
 
   const bots = [
-    { id: "135001", name: "TRADE A — SCALPER", role: "Scalper", active: scalperActive, lastSignal: "08:24:11", symbol: "EURUSD M30", color: "#FFB020" as const },
-    { id: "135002", name: "TRADE B — RUNNER", role: "Runner", active: runnerActive, lastSignal: "08:22:44", symbol: "XAUUSD M30", color: "#00A8FF" as const },
+    { id: "135001", name: "TRADE A — SCALPER", role: "Scalper", active: scalperActive, lastSignal: "08:24:11", symbol: "EURUSD M30", color: "#D4AF37", glow: "glow-gold" },
+    { id: "135002", name: "TRADE B — RUNNER", role: "Runner", active: runnerActive, lastSignal: "08:22:44", symbol: "XAUUSD M30", color: "#4CC9F0", glow: "glow-cyan" },
   ];
 
   const rules = [
@@ -26,61 +26,69 @@ export default function TradeManagerView() {
   ];
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2 transition-all duration-300 hover:border-xiphos-blue/40">
-      <div className="bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm flex flex-col overflow-hidden flex-1 min-h-0">
+    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300">
+      <div className="glass-panel flex flex-col overflow-hidden flex-1 min-h-0 relative">
+        
+        {/* Subtle Background Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-xiphos-gold opacity-5 blur-[150px] rounded-full pointer-events-none"></div>
 
         {/* Header */}
-        <div className="p-3.5 border-b border-slate-950 flex items-center bg-[#0a101b]/40 shrink-0">
-          <span className="text-3xl font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
-            <Sliders className="h-4 w-4" />
+        <div className="p-4 border-b border-white/5 flex items-center bg-black/20 shrink-0 z-10">
+          <span className="text-2xl font-black text-xiphos-gold uppercase tracking-widest flex items-center gap-2 glow-gold">
+            <Sliders className="h-5 w-5" />
             STRATEGY ROUTING POLICY CONFIGURATOR
           </span>
         </div>
 
         {/* Split: 3 + 9 */}
-        <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden">
+        <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden z-10">
 
           {/* LEFT: Bot status cards */}
-          <div className="col-span-3 border-r border-slate-900/60 p-4 flex flex-col gap-4 overflow-hidden">
-            <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block border-b border-slate-950 pb-1.5">
+          <div className="col-span-3 border-r border-white/5 p-5 flex flex-col gap-6 overflow-hidden bg-black/20">
+            <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-2">
               BOT RUNTIME STATUS
             </span>
 
             {bots.map(bot => (
               <div key={bot.id}
-                className={`bg-xiphos-bg/40 border rounded-sm p-3.5 flex flex-col gap-3 transition-all ${
-                  bot.active ? "border-slate-900/60" : "border-slate-950 opacity-55"
+                className={`glass-card p-4 flex flex-col gap-4 transition-all ${
+                  bot.active ? "border-white/10" : "border-white/5 opacity-50 grayscale"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[16px] font-black uppercase" style={{ color: bot.color }}>{bot.name}</span>
-                  <span className={`px-1.5 py-0.5 rounded-sm text-[14px] font-black uppercase ${
-                    bot.active ? "bg-xiphos-green text-black" : "bg-slate-800 text-slate-500"
+                  <span className={`text-sm font-black uppercase ${bot.active ? bot.glow : ""}`} style={{ color: bot.active ? bot.color : "#94A3B8" }}>
+                    {bot.name}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${
+                    bot.active ? "bg-xiphos-emerald/20 text-xiphos-emerald border-xiphos-emerald/30" : "bg-white/10 text-xiphos-muted border-white/10"
                   }`}>
                     {bot.active ? "ACTIVE" : "BYPASSED"}
                   </span>
                 </div>
-                <div className="space-y-1.5 text-[16px] text-[#8e9aa8]">
+                
+                <div className="space-y-2 text-xs text-xiphos-muted">
                   {[
                     ["MAGIC NO.", bot.id],
                     ["ROLE", bot.role],
                     ["LAST SIGNAL", bot.lastSignal],
                     ["ACTIVE SYMBOL", bot.symbol],
                   ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between border-b border-slate-950/40 pb-1 last:border-none">
-                      <span>{k}</span>
-                      <span className="text-white font-bold">{v}</span>
+                    <div key={k} className="flex justify-between border-b border-white/5 pb-1 last:border-none">
+                      <span className="font-black tracking-wider">{k}</span>
+                      <span className="text-white font-mono">{v}</span>
                     </div>
                   ))}
                 </div>
+
                 <button
                   onClick={() => bot.id === "135001" ? setScalperActive(!scalperActive) : setRunnerActive(!runnerActive)}
-                  className={`w-full py-1.5 text-[15px] font-black tracking-widest uppercase rounded-sm border cursor-pointer transition-all ${
+                  className={`w-full py-2 text-xs font-black tracking-widest uppercase rounded border cursor-pointer transition-all flex items-center justify-center gap-2 ${
                     bot.active
-                      ? "border-xiphos-orange/40 text-xiphos-orange hover:bg-xiphos-orange/5"
-                      : "border-xiphos-green/40 text-xiphos-green hover:bg-xiphos-green/5"
+                      ? "border-xiphos-gold/40 text-xiphos-gold hover:bg-xiphos-gold hover:text-black"
+                      : "border-xiphos-emerald/40 text-xiphos-emerald hover:bg-xiphos-emerald hover:text-black"
                   }`}
                 >
+                  <Cpu className="w-3 h-3" />
                   {bot.active ? "BYPASS ROUTE" : "ENGAGE ROUTE"}
                 </button>
               </div>
@@ -88,67 +96,68 @@ export default function TradeManagerView() {
           </div>
 
           {/* RIGHT: Rules table + execution log */}
-          <div className="col-span-9 p-4 flex flex-col gap-4 overflow-hidden">
+          <div className="col-span-9 p-5 flex flex-col gap-6 overflow-hidden">
 
             {/* Rules comparison table */}
-            <div className="flex-1 min-h-0 flex flex-col">
-              <span className="text-[15px] text-[#6f7e90] font-black uppercase tracking-wider block mb-2 border-b border-slate-950 pb-1.5 shrink-0">
-                ACTIVE STRATEGY RULES COMPARISON
-              </span>
+            <div className="flex-1 min-h-0 flex flex-col glass-card">
+              <div className="p-3 border-b border-white/5 bg-black/20 flex justify-between items-center">
+                <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider">
+                  ACTIVE STRATEGY RULES COMPARISON
+                </span>
+                <span className="text-xs text-xiphos-emerald glow-emerald font-black tracking-widest flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> ENFORCED
+                </span>
+              </div>
               <div className="overflow-hidden flex-1 min-h-0">
-                <table className="w-full text-left text-[17px] border-collapse font-bold">
-                  <thead>
-                    <tr className="bg-slate-950/80 border-b border-slate-900 text-[#6f7e90] uppercase text-[15px]">
-                      <th className="p-2.5 font-black">RULE PARAMETER</th>
-                      <th className="p-2.5 font-black text-center text-xiphos-orange">SCALPER (135001)</th>
-                      <th className="p-2.5 font-black text-center text-xiphos-blue">RUNNER (135002)</th>
+                <table className="w-full text-left text-sm border-collapse">
+                  <thead className="bg-black/40">
+                    <tr className="text-xiphos-muted text-[11px] tracking-widest uppercase">
+                      <th className="p-3 pl-4 font-black">LOGIC PARAMETER</th>
+                      <th className="p-3 font-black text-xiphos-gold">SCALPER ROUTE (A)</th>
+                      <th className="p-3 font-black text-xiphos-cyan">RUNNER ROUTE (B)</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rules.map((rule, idx) => (
-                      <tr key={idx} className="border-b border-slate-950/60 hover:bg-xiphos-bg/40 transition-colors">
-                        <td className="p-2.5 text-[#8e9aa8]">{rule.rule}</td>
-                        <td className="p-2.5 text-center font-black text-xiphos-orange">{rule.scalper}</td>
-                        <td className="p-2.5 text-center font-black text-xiphos-blue">{rule.runner}</td>
-                      </tr>
+                    {rules.map((r, i) => (
+                      <motion.tr 
+                        key={r.rule} 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: i * 0.05 }}
+                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      >
+                        <td className="p-3 pl-4 font-black text-white tracking-wider">{r.rule}</td>
+                        <td className="p-3 font-mono text-xiphos-gold">{r.scalper}</td>
+                        <td className="p-3 font-mono text-xiphos-cyan">{r.runner}</td>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            {/* Live execution log */}
-            <div className="bg-xiphos-bg/60 border border-slate-900/60 rounded-sm p-3.5 shrink-0">
-              <div className="flex items-center gap-1.5 text-[15px] font-black text-xiphos-blue uppercase tracking-widest mb-2.5 border-b border-slate-950 pb-1.5">
-                <Terminal className="h-3 w-3" />
-                <span>LIVE EXECUTION LOG</span>
-                <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green animate-pulse ml-auto" />
+            {/* Mini Console Log */}
+            <div className="shrink-0 h-32 glass-card border border-white/5 bg-black/40 flex flex-col overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-2">
+                <div className="w-2 h-2 rounded-full bg-xiphos-purple animate-pulse shadow-[0_0_8px_#8B5CF6]" />
               </div>
-              <div className="space-y-1.5 overflow-hidden">
-                {logs.slice(-6).map((log, idx) => (
-                  <div key={idx} className="flex gap-2 text-[15px]">
-                    <span className="text-[#425062] shrink-0">&gt;</span>
-                    <span className="text-[#ccd6e0]">{log.formatted}</span>
+              <div className="text-[10px] text-xiphos-muted font-black tracking-widest uppercase p-2 border-b border-white/5 bg-black/40 flex items-center gap-1.5">
+                <Terminal className="w-3 h-3" />
+                EXECUTION LOGSTREAM
+              </div>
+              <div className="flex-1 p-2 overflow-y-auto text-xs font-mono leading-relaxed opacity-80 flex flex-col gap-1">
+                {logs.slice(-4).map((log, i) => (
+                  <div key={i} className="flex gap-2">
+                    <span className="text-xiphos-muted shrink-0">[{log.timestamp}]</span>
+                    <span className={log.level === 'CRITICAL' || log.level === 'ERROR' ? 'text-xiphos-crimson' : log.level === 'WARN' ? 'text-xiphos-gold' : 'text-xiphos-purple'}>
+                      {log.message}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
           </div>
-
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-green/20 shadow-[0_0_15px_rgba(0,210,106,0.05)] rounded-sm p-3 shrink-0">
-        <div className="flex items-center justify-between text-[16px] font-black">
-          <div className="flex items-center gap-2 text-xiphos-green">
-            <ShieldCheck className="h-4 w-4" />
-            <span>SUB-STRATEGY SPLIT ROUTING PROTOCOLS ENFORCED</span>
-          </div>
-          <span className="text-[#8e9aa8] text-[15px]">
-            ACTIVE ALIGN: <span className="text-white">Close &gt; EMA13 &gt; EMA50 &gt; SMA200</span>
-          </span>
         </div>
       </div>
     </div>

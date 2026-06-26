@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { AlertTriangle, Award, CheckCircle } from "lucide-react";
+import { AlertTriangle, Award, CheckCircle, BrainCircuit } from "lucide-react";
 import { useTradingStore } from "../store/useTradingStore";
 
 export default function ChatPanel() {
   const { placeOrder } = useTradingStore();
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll chat to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -29,56 +28,57 @@ export default function ChatPanel() {
   ];
 
   return (
-    <div className="w-full h-full bg-xiphos-panel border border-slate-900/80 flex flex-col font-mono select-none overflow-hidden rounded-sm">
+    <div className="glass-panel w-full h-full flex flex-col overflow-hidden">
       
       {/* Header */}
-      <div className="shrink-0 p-2.5 border-b border-slate-950 flex items-center justify-between bg-xiphos-bg/40">
-        <span className="text-[21px] font-black text-xiphos-blue uppercase tracking-widest flex items-center gap-1.5">
-          <Award className="h-4 w-4 text-xiphos-blue" />
-          CHIEF TRADING OFFICER
+      <div className="shrink-0 px-5 py-4 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)] flex items-center justify-between">
+        <span className="text-lg font-bold text-white uppercase tracking-widest flex items-center gap-3">
+          <BrainCircuit className="h-5 w-5 text-xiphos-purple animate-pulse glow-purple" />
+          <span className="glow-purple">VINCENT AI CTO</span>
         </span>
-        <span className="flex items-center gap-1.5 text-[15px] font-bold text-xiphos-green uppercase">
-          <span className="h-1.5 w-1.5 rounded-full bg-xiphos-green animate-pulse" />{' '}CTO ACTIVE
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-bold text-xiphos-purple uppercase tracking-widest animate-pulse glow-purple">
+            ANALYZING NEURAL DATA
+          </span>
+          <div className="flex gap-1 items-center h-4">
+            <div className="w-1 h-3 bg-xiphos-purple rounded-full animate-[pulse_1s_ease-in-out_infinite] glow-purple" />
+            <div className="w-1 h-4 bg-xiphos-purple rounded-full animate-[pulse_1s_ease-in-out_0.2s_infinite] glow-purple" />
+            <div className="w-1 h-2 bg-xiphos-purple rounded-full animate-[pulse_1s_ease-in-out_0.4s_infinite] glow-purple" />
+          </div>
+        </div>
       </div>
 
       {/* TOP HALF: Unified Analysis & Alert Feed */}
-      <div className="flex-[0.55] flex flex-col min-h-0 border-b border-slate-900/60 bg-xiphos-bg/40 relative">
-        {/* Background Cyborg Watermark */}
-        <div className="absolute top-0 right-0 bottom-0 w-1/2 opacity-10 pointer-events-none flex justify-end">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/cyborg.png" alt="" className="object-cover object-right h-full" />
-        </div>
-        
-        <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block p-2.5 border-b border-slate-950/60 shrink-0 z-10">
-          LIVE INTELLIGENCE & RISK FEED
+      <div className="flex-[0.55] flex flex-col min-h-0 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.2)] relative">
+        <span className="text-xs text-xiphos-muted font-bold uppercase tracking-widest block px-5 py-3 border-b border-[rgba(255,255,255,0.02)] shrink-0 z-10">
+          LIVE INTELLIGENCE FEED
         </span>
         
-        <div ref={scrollRef} className="flex-1 overflow-hidden p-2.5 space-y-2.5 z-10">
-          {feedItems.slice(-5).map((item, idx) => {
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3 custom-scrollbar z-10">
+          {feedItems.map((item, idx) => {
             const isWarn = item.type === "WARN";
             const isCrit = item.type === "CRITICAL";
-            let color = "text-xiphos-blue";
-            let bg = "bg-xiphos-blue/5 border-xiphos-blue/20";
+            let color = "text-xiphos-cyan glow-cyan";
+            let bg = "bg-xiphos-cyan/5 border-xiphos-cyan/20";
             if (isCrit) {
-              color = "text-xiphos-red";
-              bg = "bg-xiphos-red/5 border-xiphos-red/20";
+              color = "text-xiphos-crimson glow-crimson";
+              bg = "bg-xiphos-crimson/5 border-xiphos-crimson/20";
             } else if (isWarn) {
-              color = "text-yellow-500";
-              bg = "bg-yellow-500/5 border-yellow-500/20";
+              color = "text-xiphos-gold glow-gold";
+              bg = "bg-xiphos-gold/5 border-xiphos-gold/20";
             }
             
             return (
-              <div key={`${item.time}-${idx}`} className={`p-2 border rounded-sm flex items-start gap-2.5 ${bg}`}>
+              <div key={`${item.time}-${idx}`} className={`p-4 border rounded-xl flex items-start gap-3 backdrop-blur-md transition-all hover:bg-white/5 ${bg}`}>
                 <div className={`mt-0.5 ${color}`}>
-                  {isCrit || isWarn ? <AlertTriangle className="h-3.5 w-3.5" /> : <span className="text-[16px] font-black opacity-80">&gt;</span>}
+                  {isCrit || isWarn ? <AlertTriangle className="h-4 w-4" /> : <span className="text-sm font-bold opacity-80">&gt;</span>}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`text-[11.5px] font-black ${color}`}>{item.type}</span>
-                    <span className="text-[10.5px] text-[#6f7e90] font-bold">{item.time}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${color}`}>{item.type}</span>
+                    <span className="text-[10px] text-xiphos-muted font-mono">{item.time}</span>
                   </div>
-                  <p className="text-[16px] leading-relaxed text-[#ccd6e0]">{item.text}</p>
+                  <p className="text-sm leading-relaxed text-slate-300 font-sans">{item.text}</p>
                 </div>
               </div>
             );
@@ -87,47 +87,47 @@ export default function ChatPanel() {
       </div>
 
       {/* BOTTOM HALF: Structured Recommendation Cards */}
-      <div className="flex-[0.45] flex flex-col min-h-0 bg-xiphos-bg/60">
-        <span className="text-[16px] text-[#6f7e90] font-black uppercase tracking-wider block p-2.5 border-b border-slate-950/60 shrink-0">
-          CTO ACTION DIRECTIVES
+      <div className="flex-[0.45] flex flex-col min-h-0 bg-[rgba(11,15,23,0.4)]">
+        <span className="text-xs text-xiphos-muted font-bold uppercase tracking-widest block px-5 py-3 border-b border-[rgba(255,255,255,0.02)] shrink-0">
+          AI ACTION DIRECTIVES
         </span>
         
-        <div className="flex-1 overflow-hidden p-2.5 space-y-2">
-          {recommendations.slice(-2).map(rec => (
-            <div key={rec.id} className="border border-emerald-950/60 bg-xiphos-panel rounded-sm flex flex-col">
-              <div className="p-2 border-b border-slate-950/60 flex justify-between items-center bg-xiphos-bg/40">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[17px] font-black text-xiphos-green uppercase">{rec.id}: {rec.symbol}</span>
-                  <span className="px-1.5 py-0.5 text-[10.5px] font-black border border-xiphos-green/30 text-xiphos-green bg-xiphos-green/5 rounded-sm">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 custom-scrollbar">
+          {recommendations.map(rec => (
+            <div key={rec.id} className="glass-card rounded-xl flex flex-col transition-all hover:border-xiphos-purple/40 hover:shadow-[0_0_15px_rgba(139,92,246,0.1)] overflow-hidden">
+              <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.05)] flex justify-between items-center bg-[rgba(11,15,23,0.6)]">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-white uppercase tracking-wider">{rec.symbol}</span>
+                  <span className="px-2 py-1 text-[10px] font-bold border border-xiphos-emerald/30 text-xiphos-emerald bg-xiphos-emerald/10 rounded-md uppercase">
                     {rec.type}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[15px] font-bold text-[#6f7e90]">
-                  CONFIDENCE: <span className="text-white font-black">{rec.confidence}%</span>
+                <div className="flex items-center gap-2 text-xs font-bold text-xiphos-muted uppercase tracking-wider">
+                  CONFIDENCE: <span className="text-xiphos-purple glow-purple font-black">{rec.confidence}%</span>
                 </div>
               </div>
               
-              <div className="p-2.5 flex justify-between items-center">
-                <div className="flex gap-4 text-[11.5px]">
+              <div className="p-4 flex flex-col gap-4">
+                <div className="flex justify-between text-xs font-mono">
                   <div>
-                    <span className="block text-[#6f7e90] font-bold mb-0.5">ENTRY</span>
-                    <span className="text-white font-black">{rec.price.toFixed(5)}</span>
+                    <span className="block text-xiphos-muted font-bold mb-1 uppercase tracking-wider text-[10px]">ENTRY</span>
+                    <span className="text-white font-bold">{rec.price.toFixed(5)}</span>
                   </div>
                   <div>
-                    <span className="block text-[#6f7e90] font-bold mb-0.5">TARGET (TP)</span>
-                    <span className="text-xiphos-green font-black">{rec.tp.toFixed(5)}</span>
+                    <span className="block text-xiphos-muted font-bold mb-1 uppercase tracking-wider text-[10px]">TARGET</span>
+                    <span className="text-xiphos-emerald glow-emerald font-bold">{rec.tp.toFixed(5)}</span>
                   </div>
                   <div>
-                    <span className="block text-[#6f7e90] font-bold mb-0.5">RISK (SL)</span>
-                    <span className="text-xiphos-red font-black">{rec.sl.toFixed(5)}</span>
+                    <span className="block text-xiphos-muted font-bold mb-1 uppercase tracking-wider text-[10px]">RISK</span>
+                    <span className="text-xiphos-crimson glow-crimson font-bold">{rec.sl.toFixed(5)}</span>
                   </div>
                 </div>
                 
                 <button
                   onClick={() => placeOrder(rec.symbol, rec.type, 0.01, rec.price, rec.sl, rec.tp)}
-                  className="px-3 py-1.5 bg-xiphos-green hover:bg-emerald-400 text-black text-[15px] font-black tracking-widest uppercase rounded-sm cursor-pointer transition-all flex items-center gap-1"
+                  className="w-full py-2.5 bg-xiphos-emerald/10 hover:bg-xiphos-emerald/20 border border-xiphos-emerald/50 text-xiphos-emerald text-xs font-bold tracking-widest uppercase rounded-lg cursor-pointer transition-all flex items-center justify-center gap-2 hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] glow-emerald"
                 >
-                  <CheckCircle className="h-3 w-3" /> APPROVE
+                  <CheckCircle className="h-4 w-4" /> APPROVE DIRECTIVE
                 </button>
               </div>
             </div>
