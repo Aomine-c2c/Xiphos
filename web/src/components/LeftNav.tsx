@@ -10,11 +10,12 @@ import {
   Sliders, 
   BarChart3, 
   FileSpreadsheet, 
-  Settings 
+  Settings,
+  PieChart
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type TabType = "DASHBOARD" | "RISK_MANAGER" | "TRADE_MANAGER" | "SETTINGS" | "ANALYTICS" | "MARKETS" | "POSITIONS" | "ORDERS" | "REPORTS";
+export type TabType = "DASHBOARD" | "RISK_MANAGER" | "TRADE_MANAGER" | "SETTINGS" | "ANALYTICS" | "MARKETS" | "POSITIONS" | "ORDERS" | "REPORTS" | "PORTFOLIO";
 
 interface LeftNavProps {
   activeTab: TabType;
@@ -39,6 +40,7 @@ export default function LeftNav({ activeTab, setActiveTab }: LeftNavProps) {
     { id: "TRADE_MANAGER", icon: Sliders, label: "TRADE MANAGER" },
     { id: "ANALYTICS", icon: BarChart3, label: "ANALYTICS" },
     { id: "REPORTS", icon: FileSpreadsheet, label: "REPORTS" },
+    { id: "PORTFOLIO", icon: PieChart, label: "PORTFOLIO" },
     { id: "SETTINGS", icon: Settings, label: "SETTINGS" },
   ];
 

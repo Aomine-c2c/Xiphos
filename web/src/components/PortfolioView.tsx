@@ -1,0 +1,356 @@
+"use client";
+
+import React, { useMemo } from "react";
+import { 
+  PieChart as PieChartIcon, 
+  Download, 
+  TrendingUp, 
+  Activity, 
+  FileText,
+  Clock,
+  Target
+} from "lucide-react";
+import { 
+  AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from "recharts";
+import { useTradingStore } from "../store/useTradingStore";
+import { motion } from "framer-motion";
+
+export default function PortfolioView() {
+  const { account, performanceMetrics, positions, marketWatch } = useTradingStore();
+
+  // 1. Mock Data / Calculations for missing metrics
+  const balanceHistory = performanceMetrics?.equity_curve || [100, 105, 103, 110, 115, 112, 120];
+  const equityHistory = balanceHistory.map(b => b * (1 + (Math.random() * 0.05 - 0.02)));
+  
+  const roi = ((account.balance - 40000) / 40000) * 100; // Mock initial balance 40k
+  const sortinoRatio = (performanceMetrics?.sharpe_ratio || 2.84) * 1.3; // Mock
+  const expectancy = 15.42; // Mock
+  const avgTradeDuration = "4h 15m";
+  
+  const topAssets = [
+    { symbol: "XAUUSD", profit: 2450.00, winRate: 85 },
+    { symbol: "EURUSD", profit: 1240.50, winRate: 78 },
+    { symbol: "US30", profit: 890.20, winRate: 72 },
+  ];
+  
+  const worstAssets = [
+    { symbol: "GBPUSD", profit: -340.00, winRate: 42 },
+    { symbol: "XAGUSD", profit: -120.50, winRate: 48 },
+  ];
+
+  // Asset Allocation Mock
+  const assetAllocation = [
+    { name: "Forex", value: 45000, color: "#4CC9F0" },
+    { name: "Crypto", value: 25000, color: "#8B5CF6" },
+    { name: "Indices", value: 20000, color: "#F59E0B" },
+    { name: "Commodities", value: 10000, color: "#10B981" },
+  ];
+
+  // Daily Returns Calendar Mock
+  const generateCalendar = () => {
+    const days = [];
+    for (let i = 0; i < 30; i++) {
+      const val = (Math.random() * 4) - 1.5; // -1.5% to +2.5%
+      days.push({ day: i + 1, return: val });
+    }
+    return days;
+  };
+  const calendarDays = useMemo(() => generateCalendar(), []);
+
+  // Equity Chart
+  const drawEquityChart = () => {
+    const data = balanceHistory.map((bal, i) => ({
+      index: i,
+      balance: bal,
+      equity: equityHistory[i]
+    }));
+
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#4CC9F0" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="#4CC9F0" stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#22C55E" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="#22C55E" stopOpacity={0}/>
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+          <Tooltip 
+            contentStyle={{ backgroundColor: "rgba(11,15,23,0.9)", borderColor: "rgba(255,255,255,0.1)", color: "#fff", fontSize: "10px", fontFamily: "monospace", borderRadius: "8px" }} 
+            itemStyle={{ fontWeight: "bold" }}
+          />
+          <Area type="step" dataKey="balance" stroke="#4CC9F0" fillOpacity={1} fill="url(#colorBalance)" />
+          <Area type="monotone" dataKey="equity" stroke="#22C55E" fillOpacity={1} fill="url(#colorEquity)" strokeWidth={2} />
+        </AreaChart>
+      </ResponsiveContainer>
+    );
+  };
+
+  const MetricCard = ({ label, value, sub, colorClass }: { label: string, value: string, sub?: string, colorClass?: string }) => (
+    <div className="glass-card p-4 flex flex-col justify-center">
+      <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest mb-1">{label}</span>
+      <span className={`text-2xl font-black ${colorClass || "text-white"}`}>{value}</span>
+      {sub && <span className="text-[9px] text-xiphos-muted uppercase tracking-widest mt-1 opacity-70">{sub}</span>}
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in zoom-in-95">
+      
+      {/* 1. TOP HEADER */}
+      <div className="glass-panel rounded-xl flex items-center justify-between p-4 shrink-0 border border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.6)]">
+        <div className="flex items-center gap-3">
+          <PieChartIcon className="h-6 w-6 text-xiphos-cyan animate-pulse glow-cyan" />
+          <span className="text-xl font-black text-white uppercase tracking-widest drop-shadow-md">INSTITUTIONAL PORTFOLIO DASHBOARD</span>
+        </div>
+        <div className="flex gap-3">
+          <button className="px-4 py-2 bg-[rgba(11,15,23,0.8)] hover:bg-white/10 border border-[rgba(255,255,255,0.1)] rounded-md text-xs font-bold tracking-widest text-white uppercase flex items-center gap-2 transition-all group">
+            <FileText className="w-4 h-4 text-xiphos-cyan group-hover:scale-110 transition-transform" /> EXPORT PDF
+          </button>
+          <button className="px-4 py-2 bg-[rgba(11,15,23,0.8)] hover:bg-white/10 border border-[rgba(255,255,255,0.1)] rounded-md text-xs font-bold tracking-widest text-white uppercase flex items-center gap-2 transition-all group">
+            <Download className="w-4 h-4 text-xiphos-emerald group-hover:scale-110 transition-transform" /> EXPORT EXCEL
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-4 pb-4">
+        
+        {/* 2. TOP METRICS ROW */}
+        <div className="grid grid-cols-6 gap-4 shrink-0">
+          <MetricCard label="Current Balance" value={`$${account.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`} />
+          <MetricCard label="Equity" value={`$${account.equity.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-cyan glow-cyan" />
+          <MetricCard label="Free Margin" value={`$${account.margin_free.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-emerald glow-emerald" />
+          <MetricCard label="Max Drawdown" value={`-${performanceMetrics?.max_drawdown.toFixed(2)}%`} colorClass="text-xiphos-crimson glow-crimson" />
+          <MetricCard label="ROI (YTD)" value={`+${roi.toFixed(2)}%`} colorClass="text-xiphos-emerald glow-emerald" />
+          <div className="glass-card p-4 flex flex-col justify-center bg-xiphos-purple/10 border-xiphos-purple/30 group hover:bg-xiphos-purple/20 transition-colors">
+            <span className="text-[10px] text-xiphos-purple font-bold uppercase tracking-widest mb-1">Risk Adjusted Return</span>
+            <div className="flex justify-between items-end">
+              <div>
+                <span className="text-xl font-black text-white">{performanceMetrics?.sharpe_ratio.toFixed(2)}</span>
+                <span className="text-[9px] ml-1 text-xiphos-muted">SHARPE</span>
+              </div>
+              <div>
+                <span className="text-xl font-black text-white">{sortinoRatio.toFixed(2)}</span>
+                <span className="text-[9px] ml-1 text-xiphos-muted">SORTINO</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. MIDDLE ROW: CHARTS & CALENDAR */}
+        <div className="grid grid-cols-12 gap-4 shrink-0 h-80">
+          {/* Equity Chart */}
+          <div className="col-span-6 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col relative group">
+            <div className="flex justify-between items-center mb-4 shrink-0">
+              <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-cyan transition-colors">
+                <TrendingUp className="w-4 h-4 text-xiphos-cyan" /> HISTORICAL GROWTH
+              </h3>
+              <div className="flex items-center gap-3 text-[10px] font-bold">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-xiphos-cyan"></span> BALANCE</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-xiphos-emerald"></span> EQUITY</span>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 w-full">
+              {drawEquityChart()}
+            </div>
+          </div>
+
+          {/* Asset Allocation Pie Chart */}
+          <div className="col-span-3 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col group">
+            <h3 className="text-sm font-black tracking-widest uppercase mb-2 shrink-0 group-hover:text-white transition-colors">ASSET ALLOCATION</h3>
+            <div className="flex-1 min-h-0 w-full relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={assetAllocation} innerRadius="60%" outerRadius="80%" paddingAngle={5} dataKey="value" stroke="none">
+                    {assetAllocation.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: "rgba(11,15,23,0.9)", borderColor: "rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: "12px", fontFamily: "monospace", fontWeight: "bold" }}
+                    itemStyle={{ color: "#fff" }}
+                    formatter={(value: number) => `$${value.toLocaleString()}`}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "10px", fontWeight: "bold" }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-6">
+                <div className="text-center">
+                  <span className="block text-2xl font-black text-white">4</span>
+                  <span className="block text-[9px] text-xiphos-muted tracking-widest uppercase">CLASSES</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Calendar */}
+          <div className="col-span-3 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col group">
+            <div className="flex justify-between items-center mb-4 shrink-0">
+              <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-purple transition-colors">
+                <Target className="w-4 h-4 text-xiphos-purple" /> DAILY RETURNS
+              </h3>
+              <span className="text-[10px] text-xiphos-muted font-bold uppercase">30D Heatmap</span>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-5 gap-1.5">
+                {calendarDays.map((day, i) => {
+                  const isPos = day.return > 0;
+                  const intensity = Math.min(1, Math.abs(day.return) / 2);
+                  const bg = isPos ? `rgba(34, 197, 94, ${0.1 + intensity * 0.5})` : `rgba(239, 68, 68, ${0.1 + intensity * 0.5})`;
+                  const border = isPos ? `rgba(34, 197, 94, ${intensity})` : `rgba(239, 68, 68, ${intensity})`;
+                  return (
+                    <div 
+                      key={i} 
+                      className="aspect-square rounded-sm flex items-center justify-center text-[10px] font-black border hover:scale-110 transition-transform cursor-pointer"
+                      style={{ backgroundColor: bg, borderColor: border, color: "white" }}
+                      title={`Day ${day.day}: ${day.return > 0 ? "+" : ""}${day.return.toFixed(2)}%`}
+                    >
+                      {day.day}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. BOTTOM ROW: TABLES & METRICS */}
+        <div className="grid grid-cols-12 gap-4 flex-1 min-h-[250px] shrink-0">
+          
+          {/* Winning & Worst Assets */}
+          <div className="col-span-4 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col gap-4">
+            <div className="flex-1 flex flex-col overflow-hidden group">
+              <h3 className="text-[11px] text-xiphos-muted font-bold tracking-widest uppercase mb-2 group-hover:text-white transition-colors">WINNING ASSETS</h3>
+              <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                {topAssets.map(a => (
+                  <div key={a.symbol} className="flex justify-between items-center p-2 bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.02)] rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                    <span className="font-bold text-white text-sm">{a.symbol}</span>
+                    <div className="text-right">
+                      <span className="block text-sm font-black text-xiphos-emerald glow-emerald">+${a.profit.toFixed(2)}</span>
+                      <span className="block text-[9px] text-xiphos-muted">WR: {a.winRate}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 flex flex-col overflow-hidden group">
+              <h3 className="text-[11px] text-xiphos-muted font-bold tracking-widest uppercase mb-2 group-hover:text-white transition-colors">WORST ASSETS</h3>
+              <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                {worstAssets.map(a => (
+                  <div key={a.symbol} className="flex justify-between items-center p-2 bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.02)] rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                    <span className="font-bold text-white text-sm">{a.symbol}</span>
+                    <div className="text-right">
+                      <span className="block text-sm font-black text-xiphos-crimson glow-crimson">-${Math.abs(a.profit).toFixed(2)}</span>
+                      <span className="block text-[9px] text-xiphos-muted">WR: {a.winRate}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Operational Metrics */}
+          <div className="col-span-8 grid grid-cols-2 gap-4">
+            <div className="glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col justify-between group">
+              <div>
+                <h3 className="text-xs text-xiphos-cyan font-bold tracking-widest uppercase flex items-center gap-2 mb-4 group-hover:text-white transition-colors">
+                  <Activity className="w-4 h-4 text-xiphos-cyan" /> PROFIT BREAKDOWN (M30)
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-[10px] font-bold text-xiphos-muted uppercase mb-1">
+                      <span>LONG POSITIONS</span>
+                      <span className="text-xiphos-emerald">$12,450.00</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-[rgba(11,15,23,0.8)] rounded-full overflow-hidden">
+                      <div className="h-full bg-xiphos-emerald glow-emerald w-[70%]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] font-bold text-xiphos-muted uppercase mb-1">
+                      <span>SHORT POSITIONS</span>
+                      <span className="text-xiphos-crimson">$4,210.00</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-[rgba(11,15,23,0.8)] rounded-full overflow-hidden">
+                      <div className="h-full bg-xiphos-crimson glow-crimson w-[30%]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)] grid grid-cols-2 gap-4">
+                 <div>
+                   <span className="block text-[10px] text-xiphos-muted font-bold uppercase mb-1">EXPECTANCY</span>
+                   <span className="text-2xl font-black text-white">${expectancy}</span>
+                 </div>
+                 <div>
+                   <span className="block text-[10px] text-xiphos-muted font-bold uppercase mb-1">AVG TRADE DURATION</span>
+                   <span className="text-2xl font-black text-white flex items-center gap-2">
+                     <Clock className="w-4 h-4 text-xiphos-purple" /> {avgTradeDuration}
+                   </span>
+                 </div>
+              </div>
+            </div>
+
+            <div className="glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col justify-between group">
+              <div>
+                <h3 className="text-xs text-xiphos-gold font-bold tracking-widest uppercase flex items-center gap-2 mb-4 group-hover:text-white transition-colors">
+                  <PieChartIcon className="w-4 h-4 text-xiphos-gold" /> CAPITAL UTILIZATION
+                </h3>
+                <div className="flex items-center gap-6">
+                  <div className="relative w-24 h-24">
+                    <svg viewBox="0 0 36 36" className="w-24 h-24 transform -rotate-90">
+                      <path
+                        className="text-[rgba(255,255,255,0.05)]"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="text-xiphos-gold glow-gold transition-all duration-1000 ease-out"
+                        strokeDasharray={`${(account.margin_free / account.equity) * 100}, 100`}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-sm font-black text-white">{Math.round((account.margin_free / account.equity) * 100)}%</span>
+                      <span className="text-[7px] text-xiphos-muted uppercase tracking-widest">FREE</span>
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] p-2 rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                      <span className="text-[10px] text-xiphos-muted font-bold uppercase">OPEN POSITIONS</span>
+                      <span className="text-sm font-black text-xiphos-cyan">{positions.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] p-2 rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors">
+                      <span className="text-[10px] text-xiphos-muted font-bold uppercase">CLOSED POSITIONS</span>
+                      <span className="text-sm font-black text-white">{performanceMetrics?.total_trades || 482}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)]">
+                <span className="block text-[10px] text-xiphos-muted font-bold uppercase mb-2">ALLOCATION STATUS</span>
+                <div className="w-full bg-[rgba(11,15,23,0.8)] rounded p-3 flex justify-between items-center border border-[rgba(255,255,255,0.05)]">
+                  <span className="text-xs font-bold text-white">HEALTHY</span>
+                  <span className="text-[10px] text-xiphos-emerald glow-emerald font-black uppercase tracking-widest">MARGIN LEVEL: {account.margin_level}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+}
