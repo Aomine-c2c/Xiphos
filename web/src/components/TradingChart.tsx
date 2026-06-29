@@ -32,6 +32,11 @@ export default function TradingChart({ symbol }: { symbol: string }) {
     const lineSeries = chart.addSeries(LineSeries, {
       color: '#4CC9F0',
       lineWidth: 2,
+      priceFormat: {
+        type: 'price',
+        precision: 5,
+        minMove: 0.00001,
+      },
     });
 
     // Mock data for the chart
@@ -52,6 +57,11 @@ export default function TradingChart({ symbol }: { symbol: string }) {
       color: '#D4AF37',
       lineWidth: 1,
       lineStyle: 2, // Dashed
+      priceFormat: {
+        type: 'price',
+        precision: 5,
+        minMove: 0.00001,
+      },
     });
 
     predictionSeries.setData([

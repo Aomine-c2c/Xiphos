@@ -19,7 +19,7 @@ export default function SettingsView() {
   const [activeTab, setActiveTab] = useState<TabType>("GENERAL");
   const [saveIndicator, setSaveIndicator] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaveIndicator(true);
     setTimeout(() => setSaveIndicator(false), 2000);
@@ -71,17 +71,15 @@ export default function SettingsView() {
           {/* LEFT SIDEBAR NAVIGATION */}
           <div className="w-64 border-r border-white/5 bg-black/20 flex flex-col p-4 gap-2 overflow-y-auto shrink-0">
             {tabs.map(tab => (
-              <div 
+              <button 
+                type="button"
                 key={tab.id}
-                role="button"
-                tabIndex={0}
                 onClick={() => setActiveTab(tab.id)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveTab(tab.id); }}
-                className={`flex items-center gap-3 p-3 rounded cursor-pointer transition-all text-xs font-black tracking-widest uppercase ${activeTab === tab.id ? "bg-xiphos-purple/20 text-xiphos-purple border border-xiphos-purple/50 shadow-[0_0_10px_rgba(139,92,246,0.1)]" : "text-xiphos-muted hover:bg-white/5 hover:text-white border border-transparent"}`}
+                className={`flex items-center gap-3 p-3 rounded cursor-pointer text-left transition-all text-xs font-black tracking-widest uppercase ${activeTab === tab.id ? "bg-xiphos-purple/20 text-xiphos-purple border border-xiphos-purple/50 shadow-[0_0_10px_rgba(139,92,246,0.1)]" : "text-xiphos-muted hover:bg-white/5 hover:text-white border border-transparent"}`}
               >
                 <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "glow-purple" : ""}`} />
                 {tab.label}
-              </div>
+              </button>
             ))}
           </div>
 
@@ -173,7 +171,7 @@ export default function SettingsView() {
                         <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-bold text-white">Email Alerts</span>
-                            <input type="checkbox" defaultChecked className="accent-xiphos-purple w-4 h-4" />
+                            <input title="Email alerts enabled" type="checkbox" defaultChecked className="accent-xiphos-purple w-4 h-4" />
                           </div>
                           <input title="Email alerts address" type="email" placeholder="alerts@xiphos.ai" className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
                         </div>
@@ -295,7 +293,7 @@ export default function SettingsView() {
                           <option>No Limit</option>
                         </select>
                       </div>
-                      <div className="border-t border-white/10 pt-4 mt-2 flex justify-between items-center bg-black/40 p-4 rounded border border-white/5">
+                      <div className="border-t pt-4 mt-2 flex justify-between items-center bg-black/40 p-4 rounded border border-white/5">
                         <div>
                           <div className="text-sm font-bold text-white">System Backups</div>
                           <div className="text-xs text-xiphos-muted">Last backup: Today, 08:00 AM (Auto)</div>

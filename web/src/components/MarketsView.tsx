@@ -153,27 +153,25 @@ export default function MarketsView() {
                     const isUp = item.change ? !item.change.startsWith("-") : true;
                     const isSelected = selectedAsset?.symbol === item.symbol;
                     return (
-                      <div 
+                      <button 
+                        type="button"
                         key={item.symbol}
-                        role="button"
-                        tabIndex={0}
                         onClick={() => setSelectedAsset(item)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedAsset(item); }}
-                        className={`group p-3 rounded-lg border cursor-pointer transition-all flex flex-col gap-2 ${
+                        className={`group p-3 rounded-lg border text-left cursor-pointer transition-all flex flex-col gap-2 ${
                           isSelected 
                             ? "bg-[rgba(76,201,240,0.1)] border-xiphos-cyan/30 shadow-[inset_0_0_20px_rgba(76,201,240,0.05)]" 
                             : "bg-[rgba(11,15,23,0.3)] border-transparent hover:bg-white/5 hover:border-white/10"
                         }`}
                       >
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center w-full">
                           <div className="flex items-center gap-2">
-                            <button 
+                            <div 
                               title="Toggle favorite" aria-label={`Toggle favorite for ${item.symbol}`}
-                              onClick={(e) => { e.stopPropagation(); toggleFavorite(item.symbol); }}
-                              className="text-xiphos-muted hover:text-xiphos-gold transition-colors"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(item.symbol); }}
+                              className="text-xiphos-muted hover:text-xiphos-gold transition-colors cursor-pointer inline-flex"
                             >
                               <Star className="h-3 w-3" fill={item.is_favorite ? "#D4AF37" : "none"} stroke={item.is_favorite ? "#D4AF37" : "currentColor"} />
-                            </button>
+                            </div>
                             <span className={`text-sm font-black tracking-widest ${isSelected ? 'text-xiphos-cyan' : 'text-white'}`}>{item.symbol}</span>
                           </div>
                           <span className={`text-xs font-black ${isUp ? 'text-xiphos-emerald glow-emerald' : 'text-xiphos-crimson glow-crimson'}`}>
@@ -192,7 +190,7 @@ export default function MarketsView() {
                             {drawMiniSparkline(item.history, isUp ? "#22C55E" : "#EF4444")}
                           </div>
                         </div>
-                      </div>
+                      </button>
                     );
                   })
                 )}

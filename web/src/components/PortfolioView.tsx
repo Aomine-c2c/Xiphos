@@ -12,8 +12,9 @@ import {
 } from "lucide-react";
 import { 
   AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Legend
 } from "recharts";
+import { Cell as RechartsCell } from "recharts";
 import { useTradingStore } from "../store/useTradingStore";
 
 import { GlassPanel } from "./ui/GlassPanel";
@@ -43,14 +44,14 @@ export default function PortfolioView() {
   const avgTradeDuration = "4h 15m";
   
   const topAssets = [
-    { symbol: "XAUUSD", profit: 2450.00, winRate: 85 },
-    { symbol: "EURUSD", profit: 1240.50, winRate: 78 },
-    { symbol: "US30", profit: 890.20, winRate: 72 },
+    { symbol: "XAUUSD", profit: 2450, winRate: 85 },
+    { symbol: "EURUSD", profit: 1240.5, winRate: 78 },
+    { symbol: "US30", profit: 890.2, winRate: 72 },
   ];
   
   const worstAssets = [
-    { symbol: "GBPUSD", profit: -340.00, winRate: 42 },
-    { symbol: "XAGUSD", profit: -120.50, winRate: 48 },
+    { symbol: "GBPUSD", profit: -340, winRate: 42 },
+    { symbol: "XAGUSD", profit: -120.5, winRate: 48 },
   ];
 
   // Asset Allocation Mock
@@ -183,8 +184,9 @@ export default function PortfolioView() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={assetAllocation} innerRadius="60%" outerRadius="80%" paddingAngle={5} dataKey="value" stroke="none">
-                    {assetAllocation.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    {assetAllocation.map((entry) => (
+                      // eslint-disable-next-line @typescript-eslint/no-deprecated
+                      <RechartsCell key={`alloc-${entry.name}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip 
@@ -221,8 +223,9 @@ export default function PortfolioView() {
                   const border = isPos ? `rgba(34, 197, 94, ${intensity})` : `rgba(239, 68, 68, ${intensity})`;
                   return (
                     <div 
-                      key={i} 
+                      key={`cal-day-${day.day}`} 
                       className="aspect-square rounded-sm flex items-center justify-center text-[10px] font-black border hover:scale-110 transition-transform cursor-pointer"
+                      // eslint-disable-next-line react/forbid-dom-props
                       style={{ backgroundColor: bg, borderColor: border, color: "white" }}
                       title={`Day ${day.day}: ${day.return > 0 ? "+" : ""}${day.return.toFixed(2)}%`}
                     >
@@ -248,14 +251,16 @@ export default function PortfolioView() {
                   const intensity = Math.min(1, Math.abs(m.return) / 5);
                   const bg = isPos ? `rgba(34, 197, 94, ${0.2 + intensity * 0.8})` : `rgba(239, 68, 68, ${0.2 + intensity * 0.8})`;
                   return (
-                    <div key={i} className="flex items-center gap-1 group/bar cursor-pointer" title={`${m.month}: ${m.return > 0 ? "+" : ""}${m.return.toFixed(2)}%`}>
+                    <div key={`month-${m.month}`} className="flex items-center gap-1 group/bar cursor-pointer" title={`${m.month}: ${m.return > 0 ? "+" : ""}${m.return.toFixed(2)}%`}>
                       <span className="w-5 text-xiphos-muted">{m.month}</span>
                       <div className="flex-1 h-3 bg-[rgba(11,15,23,0.5)] rounded-sm overflow-hidden flex relative">
                         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/5 z-10" />
                         <div className="w-1/2 flex justify-end items-center h-full">
+                          {/* eslint-disable-next-line react/forbid-dom-props */}
                           {!isPos && <div className="h-full rounded-l-sm" style={{ width: `${Math.min(100, Math.abs(m.return)*10)}%`, backgroundColor: bg }} />}
                         </div>
                         <div className="w-1/2 flex justify-start items-center h-full">
+                          {/* eslint-disable-next-line react/forbid-dom-props */}
                           {isPos && <div className="h-full rounded-r-sm" style={{ width: `${Math.min(100, m.return*10)}%`, backgroundColor: bg }} />}
                         </div>
                       </div>

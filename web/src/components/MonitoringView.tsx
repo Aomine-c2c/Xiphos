@@ -29,7 +29,7 @@ export default function MonitoringView() {
       initialLogs.push({
         id: `init-${i}`,
         timestamp: new Date(now.getTime() - (30 - i) * 1000),
-        level: i % 7 === 0 ? "WARNING" : i % 13 === 0 ? "ERROR" : "INFO",
+        level: i % 7 === 0 ? "WARNING" : (i % 13 === 0 ? "ERROR" : "INFO") as LogLevel,
         category: ["EXEC", "BROKER", "LEARN", "PREDICT", "ADAPT", "RISK"][i % 6] as LogCategory,
         message: `System initialization step ${i} completed successfully.`
       });
@@ -66,7 +66,8 @@ export default function MonitoringView() {
       if (Math.random() > 0.4) {
         const categories: LogCategory[] = ["EXEC", "BROKER", "LEARN", "PREDICT", "ADAPT", "RISK"];
         const randCat = categories[Math.floor(Math.random() * categories.length)];
-        const randLevel: LogLevel = Math.random() > 0.95 ? "ERROR" : Math.random() > 0.85 ? "WARNING" : "INFO";
+        const randNum = Math.random();
+        const randLevel: LogLevel = randNum > 0.95 ? "ERROR" : (randNum > 0.85 ? "WARNING" : "INFO");
         
         const messages = {
           EXEC: ["Order placed EURUSD", "Order filled GBPUSD", "Trailing stop updated"],
@@ -91,7 +92,7 @@ export default function MonitoringView() {
 
       // Add new metric tick
       setMetrics(prev => {
-        const last = prev[prev.length - 1];
+        const last = prev.at(-1);
         if (!last) return prev;
         
         const newMetric = {
@@ -143,7 +144,7 @@ export default function MonitoringView() {
     }
   };
 
-  const currentMetrics = metrics[metrics.length - 1] || { cpu: 0, ram: 0, gpu: 0, disk: 0, latency: 0, fps: 0 };
+  const currentMetrics = metrics.at(-1) || { cpu: 0, ram: 0, gpu: 0, disk: 0, latency: 0, fps: 0 };
 
   return (
     <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
@@ -239,7 +240,7 @@ export default function MonitoringView() {
                     <span className="w-20 shrink-0 text-white/50 font-bold tracking-widest">
                       [{log.category}]
                     </span>
-                    <span className={log.level === "ERROR" ? "text-xiphos-crimson font-bold" : log.level === "WARNING" ? "text-xiphos-gold" : "text-white/80"}>
+                    <span className={log.level === "ERROR" ? "text-xiphos-crimson font-bold" : (log.level === "WARNING" ? "text-xiphos-gold" : "text-white/80")}>
                       {log.message}
                     </span>
                   </motion.div>

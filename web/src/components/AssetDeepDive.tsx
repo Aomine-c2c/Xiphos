@@ -81,10 +81,10 @@ export default function AssetDeepDive({ asset }: { asset: MarketWatchItem }) {
             </div>
           </div>
 
-          <div className="flex-[0.4] min-h-0 grid grid-cols-2 gap-4">
+          <div className="flex-[0.4] min-h-0 grid grid-cols-2 grid-rows-1 gap-4">
              {/* Technical Metrics */}
-             <div className="glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col overflow-y-auto custom-scrollbar">
-               <h3 className="text-xs text-xiphos-cyan font-bold tracking-widest uppercase mb-3 flex items-center gap-2">
+             <div className="glass-panel min-h-0 rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col overflow-y-auto custom-scrollbar">
+               <h3 className="text-xs text-xiphos-cyan font-bold tracking-widest uppercase mb-3 flex items-center gap-2 shrink-0">
                  <Target className="h-4 w-4" /> QUANTITATIVE METRICS
                </h3>
                <div className="grid grid-cols-2 gap-2">
@@ -98,8 +98,8 @@ export default function AssetDeepDive({ asset }: { asset: MarketWatchItem }) {
              </div>
 
              {/* Smart Money Zones */}
-             <div className="glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col overflow-y-auto custom-scrollbar">
-               <h3 className="text-xs text-xiphos-cyan font-bold tracking-widest uppercase mb-3 flex items-center gap-2">
+             <div className="glass-panel min-h-0 rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col overflow-y-auto custom-scrollbar">
+               <h3 className="text-xs text-xiphos-cyan font-bold tracking-widest uppercase mb-3 flex items-center gap-2 shrink-0">
                  <Shield className="h-4 w-4" /> LIQUIDITY POOLS & ZONES
                </h3>
                <div className="flex flex-col gap-2">

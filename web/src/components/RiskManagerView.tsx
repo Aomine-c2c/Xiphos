@@ -52,6 +52,7 @@ const HoldButton = ({ label, onTrigger, colorClass, icon: Icon }: { label: strin
     >
       <Icon className="w-4 h-4 relative z-10" />
       <span className="relative z-10">{label} {progress > 0 && progress < 100 && `(${progress}%)`}</span>
+      {/* eslint-disable-next-line react/forbid-dom-props */}
       <div 
         className="absolute left-0 top-0 bottom-0 opacity-20"
         style={{ width: `${progress}%`, backgroundColor: "currentColor" }} 
@@ -141,8 +142,8 @@ export default function RiskManagerView() {
 
       {/* TOP METRICS GRID */}
       <div className="grid grid-cols-4 xl:grid-cols-8 gap-4 shrink-0 px-6">
-        {metrics.map((m, i) => (
-          <GlassCard key={i} className="p-4 flex flex-col justify-center">
+        {metrics.map((m) => (
+          <GlassCard key={`metric-${m.label}`} className="p-4 flex flex-col justify-center">
             <span className="text-[9px] text-xiphos-muted font-bold tracking-widest uppercase mb-2">
               {m.label}
             </span>
@@ -206,7 +207,7 @@ export default function RiskManagerView() {
             </h3>
             <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
               {aiSuggestions.map((sug, i) => (
-                <div key={i} className="p-3 bg-white/5 border-l-2 border-xiphos-gold/50 rounded-r text-xs text-gray-300 leading-relaxed">
+                <div key={`sug-${i}`} className="p-3 bg-white/5 border-l-2 border-xiphos-gold/50 rounded-r text-xs text-gray-300 leading-relaxed">
                   {sug}
                 </div>
               ))}
@@ -231,12 +232,12 @@ export default function RiskManagerView() {
                 { symbol: "XAUUSD", risk: 30, size: "col-span-1 row-span-1" },
                 { symbol: "BTCUSD", risk: 95, size: "col-span-1 row-span-1" },
                 { symbol: "US30", risk: 45, size: "col-span-2 row-span-1" },
-              ].map((block, i) => {
+              ].map((block) => {
                 const isHigh = block.risk > 70;
                 const isMed = block.risk > 40 && block.risk <= 70;
-                const color = isHigh ? "bg-xiphos-crimson/80" : isMed ? "bg-xiphos-gold/80" : "bg-xiphos-emerald/80";
+                const color = isHigh ? "bg-xiphos-crimson/80" : (isMed ? "bg-xiphos-gold/80" : "bg-xiphos-emerald/80");
                 return (
-                  <div key={i} className={`${block.size} ${color} rounded-sm p-2 flex flex-col justify-between hover:opacity-80 transition-opacity cursor-pointer border border-white/10`}>
+                  <div key={block.symbol} className={`${block.size} ${color} rounded-sm p-2 flex flex-col justify-between hover:opacity-80 transition-opacity cursor-pointer border border-white/10`}>
                     <span className="text-white font-black text-sm tracking-wider">{block.symbol}</span>
                     <span className="text-white/80 font-bold text-xs">{block.risk}% RISK</span>
                   </div>

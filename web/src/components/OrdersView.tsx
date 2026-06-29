@@ -233,7 +233,7 @@ export default function OrdersView() {
               </div>
               <div className="flex-1 p-2 overflow-y-auto text-xs text-xiphos-cyan font-mono leading-relaxed opacity-80 flex flex-col justify-end">
                 {consoleLog.map((log, i) => (
-                  <div key={i} className="animate-pulse">{`> ${log}`}</div>
+                  <div key={`${log}-${i}`} className="animate-pulse">{`> ${log}`}</div>
                 ))}
               </div>
             </div>

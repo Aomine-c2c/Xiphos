@@ -137,7 +137,7 @@ export default function ReportsView() {
 
             {/* Main Equity Chart */}
             <div className="h-64 shrink-0 glass-card flex flex-col p-4 relative group hover:border-xiphos-cyan/30 transition-all">
-              <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-2 mb-2 flex items-center gap-2">
+              <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider border-b border-white/5 pb-2 mb-2 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-xiphos-cyan" />
                 CONSOLIDATED EQUITY GROWTH (YTD)
               </span>
