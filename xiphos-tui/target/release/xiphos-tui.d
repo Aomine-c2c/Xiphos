@@ -1,1 +1,0 @@
-C:\Users\armut\404\Xiphos\xiphos-tui\target\release\xiphos-tui.exe: C:\Users\armut\404\Xiphos\xiphos-tui\src\app.rs C:\Users\armut\404\Xiphos\xiphos-tui\src\main.rs C:\Users\armut\404\Xiphos\xiphos-tui\src\models.rs C:\Users\armut\404\Xiphos\xiphos-tui\src\network.rs C:\Users\armut\404\Xiphos\xiphos-tui\src\ui.rs
