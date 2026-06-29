@@ -7,15 +7,6 @@ import CenterPanel from "../components/CenterPanel";
 import ChatPanel from "../components/ChatPanel";
 import DecisionFeed from "../components/DecisionFeed";
 import DecisionCards from "../components/DecisionCards";
-"use client";
-
-import React, { useEffect, useState } from "react";
-import Header from "../components/Header";
-import LeftNav, { TabType } from "../components/LeftNav";
-import CenterPanel from "../components/CenterPanel";
-import ChatPanel from "../components/ChatPanel";
-import DecisionFeed from "../components/DecisionFeed";
-import DecisionCards from "../components/DecisionCards";
 import RiskManagerView from "../components/RiskManagerView";
 import TradeManagerView from "../components/TradeManagerView";
 import SettingsView from "../components/SettingsView";
@@ -25,6 +16,10 @@ import PositionsView from "../components/PositionsView";
 import OrdersView from "../components/OrdersView";
 import ReportsView from "../components/ReportsView";
 import PortfolioView from "../components/PortfolioView";
+import JournalView from "../components/JournalView";
+import AdaptationEngineView from "../components/AdaptationEngineView";
+import MonitoringView from "../components/MonitoringView";
+import OracleView from "../components/OracleView";
 import { useTradingStore } from "../store/useTradingStore";
 
 export default function Home() {
@@ -86,6 +81,10 @@ export default function Home() {
             {activeTab === "ORDERS" && <OrdersView />}
             {activeTab === "REPORTS" && <ReportsView />}
             {activeTab === "PORTFOLIO" && <PortfolioView />}
+            {activeTab === "JOURNAL" && <JournalView />}
+            {activeTab === "ADAPTATION" && <AdaptationEngineView />}
+            {activeTab === "MONITORING" && <MonitoringView />}
+            {activeTab === "ORACLE" && <OracleView />}
           </main>
         )}
       </div>

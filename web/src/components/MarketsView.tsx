@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { useTradingStore, MarketWatchItem } from "../store/useTradingStore";
-import { Activity, Search, Star, LayoutGrid, BarChart2, ChevronRight, ChevronLeft, Hexagon } from "lucide-react";
+import { Activity, Search, Star, LayoutGrid, BarChart2, Hexagon } from "lucide-react";
 import AssetDeepDive from "./AssetDeepDive";
 import HeatMapPanel from "./HeatMapPanel";
 import CorrelationMatrix from "./CorrelationMatrix";
@@ -18,14 +18,7 @@ export default function MarketsView() {
   const [category, setCategory] = useState<Category>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState<MarketWatchItem | null>(null);
-
-  // Set initial selected asset if none selected
-  React.useEffect(() => {
-    if (marketWatch.length > 0 && !selectedAsset) {
-      setSelectedAsset(marketWatch[0]);
-    }
-  }, [marketWatch, selectedAsset]);
+  const [selectedAsset, setSelectedAsset] = useState<MarketWatchItem | null>(() => marketWatch.length > 0 ? marketWatch[0] : null);
 
   const filteredMarkets = useMemo(() => {
     return marketWatch.filter((m) => {

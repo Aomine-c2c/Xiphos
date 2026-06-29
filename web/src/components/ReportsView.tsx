@@ -6,7 +6,7 @@ import { useTradingStore } from "../store/useTradingStore";
 import { motion } from "framer-motion";
 
 export default function ReportsView() {
-  const { account, performanceMetrics } = useTradingStore();
+  const { performanceMetrics } = useTradingStore();
 
   const balanceHistory = performanceMetrics?.equity_curve || [100];
   const equityHistory = performanceMetrics?.equity_curve || [100];

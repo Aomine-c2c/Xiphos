@@ -11,11 +11,15 @@ import {
   BarChart3, 
   FileSpreadsheet, 
   Settings,
-  PieChart
+  PieChart,
+  BookOpen,
+  Terminal,
+  Eye,
+  Network
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type TabType = "DASHBOARD" | "RISK_MANAGER" | "TRADE_MANAGER" | "SETTINGS" | "ANALYTICS" | "MARKETS" | "POSITIONS" | "ORDERS" | "REPORTS" | "PORTFOLIO";
+export type TabType = "DASHBOARD" | "RISK_MANAGER" | "TRADE_MANAGER" | "SETTINGS" | "ANALYTICS" | "MARKETS" | "POSITIONS" | "ORDERS" | "REPORTS" | "PORTFOLIO" | "JOURNAL" | "ADAPTATION" | "MONITORING" | "ORACLE";
 
 interface LeftNavProps {
   activeTab: TabType;
@@ -41,6 +45,10 @@ export default function LeftNav({ activeTab, setActiveTab }: LeftNavProps) {
     { id: "ANALYTICS", icon: BarChart3, label: "ANALYTICS" },
     { id: "REPORTS", icon: FileSpreadsheet, label: "REPORTS" },
     { id: "PORTFOLIO", icon: PieChart, label: "PORTFOLIO" },
+    { id: "JOURNAL", icon: BookOpen, label: "JOURNAL" },
+    { id: "ADAPTATION", icon: Network, label: "ADAPTATION ENGINE" },
+    { id: "MONITORING", icon: Terminal, label: "SYSTEM MONITORING" },
+    { id: "ORACLE", icon: Eye, label: "ORACLE ENGINE" },
     { id: "SETTINGS", icon: Settings, label: "SETTINGS" },
   ];
 

@@ -25,7 +25,7 @@ export default function HeatMapPanel({ category }: { category: string }) {
   };
 
   const getWidth = (probability: number) => {
-    return \`\${Math.max(10, probability)}%\`;
+    return `${Math.max(10, probability)}%`;
   };
 
   return (
@@ -36,7 +36,7 @@ export default function HeatMapPanel({ category }: { category: string }) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, delay: idx * 0.02 }}
           key={item.symbol}
-          className={\`relative flex flex-col justify-between p-2 border rounded-sm transition-all cursor-crosshair hover:brightness-125 \${getColor(item.ai_bias)}\`}
+          className={`relative flex flex-col justify-between p-2 border rounded-sm transition-all cursor-crosshair hover:brightness-125 ${getColor(item.ai_bias)}`}
           style={{ 
             flexGrow: item.probability / 10,
             flexBasis: getWidth(item.probability),

@@ -6,6 +6,7 @@ export interface AccountInfo {
   margin_free: number;
   margin_level: number;
   profit: number;
+  margin: number;
 }
 
 export interface Position {
@@ -23,6 +24,27 @@ export interface Position {
   scalper_pnl?: number;
   runner_pnl?: number;
   comment?: string;
+  swap?: number;
+  commission?: number;
+  ai_score?: number;
+}
+
+export interface JournalEntry {
+  id: string;
+  date: string;
+  asset: string;
+  direction: "BUY" | "SELL";
+  entryPrice: number;
+  exitPrice: number;
+  profit: number;
+  strategy: string;
+  session: string;
+  winLoss: "WIN" | "LOSS";
+  screenshotUrl: string;
+  notes: string;
+  ai_explanation: string;
+  mistake_analysis: string;
+  lessons_learned: string;
 }
 
 export interface Order {
@@ -123,6 +145,7 @@ interface TradingStore {
   marketWatch: MarketWatchItem[];
   gates: GatesState;
   rankedSignals: RankedSignal[];
+  journal: JournalEntry[];
   lastCycleTime: string;
   systemStats: { cpu: number; memory: number };
   logs: LogItem[];
@@ -155,6 +178,7 @@ const MOCK_ACCOUNT: AccountInfo = {
   margin_free: 44_210.18,
   margin_level: 1840.5,
   profit: 785.42,
+  margin: 4895.24,
 };
 
 const MOCK_POSITIONS: Position[] = [
@@ -171,10 +195,7 @@ const MOCK_ORDERS: Order[] = [
   { ticket: 77403, symbol: "GBPJPY", type: "SELL LIMIT", volume: 0.03, price_open:  201.200, sl:  201.800, tp:  199.500, comment: "KRONOS-L3" },
 ];
 
-const sparkline = (base: number, len = 20, drift = 0.001): number[] =>
-  Array.from({ length: len }, (_, i) =>
-    parseFloat((base + (Math.random() - 0.5) * drift * i).toFixed(5))
-  );
+
 
 const MOCK_MARKET_WATCH: MarketWatchItem[] = [
   { symbol: "EURUSD", category: "Forex", price: 1.10402, e13_dist: 0.00121, e50_dist: 0.01827, s200_dist: 0.02861, signal: "BUY", change: "+1.98%", history: [1.10402, 1.10407, 1.10388, 1.10258, 1.10476, 1.10326, 1.10308, 1.10745, 1.10454, 1.10737, 1.10388, 1.09856, 1.10457, 1.09788, 1.10679, 1.09757, 1.11176, 1.10917, 1.10377, 1.10423], spread: 0.8, atr: 0.01, trend: "RANGING", volatility: "HIGH", ai_bias: -59, probability: 60, support: 1.04882, resistance: 1.15922, liquidity: "15M", volume: "502K", smart_money_zones: [1.08194, 1.1261], fair_value_gaps: false, order_blocks: [1.05986], market_structure: "LL", is_favorite: false },
@@ -240,6 +261,60 @@ const MOCK_MARKET_WATCH: MarketWatchItem[] = [
 ];
 
 
+const MOCK_JOURNAL: JournalEntry[] = [
+  {
+    id: "TRD-1029",
+    date: "2026-06-28T14:30:00Z",
+    asset: "EURUSD",
+    direction: "BUY",
+    entryPrice: 1.08500,
+    exitPrice: 1.08750,
+    profit: 250.00,
+    strategy: "Trend Following",
+    session: "NY",
+    winLoss: "WIN",
+    screenshotUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop",
+    notes: "Saw strong support bounce on the 15M, followed by a break of market structure. EMA fans were perfectly aligned.",
+    ai_explanation: "The algorithm identified a high-probability bullish order block at 1.08450. Market structure shifted from bearish to bullish with strong momentum (RSI > 60). Entering on the pullback provided a 1:3 risk-to-reward ratio.",
+    mistake_analysis: "Exit was slightly premature. Could have trailed the stop loss to capture the final push to 1.08900 liquidity pool.",
+    lessons_learned: "Trust the higher timeframe targets. When momentum is strong in NY session, trail stops rather than using fixed take profits."
+  },
+  {
+    id: "TRD-1028",
+    date: "2026-06-27T09:15:00Z",
+    asset: "GBPJPY",
+    direction: "SELL",
+    entryPrice: 188.500,
+    exitPrice: 188.800,
+    profit: -300.00,
+    strategy: "Mean Reversion",
+    session: "London",
+    winLoss: "LOSS",
+    screenshotUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop",
+    notes: "Faded the morning breakout. Got stopped out as momentum continued.",
+    ai_explanation: "This trade was executed against the primary M30 trend. While RSI showed overbought conditions, the EMA13 and EMA50 spread was expanding, indicating strong underlying momentum. Fading strong trend days is statistically a low-winrate strategy.",
+    mistake_analysis: "Fading a strong breakout without waiting for structural breakdown confirmation. Stop loss was placed too tight below the high.",
+    lessons_learned: "Do not counter-trend trade during the first hour of London session without clear reversal patterns (e.g., Head & Shoulders or double top with divergence)."
+  },
+  {
+    id: "TRD-1027",
+    date: "2026-06-25T19:00:00Z",
+    asset: "BTCUSD",
+    direction: "BUY",
+    entryPrice: 62000.00,
+    exitPrice: 64500.00,
+    profit: 1250.00,
+    strategy: "Breakout",
+    session: "Asian",
+    winLoss: "WIN",
+    screenshotUrl: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop",
+    notes: "BTC broke out of a multi-day consolidation wedge. Volume spiked.",
+    ai_explanation: "Volume analysis confirmed institutional buying pressure as BTC breached the 61,800 resistance zone. The trade aligned with positive funding rates and growing open interest.",
+    mistake_analysis: "Perfect execution. Entry and exit were completely according to the plan.",
+    lessons_learned: "Patience pays off. Waiting for the daily close to confirm the breakout resulted in a high-confidence, low-stress trade."
+  }
+];
+
 const MOCK_GATES: GatesState = {
   gate_1_risk_slot:       "OPEN",
   gate_1_details:         "2 of 4 risk slots occupied. Capacity available.",
@@ -294,7 +369,7 @@ const MOCK_CORRELATION: Record<string, Record<string, string>> = {
 // STORE
 // ─────────────────────────────────────────────
 
-export const useTradingStore = create<TradingStore>((set, get) => ({
+export const useTradingStore = create<TradingStore>((set) => ({
   connected:    true,
   botRunning:   true,
   mt5Connected: true,
@@ -307,6 +382,7 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   marketWatch:        MOCK_MARKET_WATCH,
   gates:              MOCK_GATES,
   rankedSignals:      MOCK_SIGNALS,
+  journal:            MOCK_JOURNAL,
   lastCycleTime:      "08:40:02",
   systemStats:        { cpu: 12.4, memory: 38.7 },
   logs:               MOCK_LOGS,

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Globe, AlertTriangle, Zap, TrendingUp, TrendingDown } from "lucide-react";
+import { Globe, TrendingUp, TrendingDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface NewsItem {
@@ -13,17 +13,14 @@ interface NewsItem {
 }
 
 export default function NewsImpact({ symbol }: { symbol: string }) {
-  const [news, setNews] = useState<NewsItem[]>([]);
+  const [news, setNews] = useState<NewsItem[]>(() => [
+    { id: "1", headline: `Institutional block orders detected on ${symbol}`, impact: 85, time: "2m ago", source: "BLOOMBERG" },
+    { id: "2", headline: `Unexpected liquidity sweep in ${symbol} Asian session`, impact: -45, time: "14m ago", source: "REUTERS" },
+    { id: "3", headline: `Hedge funds increase net-long positioning for ${symbol}`, impact: 60, time: "1h ago", source: "CFTC" },
+    { id: "4", headline: `Macroeconomic data signals volatility for ${symbol} pairs`, impact: -75, time: "2h ago", source: "MACRO" },
+  ]);
 
   useEffect(() => {
-    // Generate mock news specific to the symbol
-    const baseNews = [
-      { id: "1", headline: `Institutional block orders detected on ${symbol}`, impact: 85, time: "2m ago", source: "BLOOMBERG" },
-      { id: "2", headline: `Unexpected liquidity sweep in ${symbol} Asian session`, impact: -45, time: "14m ago", source: "REUTERS" },
-      { id: "3", headline: `Hedge funds increase net-long positioning for ${symbol}`, impact: 60, time: "1h ago", source: "CFTC" },
-      { id: "4", headline: `Macroeconomic data signals volatility for ${symbol} pairs`, impact: -75, time: "2h ago", source: "MACRO" },
-    ];
-    setNews(baseNews);
 
     // Simulate incoming news
     const interval = setInterval(() => {

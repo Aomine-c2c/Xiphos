@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { BarChart3, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import { AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface TradeRecord {

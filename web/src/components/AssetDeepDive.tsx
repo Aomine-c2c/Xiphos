@@ -4,21 +4,21 @@ import React, { useState } from "react";
 import { MarketWatchItem } from "../store/useTradingStore";
 import TradingChart from "./TradingChart";
 import NewsImpact from "./NewsImpact";
-import { Activity, Zap, TrendingUp, TrendingDown, Target, Shield, Crosshair, BarChart2, Maximize2, Minimize2 } from "lucide-react";
+import { Activity, Target, Shield, Crosshair, Maximize2, Minimize2, Zap } from "lucide-react";
+
+const StatBox = ({ label, value, icon, colorClass = "text-white" }: { label: string, value: string | number, icon?: React.ReactNode, colorClass?: string }) => (
+  <div className="flex flex-col bg-[rgba(11,15,23,0.4)] p-3 rounded-md border border-[rgba(255,255,255,0.05)]">
+    <span className="text-[9px] text-xiphos-muted font-bold tracking-widest uppercase mb-1 flex items-center gap-1">
+      {icon}
+      {label}
+    </span>
+    <span className={`text-base font-black ${colorClass}`}>{value}</span>
+  </div>
+);
 
 export default function AssetDeepDive({ asset }: { asset: MarketWatchItem }) {
   const [isChartExpanded, setIsChartExpanded] = useState(false);
   const isUp = asset.change && !asset.change.startsWith("-");
-
-  const StatBox = ({ label, value, icon, colorClass = "text-white" }: { label: string, value: string | number, icon?: React.ReactNode, colorClass?: string }) => (
-    <div className="flex flex-col bg-[rgba(11,15,23,0.4)] p-3 rounded-md border border-[rgba(255,255,255,0.05)]">
-      <span className="text-[9px] text-xiphos-muted font-bold tracking-widest uppercase mb-1 flex items-center gap-1">
-        {icon}
-        {label}
-      </span>
-      <span className={`text-base font-black ${colorClass}`}>{value}</span>
-    </div>
-  );
 
   return (
     <div className="flex flex-col h-full overflow-hidden font-mono gap-4 animate-in fade-in slide-in-from-right-4 duration-300">

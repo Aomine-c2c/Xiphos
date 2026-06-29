@@ -1,243 +1,402 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Settings, Save, Terminal, CheckCircle, AlertTriangle, Wifi, Database, Cpu } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { 
+  Settings, Save, Globe, User, Bell, BrainCircuit, ShieldAlert, 
+  Database, ShieldCheck, Blocks, CheckCircle, Smartphone, Key, 
+  Cloud, HardDrive, RefreshCw, FlaskConical, SlidersHorizontal
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { GlassPanel } from "./ui/GlassPanel";
+import { GlassCard } from "./ui/GlassCard";
+import { PageHeader } from "./ui/PageHeader";
+import { Button } from "./ui/Button";
+import { StatusBadge } from "./ui/StatusBadge";
+
+type TabType = "GENERAL" | "ACCOUNTS" | "NOTIFICATIONS" | "AI_MODELS" | "RISK" | "SYSTEM" | "SECURITY" | "PLUGINS";
 
 export default function SettingsView() {
-  const [lotSize, setLotSize] = useState(0.01);
-  const [maxRiskTrades, setMaxRiskTrades] = useState(4);
-  const [mode, setMode] = useState("DIRECT");
-  const [bridgeHost, setBridgeHost] = useState("127.0.0.1");
-  const [bridgePort, setBridgePort] = useState(8000);
-  const [consoleLogs, setConsoleLogs] = useState<string[]>([
-    "Initializing settings manager...",
-    "Connection to settings API verified.",
-  ]);
+  const [activeTab, setActiveTab] = useState<TabType>("GENERAL");
+  const [saveIndicator, setSaveIndicator] = useState(false);
 
-  const addLog = (msg: string) => {
-    const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    setConsoleLogs(prev => [...prev, `[${ts}] ${msg}`].slice(-6));
-  };
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("http://127.0.0.1:8001/api/settings");
-        if (res.ok) {
-          const data = await res.json();
-          if (data?.trading) {
-            setLotSize(data.trading.lot_size || 0.01);
-            setMaxRiskTrades(data.trading.max_risk_trades || 4);
-          }
-          if (data?.execution) {
-            setMode(data.execution.mode || "DIRECT");
-            setBridgeHost(data.execution.bridge_host || "127.0.0.1");
-            setBridgePort(data.execution.bridge_port || 8000);
-          }
-          addLog("Configuration loaded from config/settings.yaml");
-        }
-      } catch {
-        addLog("Running in offline demo mode.");
-      }
-    })();
-  }, []);
-
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    addLog("Updating platform configuration...");
-    const payload = {
-      execution: { mode, bridge_host: bridgeHost, bridge_port: Number(bridgePort) },
-      trading: { timeframe: "M30", max_risk_trades: Number(maxRiskTrades), lot_size: Number(lotSize) },
-      magic_numbers: { scalper: 135001, runner: 135002 },
-      indicators: { fast_ema: 13, medium_ema: 50, slow_sma: 200 },
-      logging: { level: "INFO", rotation: "10 MB", retention: "10 days" },
-      database: { path: "storage/xiphos.sqlite" },
-    };
-    try {
-      const res = await fetch("http://127.0.0.1:8001/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      addLog(res.ok ? "Config saved. settings.yaml sync completed." : "Error: settings endpoint responded with error.");
-    } catch {
-      addLog("Failed to post configuration to API server.");
-    }
+    setSaveIndicator(true);
+    setTimeout(() => setSaveIndicator(false), 2000);
   };
 
-  const systemStatuses = [
-    { label: "MT5 BRIDGE", icon: Wifi, status: "CONNECTED", ok: true, detail: `${bridgeHost}:${bridgePort}`, colorClass: "text-xiphos-cyan glow-cyan" },
-    { label: "API SERVER", icon: Cpu, status: "ONLINE", ok: true, detail: "127.0.0.1:8001", colorClass: "text-xiphos-emerald glow-emerald" },
-    { label: "BOT ENGINE", icon: Settings, status: "RUNNING", ok: true, detail: "2 bots active", colorClass: "text-xiphos-purple glow-purple" },
-    { label: "DATABASE", icon: Database, status: "SYNCED", ok: true, detail: "xiphos.sqlite", colorClass: "text-xiphos-gold glow-gold" },
-  ];
-
-  const lockedParams = [
-    { label: "FAST EMA FILTER", value: "13 EMA" },
-    { label: "MEDIUM EMA FILTER", value: "50 EMA" },
-    { label: "SLOW SMA FILTER", value: "200 SMA" },
-    { label: "SCALPER MAGIC NO.", value: "135001" },
-    { label: "RUNNER MAGIC NO.", value: "135002" },
-    { label: "TIMEFRAME LOCK", value: "M30" },
+  const tabs: { id: TabType; icon: React.ElementType; label: string }[] = [
+    { id: "GENERAL", icon: Globe, label: "General" },
+    { id: "ACCOUNTS", icon: User, label: "Accounts & Brokers" },
+    { id: "NOTIFICATIONS", icon: Bell, label: "Notifications" },
+    { id: "AI_MODELS", icon: BrainCircuit, label: "AI & Models" },
+    { id: "RISK", icon: ShieldAlert, label: "Risk Limits" },
+    { id: "SYSTEM", icon: Database, label: "System & Data" },
+    { id: "SECURITY", icon: ShieldCheck, label: "Security" },
+    { id: "PLUGINS", icon: Blocks, label: "Plugins & Updates" },
   ];
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300">
-      <form onSubmit={handleSave} className="glass-panel flex flex-col overflow-hidden flex-1 min-h-0 relative">
-        
-        {/* Subtle Background Glow */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-xiphos-purple opacity-5 blur-[150px] rounded-full pointer-events-none"></div>
+    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
+      <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col relative">
+        <GlassPanel glowColor="purple">
 
-        {/* Header */}
-        <div className="p-4 border-b border-white/5 flex items-center justify-between bg-black/20 shrink-0 z-10">
-          <span className="text-2xl font-black text-xiphos-purple uppercase tracking-widest flex items-center gap-2 glow-purple">
-            <Settings className="h-5 w-5" />
-            XIPHOS CONFIGURATION DIRECTORY
-          </span>
-          <button type="submit"
-            className="px-6 py-2 bg-xiphos-purple/20 text-xiphos-purple border border-xiphos-purple/50 hover:bg-xiphos-purple hover:text-black text-sm font-black tracking-widest uppercase rounded cursor-pointer transition-all flex items-center gap-2">
-            <Save className="h-4 w-4" /> SAVE CONFIG
-          </button>
-        </div>
+          {/* Header */}
+          <PageHeader 
+            title="PLATFORM CONFIGURATION" 
+            icon={Settings} 
+            glowColor="purple" 
+            actions={
+              <>
+                <AnimatePresence>
+                  {saveIndicator && (
+                    <motion.span 
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className="text-xs text-xiphos-emerald font-black tracking-widest uppercase flex items-center gap-1"
+                    >
+                      <CheckCircle className="w-3 h-3" /> CONFIG SAVED
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                <Button type="submit" variant="primary" glowColor="purple" icon={Save} label="APPLY CHANGES" />
+              </>
+            }
+          />
 
-        {/* Split: 3 + 9 */}
-        <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden z-10">
-
-          {/* LEFT: System status */}
-          <div className="col-span-3 border-r border-white/5 p-5 flex flex-col gap-6 overflow-hidden bg-black/20">
-            <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-2">
-              SYSTEM STATUS DIAGNOSTICS
-            </span>
-
-            <div className="flex flex-col gap-4">
-              {systemStatuses.map((s, i) => (
-                <motion.div 
-                  key={s.label}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: i * 0.1 }}
-                  className="glass-card p-4 flex flex-col gap-3 group hover:border-white/20 transition-all"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-1.5 group-hover:text-white transition-colors">
-                      <s.icon className="h-3 w-3" /> {s.label}
-                    </span>
-                    {s.ok ? <CheckCircle className="h-3 w-3 text-xiphos-emerald" /> : <AlertTriangle className="h-3 w-3 text-xiphos-crimson" />}
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <span className={`text-lg font-black uppercase tracking-wider ${s.colorClass}`}>{s.status}</span>
-                    <span className="text-[10px] text-xiphos-muted uppercase tracking-widest bg-black/40 px-2 py-0.5 rounded">{s.detail}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Core Locked Params */}
-            <div className="border-t border-white/5 pt-5 mt-auto">
-              <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block mb-3">LOCKED HYPERPARAMETERS</span>
-              <div className="grid grid-cols-2 gap-2">
-                {lockedParams.map(lp => (
-                  <div key={lp.label} className="bg-black/40 border border-white/5 rounded p-2 flex flex-col items-center justify-center text-center">
-                    <span className="text-[9px] text-xiphos-muted font-black tracking-widest mb-1">{lp.label}</span>
-                    <span className="text-xs text-white font-mono">{lp.value}</span>
-                  </div>
-                ))}
+        {/* Layout Split: Sidebar + Content */}
+        <div className="flex-1 min-h-0 flex overflow-hidden z-10">
+          
+          {/* LEFT SIDEBAR NAVIGATION */}
+          <div className="w-64 border-r border-white/5 bg-black/20 flex flex-col p-4 gap-2 overflow-y-auto shrink-0">
+            {tabs.map(tab => (
+              <div 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-3 p-3 rounded cursor-pointer transition-all text-xs font-black tracking-widest uppercase ${activeTab === tab.id ? "bg-xiphos-purple/20 text-xiphos-purple border border-xiphos-purple/50 shadow-[0_0_10px_rgba(139,92,246,0.1)]" : "text-xiphos-muted hover:bg-white/5 hover:text-white border border-transparent"}`}
+              >
+                <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "glow-purple" : ""}`} />
+                {tab.label}
               </div>
-            </div>
+            ))}
           </div>
 
-          {/* RIGHT: Config fields + Log */}
-          <div className="col-span-9 p-5 flex flex-col gap-6 overflow-hidden">
-
-            <div className="flex-1 min-h-0 grid grid-cols-2 gap-6">
-              
-              {/* Execution Config */}
-              <div className="glass-card flex flex-col p-5 h-fit">
-                <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-2 mb-4">
-                  EXECUTION TOPOLOGY
-                </span>
+          {/* RIGHT CONTENT AREA */}
+          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="max-w-3xl flex flex-col gap-8 pb-12"
+              >
                 
-                <div className="space-y-5">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">BRIDGE HOST</label>
-                    <input type="text" value={bridgeHost} onChange={e => setBridgeHost(e.target.value)} 
-                      className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" 
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">BRIDGE PORT</label>
-                      <input type="number" value={bridgePort} onChange={e => setBridgePort(Number(e.target.value))} 
-                        className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" 
-                      />
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">ROUTING MODE</label>
-                      <select value={mode} onChange={e => setMode(e.target.value)} 
-                        className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all appearance-none cursor-pointer">
-                        <option value="DIRECT">DIRECT</option>
-                        <option value="AGGREGATED">AGGREGATED</option>
-                        <option value="DEMO">DEMO</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                {activeTab === "GENERAL" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <Globe className="w-5 h-5 text-xiphos-cyan" /> General Settings
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">THEME ENGINE</label>
+                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                          <option>Deep Space Dark (Default)</option>
+                          <option>High Contrast OLED</option>
+                          <option>Institutional Gray</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">SYSTEM LANGUAGE</label>
+                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                          <option>English (US)</option>
+                          <option>Japanese (日本語)</option>
+                          <option>German (Deutsch)</option>
+                          <option>French (Français)</option>
+                        </select>
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
 
-              {/* Trading Config */}
-              <div className="glass-card flex flex-col p-5 h-fit">
-                <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-2 mb-4">
-                  TRADING BOUNDARIES
-                </span>
-                
-                <div className="space-y-5">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">BASE LOT SIZE</label>
-                    <div className="flex items-center gap-3">
-                      <input type="range" min="0.01" max="1" step="0.01" value={lotSize} onChange={e => setLotSize(parseFloat(e.target.value))} 
-                        className="flex-1 accent-xiphos-purple" 
-                      />
-                      <span className="text-lg font-black text-xiphos-cyan glow-cyan w-16 text-right">{lotSize.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col gap-2 pt-2">
-                    <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX CONCURRENT RISK TRADES</label>
-                    <div className="flex items-center gap-3">
-                      <input type="range" min="1" max="8" step="1" value={maxRiskTrades} onChange={e => setMaxRiskTrades(parseInt(e.target.value))} 
-                        className="flex-1 accent-xiphos-purple" 
-                      />
-                      <span className="text-lg font-black text-xiphos-gold glow-gold w-16 text-right">{maxRiskTrades}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                {activeTab === "ACCOUNTS" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <User className="w-5 h-5 text-xiphos-gold" /> Accounts & Brokers
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">PRIMARY BROKER</label>
+                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                          <option>IC Markets (Raw Spread)</option>
+                          <option>Pepperstone (Razor)</option>
+                          <option>OANDA (Core)</option>
+                          <option>Custom FIX API</option>
+                        </select>
+                      </div>
+                      <div className="border-t border-white/10 pt-4 mt-2">
+                        <h3 className="text-sm font-bold text-white mb-4">MT5 ACCOUNTS</h3>
+                        <div className="flex flex-col gap-3">
+                          <div className="bg-black/40 border border-xiphos-emerald/30 p-3 rounded flex justify-between items-center">
+                            <div>
+                              <div className="text-xs text-white font-black">ICMarkets-Demo</div>
+                              <div className="text-[10px] text-xiphos-muted">Login: 10492850 | Server: ICMarketsSC-Demo</div>
+                            </div>
+                            <StatusBadge label="CONNECTED" variant="success" />
+                          </div>
+                          <div className="bg-black/40 border border-white/10 p-3 rounded flex justify-between items-center opacity-60">
+                            <div>
+                              <div className="text-xs text-white font-black">Pepperstone-Live</div>
+                              <div className="text-[10px] text-xiphos-muted">Login: 994821 | Server: Pepperstone-Live02</div>
+                            </div>
+                            <StatusBadge label="OFFLINE" variant="neutral" />
+                          </div>
+                          <Button type="button" variant="ghost" className="w-fit" label="+ ADD ACCOUNT" />
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
 
-            </div>
+                {activeTab === "NOTIFICATIONS" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <Bell className="w-5 h-5 text-xiphos-purple" /> Notifications
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-white">Email Alerts</span>
+                            <input type="checkbox" defaultChecked className="accent-xiphos-purple w-4 h-4" />
+                          </div>
+                          <input type="email" placeholder="alerts@xiphos.ai" className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                        </div>
+                        <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-white">Discord Webhook</span>
+                            <input type="checkbox" defaultChecked className="accent-xiphos-purple w-4 h-4" />
+                          </div>
+                          <input type="text" placeholder="https://discord.com/api/webhooks/..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                        </div>
+                        <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-white">Telegram Bot</span>
+                            <input type="checkbox" className="accent-xiphos-purple w-4 h-4" />
+                          </div>
+                          <input type="text" placeholder="Bot Token..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                        </div>
+                        <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-white">Slack Channel</span>
+                            <input type="checkbox" className="accent-xiphos-purple w-4 h-4" />
+                          </div>
+                          <input type="text" placeholder="Webhook URL..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
 
-            {/* Mini Console Log */}
-            <div className="shrink-0 h-32 glass-card border border-white/5 bg-black/40 flex flex-col overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-2">
-                <div className="w-2 h-2 rounded-full bg-xiphos-cyan animate-pulse shadow-[0_0_8px_#4CC9F0]" />
-              </div>
-              <div className="text-[10px] text-xiphos-muted font-black tracking-widest uppercase p-2 border-b border-white/5 bg-black/40 flex items-center gap-1.5">
-                <Terminal className="w-3 h-3" />
-                SYSTEM LOGSTREAM
-              </div>
-              <div className="flex-1 p-2 overflow-y-auto text-xs font-mono leading-relaxed opacity-80 flex flex-col gap-1">
-                {consoleLogs.map((log, i) => (
-                  <div key={i} className="flex gap-2 animate-pulse text-xiphos-cyan">
-                    {`> ${log}`}
-                  </div>
-                ))}
-              </div>
-            </div>
+                {activeTab === "AI_MODELS" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <BrainCircuit className="w-5 h-5 text-xiphos-cyan" /> AI & Models
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
+                          <HardDrive className="w-3 h-3" /> LOCAL LLM ENGINE
+                        </label>
+                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                          <option>Llama-3.1-8B-Instruct (Ollama)</option>
+                          <option>Mistral-Nemo-12B (Ollama)</option>
+                          <option>Phi-3-Mini (LMStudio)</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
+                          <Cloud className="w-3 h-3" /> CLOUD LLM ENGINE
+                        </label>
+                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                          <option>Claude 3.5 Sonnet (Anthropic)</option>
+                          <option>GPT-4o (OpenAI)</option>
+                          <option>Gemini 1.5 Pro (Google)</option>
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
+                          <Key className="w-3 h-3" /> CLOUD API KEY
+                        </label>
+                        <input type="password" defaultValue="sk-ant-api03-xxxxxxxxxxxx" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm font-mono" />
+                      </div>
+                      <div className="border-t border-white/10 pt-4 mt-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1 mb-4">
+                          <SlidersHorizontal className="w-3 h-3" /> MAHORAGA LEARNING SPEED
+                        </label>
+                        <div className="flex items-center gap-4 max-w-md">
+                          <span className="text-xs text-white">Conservative</span>
+                          <input type="range" min="1" max="100" defaultValue="75" className="flex-1 accent-xiphos-purple" />
+                          <span className="text-xs text-xiphos-crimson font-black">Aggressive</span>
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
 
+                {activeTab === "RISK" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <ShieldAlert className="w-5 h-5 text-xiphos-crimson" /> Risk Limits
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DEFAULT LOT SIZE</label>
+                          <input type="number" defaultValue={0.1} step="0.01" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX DRAWDOWN (%)</label>
+                          <input type="number" defaultValue={5.0} step="0.1" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX CORRELATION</label>
+                          <input type="number" defaultValue={75} className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX OPEN POSITIONS</label>
+                          <input type="number" defaultValue={8} className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
+
+                {activeTab === "SYSTEM" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <Database className="w-5 h-5 text-xiphos-emerald" /> System & Data
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DATABASE PATH</label>
+                        <input type="text" defaultValue="./storage/xiphos.sqlite" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm font-mono outline-none focus:border-xiphos-purple rounded transition-all" />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">LOG ROTATION</label>
+                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                          <option>10 MB / 7 Days</option>
+                          <option>50 MB / 30 Days</option>
+                          <option>No Limit</option>
+                        </select>
+                      </div>
+                      <div className="border-t border-white/10 pt-4 mt-2 flex justify-between items-center bg-black/40 p-4 rounded border border-white/5">
+                        <div>
+                          <div className="text-sm font-bold text-white">System Backups</div>
+                          <div className="text-xs text-xiphos-muted">Last backup: Today, 08:00 AM (Auto)</div>
+                        </div>
+                        <Button type="button" variant="secondary" icon={HardDrive} label="BACKUP NOW" />
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
+
+                {activeTab === "SECURITY" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <ShieldCheck className="w-5 h-5 text-xiphos-gold" /> Security
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      <div className="bg-black/40 border border-white/10 p-4 rounded flex justify-between items-center">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-bold text-white flex items-center gap-2">
+                            <Smartphone className="w-4 h-4" /> Two-Factor Authentication (2FA)
+                          </div>
+                          <div className="text-xs text-xiphos-muted">Require TOTP code on login and critical risk changes.</div>
+                        </div>
+                        <div className="relative inline-block w-12 h-6 rounded-full bg-xiphos-emerald cursor-pointer">
+                          <div className="absolute top-1 left-7 w-4 h-4 rounded-full bg-white transition-all shadow"></div>
+                        </div>
+                      </div>
+                      <div className="bg-black/40 border border-white/10 p-4 rounded flex justify-between items-center">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-bold text-white flex items-center gap-2">
+                            <User className="w-4 h-4" /> Biometric Auth (WebAuthn)
+                          </div>
+                          <div className="text-xs text-xiphos-muted">Use Fingerprint/FaceID for quick unlocks.</div>
+                        </div>
+                        <div className="relative inline-block w-12 h-6 rounded-full bg-white/10 cursor-pointer border border-white/10">
+                          <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-xiphos-muted transition-all shadow"></div>
+                        </div>
+                      </div>
+                    </GlassCard>
+                  </>
+                )}
+
+                {activeTab === "PLUGINS" && (
+                  <>
+                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
+                      <Blocks className="w-5 h-5 text-xiphos-purple" /> Plugins & Updates
+                    </h2>
+                    <GlassCard className="p-5 flex flex-col gap-6">
+                      
+                      <div className="flex justify-between items-center bg-xiphos-purple/10 border border-xiphos-purple/30 p-4 rounded">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-bold text-white flex items-center gap-2">
+                            Xiphos Core <span className="bg-xiphos-purple text-black text-[9px] px-1.5 rounded-sm tracking-widest">v2.4.1</span>
+                          </div>
+                          <div className="text-xs text-xiphos-purple">Your system is up to date.</div>
+                        </div>
+                        <Button type="button" variant="primary" glowColor="purple" icon={RefreshCw} label="CHECK UPDATES" />
+                      </div>
+
+                      <div className="border-t border-white/10 pt-4 mt-2">
+                        <h3 className="text-sm font-bold text-white mb-4">INSTALLED PLUGINS</h3>
+                        <div className="flex flex-col gap-3">
+                          <div className="bg-black/40 border border-white/10 p-3 rounded flex justify-between items-center">
+                            <div>
+                              <div className="text-xs text-white font-black">News Sentiment Analyzer (Alpha)</div>
+                              <div className="text-[10px] text-xiphos-muted">Parses ForexFactory and Bloomberg RSS.</div>
+                            </div>
+                            <div className="relative inline-block w-8 h-4 rounded-full bg-xiphos-emerald cursor-pointer">
+                              <div className="absolute top-0.5 left-4 w-3 h-3 rounded-full bg-white transition-all shadow"></div>
+                            </div>
+                          </div>
+                          <div className="bg-black/40 border border-white/10 p-3 rounded flex justify-between items-center opacity-60">
+                            <div>
+                              <div className="text-xs text-white font-black">Binance Spot Bridge</div>
+                              <div className="text-[10px] text-xiphos-muted">Connects to Binance API for spot trading.</div>
+                            </div>
+                            <div className="relative inline-block w-8 h-4 rounded-full bg-white/10 cursor-pointer border border-white/10">
+                              <div className="absolute top-0.5 left-0.5 w-3 h-3 rounded-full bg-xiphos-muted transition-all shadow"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-black/40 border border-xiphos-gold/30 p-4 rounded flex justify-between items-center mt-4">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-bold text-xiphos-gold flex items-center gap-2">
+                            <FlaskConical className="w-4 h-4" /> Experimental Features
+                          </div>
+                          <div className="text-xs text-xiphos-muted">Enable unstable UI and logic features. Use at your own risk.</div>
+                        </div>
+                        <div className="relative inline-block w-12 h-6 rounded-full bg-white/10 cursor-pointer border border-white/10">
+                          <div className="absolute top-1 left-1 w-4 h-4 rounded-full bg-xiphos-muted transition-all shadow"></div>
+                        </div>
+                      </div>
+
+                    </GlassCard>
+                  </>
+                )}
+
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
+        </GlassPanel>
       </form>
     </div>
   );

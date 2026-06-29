@@ -69,7 +69,7 @@ export default function CorrelationMatrix({ category }: { category: string }) {
                 const val = getCorr(rowSym, colSym);
                 return (
                   <td key={colSym} className="p-0.5 relative group">
-                    <div className={\`w-full h-8 flex items-center justify-center rounded-sm transition-all cursor-crosshair hover:scale-110 hover:z-10 \${getColor(val)}\`}>
+                    <div className={`w-full h-8 flex items-center justify-center rounded-sm transition-all cursor-crosshair hover:scale-110 hover:z-10 ${getColor(val)}`}>
                       {val.toFixed(2)}
                     </div>
                   </td>

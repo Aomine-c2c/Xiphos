@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { AlertTriangle, Award, CheckCircle, BrainCircuit } from "lucide-react";
+import { AlertTriangle, CheckCircle, BrainCircuit } from "lucide-react";
 import { useTradingStore } from "../store/useTradingStore";
 
 export default function ChatPanel() {

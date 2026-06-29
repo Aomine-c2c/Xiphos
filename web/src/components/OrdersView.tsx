@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { Send, Trash2, ChevronLeft, ChevronRight, ShieldAlert } from "lucide-react";
+import { Send, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function OrdersView() {
