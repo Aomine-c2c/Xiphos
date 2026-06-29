@@ -439,6 +439,12 @@ export const useTradingStore = create<TradingStore>((set) => ({
     const momentums = ["OVERBOUGHT", "OVERSOLD", "NEUTRAL"];
     set((state) => {
       const currentSpins = state.mahoragaState?.["XAUUSD"]?.adaptation_spins || 0;
+      
+      // Lore mechanics: Mahoraga's wheel stops spinning once it completes a full cycle (8 spins)
+      if (currentSpins >= 8) {
+        return state;
+      }
+      
       return {
         mahoragaState: {
           "XAUUSD": {

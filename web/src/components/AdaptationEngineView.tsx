@@ -48,13 +48,18 @@ export default function AdaptationEngineView() {
   const activeIndex = (8 - (adaptationSpins % 8)) % 8;
   const activeHandle = handles[activeIndex].label;
 
-  const aiThoughts = primaryState 
-    ? `Adapting to ${trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
-    : "Waiting for Mahoraga core synchronization...";
+
+  const isFullyAdapted = adaptationSpins >= 8;
+
+  const aiThoughts = isFullyAdapted 
+    ? `FULL ADAPTATION COMPLETE. Phenomenon negated. Waiting for new market regime...`
+    : primaryState 
+      ? `Adapting to ${trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
+      : "Waiting for Mahoraga core synchronization...";
 
   const learningLog = useMemo(() => {
     if (!primaryState) return ["Waiting for state..."];
-    return [
+    const log = [
       `Engine synchronized with ${Object.keys(mahoragaState || {}).length} symbols.`,
       `> Wheel shifted 45° — New Focus: [${activeHandle.toUpperCase()}]`,
       `Regime shifted to: ${trendState}`,
@@ -63,7 +68,11 @@ export default function AdaptationEngineView() {
       `Adjusted lot size sizing: ${primaryState.lot_multiplier}x`,
       `Fast EMA set to: ${primaryState.fast_ema}`
     ];
-  }, [primaryState, trendState, momentumState, mahoragaState, activeHandle]);
+    if (isFullyAdapted) {
+      log.unshift(`> [CRITICAL] FULL ADAPTATION REACHED. PHENOMENON NEGATED.`);
+    }
+    return log;
+  }, [primaryState, trendState, momentumState, mahoragaState, activeHandle, isFullyAdapted]);
 
 
 
@@ -158,22 +167,22 @@ export default function AdaptationEngineView() {
                   <g key={i} transform={`rotate(${handle.deg} 100 100)`}>
                     {/* Spoke */}
                     <line x1="100" y1="70" x2="100" y2="20" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                    <line x1="100" y1="70" x2="100" y2="20" stroke={i === activeIndex ? "#FACC15" : "#8B5CF6"} strokeWidth="2" strokeLinecap="round" className={i === activeIndex ? "animate-pulse" : ""} />
+                    <line x1="100" y1="70" x2="100" y2="20" stroke={isFullyAdapted || i === activeIndex ? "#FACC15" : "#8B5CF6"} strokeWidth="2" strokeLinecap="round" className={isFullyAdapted || i === activeIndex ? "animate-pulse" : ""} />
                     {/* Handle End */}
-                    <circle cx="100" cy="20" r="8" fill="#0b0f17" stroke={i === activeIndex ? "#FACC15" : "white"} strokeWidth="3" />
+                    <circle cx="100" cy="20" r="8" fill="#0b0f17" stroke={isFullyAdapted || i === activeIndex ? "#FACC15" : "white"} strokeWidth="3" />
                   </g>
                 ))}
                 
                 {/* Outer Ring */}
-                <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                <circle cx="100" cy="100" r="85" fill="none" stroke={isFullyAdapted ? "rgba(250,204,21,0.5)" : "rgba(255,255,255,0.1)"} strokeWidth={isFullyAdapted ? 3 : 1} />
               </svg>
             </motion.div>
 
             {/* Center Hub Status */}
             <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center pt-2">
-              <span className="text-[7px] text-xiphos-muted tracking-[0.2em] mb-1">ADAPTING</span>
-              <span className="text-[11px] font-black text-xiphos-gold glow-gold tracking-widest uppercase text-center w-full">
-                {activeHandle}
+              <span className="text-[7px] text-xiphos-muted tracking-[0.2em] mb-1">{isFullyAdapted ? "ADAPTATION" : "ADAPTING"}</span>
+              <span className={`text-[11px] font-black tracking-widest uppercase text-center w-full ${isFullyAdapted ? 'text-white glow-gold drop-shadow-[0_0_15px_rgba(255,255,255,1)] animate-pulse' : 'text-xiphos-gold glow-gold'}`}>
+                {isFullyAdapted ? "COMPLETE" : activeHandle}
               </span>
             </div>
 
@@ -184,7 +193,7 @@ export default function AdaptationEngineView() {
                 const radius = 170; // Label distance
                 const x = Math.cos(rad) * radius;
                 const y = Math.sin(rad) * radius;
-                const isActive = i === activeIndex;
+                const isActive = i === activeIndex || isFullyAdapted;
                 return (
                   <div 
                     key={i}
