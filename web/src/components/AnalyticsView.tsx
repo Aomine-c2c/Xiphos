@@ -216,8 +216,8 @@ export default function AnalyticsView() {
                           <td className="p-3 text-white">{t.symbol}</td>
                           <td className="p-3">
                             <StatusBadge
-                              status={t.type}
-                              variant={t.type === "BUY" ? "emerald" : "crimson"}
+                              label={t.type}
+                              variant={t.type === "BUY" ? "success" : "danger"}
                             />
                           </td>
                           <td className="p-3 text-white text-right">{t.volume.toFixed(2)}</td>

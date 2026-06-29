@@ -366,7 +366,8 @@ def compile_system_state():
         "last_cycle_time": last_cycle_data.get("time", ""),
         "system_stats": {"cpu": cpu_pct, "memory": mem_mb},
         "correlation_matrix": correlation_engine.get_matrix(),
-        "performance_metrics": state_manager.get_performance_metrics()
+        "performance_metrics": state_manager.get_performance_metrics(),
+        "mahoraga_state": {sym: params.to_dict() for sym, params in mahoraga_engine.state.items()}
     }
 
 # Periodical update dispatcher loop

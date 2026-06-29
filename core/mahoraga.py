@@ -16,6 +16,10 @@ class AdaptiveParameters:
         self.trend_state = "UNKNOWN"
         self.momentum_state = "NEUTRAL"
         self.confidence_score = 50.0  # 0 to 100
+        
+        # Mahoraga Technique
+        self.adaptation_spins = 0
+        self._last_state_hash = ""
 
     def to_dict(self):
         return {
@@ -27,7 +31,8 @@ class AdaptiveParameters:
             "filter_strictness": self.filter_strictness,
             "trend_state": self.trend_state,
             "momentum_state": self.momentum_state,
-            "confidence_score": self.confidence_score
+            "confidence_score": self.confidence_score,
+            "adaptation_spins": self.adaptation_spins
         }
 
 class MahoragaAdaptationEngine:
@@ -115,6 +120,13 @@ class MahoragaAdaptationEngine:
         win_bonus = (recent_win_rate - 50.0) * 0.5
         confidence = 50.0 - vol_penalty + win_bonus
         params.confidence_score = min(max(confidence, 0.0), 100.0)
+
+        # Mahoraga Wheel Spin Logic
+        current_state_hash = f"{params.trend_state}_{params.momentum_state}_{params.filter_strictness}_{params.lot_multiplier:.1f}_{params.sl_multiplier:.1f}_{params.fast_ema}"
+        if params._last_state_hash and params._last_state_hash != current_state_hash:
+            params.adaptation_spins += 1
+            log.info(f"[Mahoraga] {symbol} Wheel Clicked! Spin #{params.adaptation_spins} for {current_state_hash}")
+        params._last_state_hash = current_state_hash
 
         log.debug(f"[Mahoraga] {symbol} adapted: VolRatio={volatility_ratio:.2f}, ADX={adx:.1f}, "
                   f"Trend={params.trend_state}, Mom={params.momentum_state}, Strict={params.filter_strictness}")

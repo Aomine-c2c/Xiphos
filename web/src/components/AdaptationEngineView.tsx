@@ -1,57 +1,54 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, BrainCircuit, Network, Fingerprint, Zap, RefreshCw, GitMerge, AlertTriangle } from "lucide-react";
 import { GlassPanel } from "./ui/GlassPanel";
 import { GlassCard } from "./ui/GlassCard";
 import { PageHeader } from "./ui/PageHeader";
 import { StatusBadge } from "./ui/StatusBadge";
+import { useTradingStore } from "../store/useTradingStore";
 
 export default function AdaptationEngineView() {
-  const [learningLog, setLearningLog] = useState<string[]>([
-    "Engine Initialized...",
-    "Loading Neural Weights...",
-    "Synchronizing with live market data...",
-    "Scanning for recent liquidity sweeps..."
-  ]);
+  const { mahoragaState, fetchMahoragaState } = useTradingStore();
 
-  const [aiThoughts, setAiThoughts] = useState(
-    "Market displaying heavy mean-reversion tendencies. Preparing to shift entry triggers from breakout to fade. Awaiting volatility confirmation."
-  );
-
-  const [scores] = useState({
-    success: 87.4,
-    confidence: 92.1,
-    failure: 12.6
-  });
-
-  const [regime, setRegime] = useState("Liquidity sweep");
-
-  // Simulated live feed updates
   useEffect(() => {
-    const messages = [
-      "Market changed: Spread widening detected.",
-      "Adapting... shifting risk parameters.",
-      "New pattern discovered: Fractal breakout on M15.",
-      "Learning complete for recent sequence.",
-      "Volatility spike detected. Adjusting timing."
-    ];
-    let i = 0;
-    const interval = setInterval(() => {
-      setLearningLog(prev => {
-        const newLog = [...prev, messages[i % messages.length]];
-        if (newLog.length > 8) newLog.shift();
-        return newLog;
-      });
-      i++;
-      if (i % 3 === 0) {
-        setRegime(prev => prev === "Liquidity sweep" ? "High volatility" : prev === "High volatility" ? "Trending" : "Liquidity sweep");
-        setAiThoughts("Regime shift confirmed. Recalibrating historical correlation matrices. Expecting increased drawdowns on trend-following strategies.");
-      }
-    }, 4000);
+    fetchMahoragaState();
+    const interval = setInterval(fetchMahoragaState, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchMahoragaState]);
+
+  // Aggregate stats from all symbols or just use EURUSD as primary
+  const primaryState = mahoragaState && Object.keys(mahoragaState).length > 0
+    ? mahoragaState[Object.keys(mahoragaState)[0]]
+    : null;
+
+  const confidence = primaryState?.confidence_score || 0;
+
+  const adaptationSpins = primaryState?.adaptation_spins || 0;
+  const rotation = adaptationSpins * 45;
+  const success = Math.min(confidence * 1.1, 99.9).toFixed(1);
+  const failure = (100 - parseFloat(success)).toFixed(1);
+
+  const trendState = primaryState?.trend_state || "UNKNOWN";
+  const momentumState = primaryState?.momentum_state || "NEUTRAL";
+  const strictness = primaryState?.filter_strictness || "NORMAL";
+
+  const aiThoughts = primaryState 
+    ? `Adapting to ${trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
+    : "Waiting for Mahoraga core synchronization...";
+
+  const learningLog = useMemo(() => {
+    if (!primaryState) return ["Waiting for state..."];
+    return [
+      `Engine synchronized with ${Object.keys(mahoragaState || {}).length} symbols.`,
+      `Regime shifted to: ${trendState}`,
+      `Momentum detected: ${momentumState}`,
+      `Adjusted risk parameter SL: ${primaryState.sl_multiplier}x`,
+      `Adjusted lot size sizing: ${primaryState.lot_multiplier}x`,
+      `Fast EMA set to: ${primaryState.fast_ema}`
+    ];
+  }, [primaryState, trendState, momentumState, mahoragaState]);
 
   const handles = [
     { label: "Risk", deg: 0 },
@@ -65,7 +62,7 @@ export default function AdaptationEngineView() {
   ];
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-mono text-sm relative">
+    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-mono text-sm relative overflow-y-auto custom-scrollbar">
       <GlassPanel glowColor="gold" className="p-0 gap-6" noOverflowHidden>
       {/* HEADER */}
       <PageHeader
@@ -73,13 +70,12 @@ export default function AdaptationEngineView() {
         icon={RefreshCw}
         glowColor="purple"
         subtitle="Continuous autonomous adaptation matrix."
-        iconClassName="animate-spin-slow"
         actions={
           <StatusBadge label="ADAPTING" variant="info" className="animate-pulse shadow-[0_0_10px_#06b6d4]" />
         }
       />
 
-      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 px-6">
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-[500px] px-6">
         
         {/* LEFT PANEL - Live Feed & AI Thoughts */}
         <div className="w-full lg:w-1/4 flex flex-col gap-6 shrink-0">
@@ -124,10 +120,25 @@ export default function AdaptationEngineView() {
           </h3>
 
           <div className="relative w-80 h-80 flex items-center justify-center">
+            
+            {/* Shockwave Effect */}
+            <AnimatePresence>
+              {adaptationSpins > 0 && (
+                <motion.div
+                  key={`shockwave-${adaptationSpins}`}
+                  initial={{ scale: 1, opacity: 0.8, borderWidth: '10px' }}
+                  animate={{ scale: 2.5, opacity: 0, borderWidth: '1px' }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="absolute rounded-full border-xiphos-purple pointer-events-none"
+                  style={{ width: '170px', height: '170px' }}
+                />
+              )}
+            </AnimatePresence>
+
             {/* The Wheel */}
             <motion.div 
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+              animate={{ rotate: rotation }}
+              transition={{ type: "spring", stiffness: 120, damping: 12, mass: 1.5 }}
               className="absolute inset-0 flex items-center justify-center"
             >
               <svg viewBox="0 0 200 200" className="w-full h-full overflow-visible drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
@@ -189,42 +200,42 @@ export default function AdaptationEngineView() {
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-xiphos-muted">Success %</span>
-                  <span className="text-xiphos-emerald font-bold glow-emerald">{scores.success}%</span>
+                  <span className="text-xiphos-emerald font-bold glow-emerald">{success}%</span>
                 </div>
                 <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${scores.success}%` }} className="h-full bg-xiphos-emerald" />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${success}%` }} className="h-full bg-xiphos-emerald" />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-xiphos-muted">Confidence</span>
-                  <span className="text-xiphos-cyan font-bold glow-cyan">{scores.confidence}%</span>
+                  <span className="text-xiphos-cyan font-bold glow-cyan">{confidence.toFixed(1)}%</span>
                 </div>
                 <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${scores.confidence}%` }} className="h-full bg-xiphos-cyan" />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${confidence}%` }} className="h-full bg-xiphos-cyan" />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-xiphos-muted">Failure Rate</span>
-                  <span className="text-xiphos-crimson font-bold glow-crimson">{scores.failure}%</span>
+                  <span className="text-xiphos-crimson font-bold glow-crimson">{failure}%</span>
                 </div>
                 <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${scores.failure}%` }} className="h-full bg-xiphos-crimson" />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${failure}%` }} className="h-full bg-xiphos-crimson" />
                 </div>
               </div>
             </div>
           </GlassCard>
 
           {/* Current State */}
-          <GlassCard className="p-5 shrink-0 flex-1 flex flex-col">
+          <GlassCard className="p-5 shrink-0 flex-1 flex flex-col overflow-y-auto custom-scrollbar min-h-[250px]">
             <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
               <AlertTriangle className="w-3 h-3 text-xiphos-gold" /> Current Market Regime
             </h3>
             
             <div className="flex flex-wrap gap-2 mb-6">
-              {["Trending", "Ranging", "High volatility", "News event", "Liquidity sweep"].map(r => (
-                <span key={r} className={`px-2 py-1 text-[10px] font-bold rounded-sm border ${regime === r ? 'bg-white/10 text-white border-white' : 'bg-transparent text-gray-500 border-white/5'}`}>
+              {["TRENDING", "RANGING", "SQUEEZE", "UNKNOWN"].map(r => (
+                <span key={r} className={`px-2 py-1 text-[10px] font-bold rounded-sm border ${trendState === r ? 'bg-white/10 text-white border-white' : 'bg-transparent text-gray-500 border-white/5'}`}>
                   {r}
                 </span>
               ))}
@@ -236,19 +247,17 @@ export default function AdaptationEngineView() {
             
             <div className="space-y-5 flex-1 justify-center flex flex-col">
               {[
-                { label: "Stop Loss Tightness", val: 65 },
-                { label: "Take Profit Extension", val: 82 },
-                { label: "Position Sizing", val: 55 }
+                { label: "Stop Loss Tightness", val: primaryState ? Math.min((primaryState.sl_multiplier / 2) * 100, 100) : 50 },
+                { label: "Position Sizing", val: primaryState ? Math.min((primaryState.lot_multiplier / 2) * 100, 100) : 50 },
+                { label: "EMA Speed", val: primaryState ? Math.min((primaryState.fast_ema / 30) * 100, 100) : 50 }
               ].map(param => (
                 <div key={param.label}>
                   <div className="flex justify-between text-[10px] mb-2 text-xiphos-muted uppercase tracking-widest">
                     <span>{param.label}</span>
                   </div>
                   <div className="w-full h-0.5 bg-white/10 relative">
-                    {/* Animated slider thumb */}
                     <motion.div 
                       animate={{ left: `${param.val}%` }} 
-                      transition={{ duration: 5, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
                       className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-xiphos-purple rounded-full shadow-[0_0_10px_#8B5CF6]" 
                     />
                   </div>
@@ -263,12 +272,12 @@ export default function AdaptationEngineView() {
 
       {/* BOTTOM PANEL - Evolution Tree & History */}
       <div className="px-6 pb-6">
-        <GlassCard className="p-5 shrink-0 h-48 flex flex-col">
+        <GlassCard className="p-5 shrink-0 h-48 flex flex-col overflow-x-auto custom-scrollbar">
           <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2 shrink-0">
           <GitMerge className="w-3 h-3 text-xiphos-cyan" /> Evolution Tree / History
         </h3>
         
-        <div className="flex-1 relative flex items-center">
+        <div className="flex-1 relative flex items-center min-w-[700px]">
           {/* Horizontal Timeline Line */}
           <div className="absolute left-0 right-0 h-0.5 bg-white/10 top-1/2 -translate-y-1/2"></div>
           

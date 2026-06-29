@@ -132,6 +132,20 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export interface MahoragaState {
+  trend_state: string;
+  momentum_state: string;
+  filter_strictness: string;
+  confidence_score: number;
+  adaptation_spins: number;
+  fast_ema: number;
+  medium_ema: number;
+  slow_sma: number;
+  lot_multiplier: number;
+  sl_multiplier: number;
+}
+
+
 interface TradingStore {
   connected: boolean;
   botRunning: boolean;
@@ -152,10 +166,12 @@ interface TradingStore {
   chatMessages: ChatMessage[];
   correlationMatrix: Record<string, Record<string, string>>;
   performanceMetrics: PerformanceMetrics;
+  mahoragaState: Record<string, MahoragaState> | null;
 
   ws: WebSocket | null;
 
   connectWebSocket: () => void;
+  fetchMahoragaState: () => Promise<void>;
   sendCommand: (type: string, data?: unknown) => void;
   sendChatMessage: (text: string) => void;
   modifySL: (ticket: number, symbol: string, newSL: number) => void;
@@ -388,6 +404,7 @@ export const useTradingStore = create<TradingStore>((set) => ({
   logs:               MOCK_LOGS,
   correlationMatrix:  MOCK_CORRELATION,
   performanceMetrics: MOCK_PERFORMANCE,
+  mahoragaState:      null,
 
   chatMessages: [
     { sender: "vincent", text: "Welcome to the XIPHOS Command Core. I am Vincent, the system reasoning agent. Ask me about active setups, risk exposures, or skipped signals.", timestamp: "14:28" },
@@ -402,6 +419,18 @@ export const useTradingStore = create<TradingStore>((set) => ({
   // No-op in mock mode
   connectWebSocket: () => {
     console.info("XIPHOS: Running in mock/demo mode. WebSocket disabled.");
+  },
+
+  fetchMahoragaState: async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8001/api/mahoraga/state");
+      if (res.ok) {
+        const data = await res.json();
+        set({ mahoragaState: data });
+      }
+    } catch (e) {
+      console.error("Failed to fetch Mahoraga state", e);
+    }
   },
 
   sendCommand: (type, data = {}) => {

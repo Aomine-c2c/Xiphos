@@ -53,6 +53,7 @@ export default function JournalView() {
       {/* HEADER & CONTROLS */}
       <PageHeader
         title="TRADING JOURNAL"
+        icon={BookOpen}
         subtitle="Review, replay, and refine your edge."
         actions={
           <Button variant="secondary" glowColor="cyan" icon={Download} label="EXPORT" />
