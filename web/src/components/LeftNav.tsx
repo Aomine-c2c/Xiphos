@@ -59,10 +59,17 @@ export default function LeftNav({ activeTab, setActiveTab }: LeftNavProps) {
       className="w-[80px] h-full flex flex-col items-center bg-[rgba(11,15,23,0.8)] backdrop-blur-xl border-r border-[rgba(255,255,255,0.05)] z-20 shadow-2xl shrink-0"
     >
       <div className="py-6 flex flex-col items-center shrink-0">
-        <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-xiphos-purple/20 border border-xiphos-purple/50 flex items-center justify-center animate-ai-pulse">
-            <div className="w-4 h-4 rounded-full bg-xiphos-purple glow-purple"></div>
-          </div>
+        <div className="w-10 h-10 relative flex items-center justify-center">
+          <svg viewBox="0 0 200 200" className="w-full h-full overflow-visible drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] animate-[spin_10s_linear_infinite]">
+            <circle cx="100" cy="100" r="30" fill="none" stroke="white" strokeWidth="8" />
+            <circle cx="100" cy="100" r="12" fill="white" />
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+              <g key={deg} transform={`rotate(${deg} 100 100)`}>
+                <line x1="100" y1="70" x2="100" y2="20" stroke="white" strokeWidth="8" strokeLinecap="round" />
+                <circle cx="100" cy="20" r="12" fill="#0b0f17" stroke="white" strokeWidth="4" />
+              </g>
+            ))}
+          </svg>
         </div>
       </div>
       

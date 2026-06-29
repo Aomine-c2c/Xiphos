@@ -26,6 +26,7 @@ from state_manager import StateManager
 from mt5_executor import MT5Executor
 
 from core.correlation_engine import correlation_engine
+from core.mahoraga import mahoraga_engine
 
 app = FastAPI(title="Xiphos Institutional Web API")
 
@@ -676,6 +677,11 @@ def get_web_performance():
         "global": state_manager.get_performance_metrics(),
         "strategy": state_manager.get_strategy_performance_metrics()
     }
+
+@app.get("/api/mahoraga/state")
+def get_mahoraga_state():
+    # Convert all AdaptiveParameters to dict
+    return {sym: params.to_dict() for sym, params in mahoraga_engine.state.items()}
 
 # FastAPI Startup event to bind and run event loops
 main_event_loop = None

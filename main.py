@@ -16,6 +16,7 @@ from risk.CorrelationGuard import CorrelationGuard
 from risk.SignalPriorityEngine import SignalPriorityEngine
 from state_manager import StateManager
 from rich.live import Live
+from core.mahoraga import mahoraga_engine
 
 state_manager = StateManager()
 
@@ -75,7 +76,7 @@ def _evaluate_gate_2():
     last_cycle_data["gates"]["gate_2_correlation"] = "PASS"
     last_cycle_data["gates"]["gate_2_details"] = f"{blocked_count} BLOCKED" if blocked_count > 0 else "NO BLOCK"
 
-def _gather_signals() -> list:
+def _gather_signals(recent_win_rate: float) -> list:
     # Only scan symbols explicitly defined in settings.yaml correlation_groups
     all_symbols = []
     for group_symbols in settings.correlation_groups.values():
@@ -89,9 +90,23 @@ def _gather_signals() -> list:
                 log.debug(f"Skipping {sym} - volume_min {info.volume_min} > 0.01")
             continue
             
+        # Initial fetch to get ATR for Mahoraga
         ind_data = get_m30_indicators(sym)
         if not ind_data:
             continue
+            
+        mahoraga_engine.evaluate(sym, ind_data, recent_win_rate)
+        params = mahoraga_engine.get_parameters(sym)
+        
+        # Re-fetch indicators with adapted parameters
+        ind_data = get_m30_indicators(sym, fast=params.fast_ema, medium=params.medium_ema, slow=params.slow_sma)
+        if not ind_data:
+            continue
+            
+        # Inject mahoraga params into ind_data for the strategy evaluator
+        ind_data["filter_strictness"] = params.filter_strictness
+        ind_data["lot_multiplier"] = params.lot_multiplier
+        ind_data["sl_multiplier"] = params.sl_multiplier
             
         candle_time = ind_data.get('time', 0)
         if candle_time <= last_processed_candles.get(sym, 0):
@@ -180,15 +195,23 @@ def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) 
     else:
         entry_price = ind["close"]
     
-    # HARDCODED FIX: 0.01 Fixed Lot
-    lot_a = 0.01
-    lot_b = 0.01
+    # ADAPTIVE LOT SIZING
+    base_lot = settings.trading.lot_size
+    lot_multiplier = ind.get("lot_multiplier", 1.0)
+    sl_multiplier = ind.get("sl_multiplier", 1.0)
+    
+    # Cap maximum lot at 0.05 as per risk boundaries
+    adapted_lot = min(round(base_lot * lot_multiplier, 2), 0.05)
+    
+    lot_a = adapted_lot
+    lot_b = adapted_lot
     
     order_type = mt5.ORDER_TYPE_BUY if typ == "BUY" else mt5.ORDER_TYPE_SELL
     
     # Trade A (Scalper)
     if open_count < 2 and slots_available > 0:
-        sl_scalper = round(float(sl_a), 5)
+        sl_raw_dist_a = entry_price - float(sl_a)
+        sl_scalper = round(entry_price - (sl_raw_dist_a * sl_multiplier), 5)
         # HARD RISK CAP: Reject if risk > $10.00
         risk_a = mt5.order_calc_profit(order_type, sym, lot_a, entry_price, sl_scalper)
         if risk_a is not None and abs(risk_a) > 10.0:
@@ -201,7 +224,8 @@ def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) 
     
     # Trade B (Runner)
     if open_count < 2 and slots_available > slots_consumed:
-        sl_runner = round(float(sl_b), 5)
+        sl_raw_dist_b = entry_price - float(sl_b)
+        sl_runner = round(entry_price - (sl_raw_dist_b * sl_multiplier), 5)
         # HARD RISK CAP: Reject if risk > $10.00
         risk_b = mt5.order_calc_profit(order_type, sym, lot_b, entry_price, sl_runner)
         if risk_b is not None and abs(risk_b) > 10.0:
@@ -251,7 +275,10 @@ def process_m30_cycle(): # NOSONAR
         for p in positions:
             open_counts[p.symbol] = open_counts.get(p.symbol, 0) + 1
 
-    signals = _gather_signals()
+    global_metrics = state_manager.get_performance_metrics()
+    recent_win_rate = global_metrics.get("win_rate", 50.0)
+
+    signals = _gather_signals(recent_win_rate)
     
     if not _evaluate_gate_3(signals):
         return

@@ -23,10 +23,15 @@ def evaluate_signal(ind_data: dict):
       - None. Trailing stop on 13 EMA (scalper) and 50 EMA (runner)
       - Ride the entire trend until it snaps — creates the "Win Big" side
 
+    STRICTNESS:
+      - If strictness == "STRICT", requires a stronger trend definition or rejects choppiness.
+
     Returns: "BUY", "SELL", or None
     """
     if not ind_data:
         return None
+
+    strictness = ind_data.get("filter_strictness", "NORMAL")
 
     c         = ind_data.get('close')
     prev_c    = ind_data.get('prev_close')
@@ -41,12 +46,31 @@ def evaluate_signal(ind_data: dict):
     macro_up   = e_med > s_slow
     macro_down = e_med < s_slow
 
-    # 13 EMA crossover in the direction of the macro trend
+    # Strictness filter: Require price to be aligned with macro trend
+    if strictness == "EXTREME_STRICT":
+        # Ranging market blocked by Mahoraga ADX rules
+        return None
+        
+    if strictness == "STRICT":
+        if macro_up and c < e_med:
+            return None
+        if macro_down and c > e_med:
+            return None
+            
+    rsi = ind_data.get('rsi_14', 50)
+
+    # Fast EMA crossover in the direction of the macro trend
     if macro_up and prev_c < prev_fast and c > e_fast:
-        log.debug("BUY signal: 13 EMA cross above in macro uptrend (50 EMA > 200 SMA)")
+        if rsi > 70:
+            log.debug(f"BUY rejected: RSI overbought ({rsi:.1f})")
+            return None
+        log.debug(f"BUY signal: Fast EMA cross above in macro uptrend (50 EMA > 200 SMA) [Strictness: {strictness}]")
         return "BUY"
     elif macro_down and prev_c > prev_fast and c < e_fast:
-        log.debug("SELL signal: 13 EMA cross below in macro downtrend (50 EMA < 200 SMA)")
+        if rsi < 30:
+            log.debug(f"SELL rejected: RSI oversold ({rsi:.1f})")
+            return None
+        log.debug(f"SELL signal: Fast EMA cross below in macro downtrend (50 EMA < 200 SMA) [Strictness: {strictness}]")
         return "SELL"
 
     return None
