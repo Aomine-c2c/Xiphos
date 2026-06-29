@@ -22,94 +22,69 @@ interface LogEntry {
 }
 
 export default function MonitoringView() {
-  const [logs, setLogs] = useState<LogEntry[]>(() => {
-    const initialLogs: LogEntry[] = [];
-    const now = new Date();
-    for (let i = 0; i < 30; i++) {
-      initialLogs.push({
-        id: `init-${i}`,
-        timestamp: new Date(now.getTime() - (30 - i) * 1000),
-        level: i % 7 === 0 ? "WARNING" : (i % 13 === 0 ? "ERROR" : "INFO") as LogLevel,
-        category: ["EXEC", "BROKER", "LEARN", "PREDICT", "ADAPT", "RISK"][i % 6] as LogCategory,
-        message: `System initialization step ${i} completed successfully.`
-      });
-    }
-    return initialLogs;
-  });
+  const [logs, setLogs] = useState<LogEntry[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterLevel, setFilterLevel] = useState<LogLevel | "ALL">("ALL");
   const [filterCategory, setFilterCategory] = useState<LogCategory | "ALL">("ALL");
   const [autoScroll, setAutoScroll] = useState(true);
   
-  const [metrics, setMetrics] = useState<Record<string, number>[]>(() => {
-    const initialMetrics = [];
-    for (let i = 0; i < 60; i++) {
-      initialMetrics.push({
-        time: i,
-        cpu: 20 + Math.random() * 30,
-        ram: 40 + Math.random() * 10,
-        gpu: 5 + Math.random() * 20,
-        disk: Math.random() * 5,
-        latency: 12 + Math.random() * 5,
-        fps: 58 + Math.random() * 2,
-      });
-    }
-    return initialMetrics;
-  });
+  const [metrics, setMetrics] = useState<Record<string, number>[]>([]);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
-  // Live Simulation loop
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Add random log
-      if (Math.random() > 0.4) {
-        const categories: LogCategory[] = ["EXEC", "BROKER", "LEARN", "PREDICT", "ADAPT", "RISK"];
-        const randCat = categories[Math.floor(Math.random() * categories.length)];
-        const randNum = Math.random();
-        const randLevel: LogLevel = randNum > 0.95 ? "ERROR" : (randNum > 0.85 ? "WARNING" : "INFO");
+    const ws = new WebSocket("ws://127.0.0.1:8001/ws");
+    
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
         
-        const messages = {
-          EXEC: ["Order placed EURUSD", "Order filled GBPUSD", "Trailing stop updated"],
-          BROKER: ["Ping 14ms", "Heartbeat ok", "FIX session active"],
-          LEARN: ["Backprop epoch 45 completed", "Gradient norm stable", "Loss converging"],
-          PREDICT: ["EURUSD up probability 64%", "Volatility spike detected", "Pattern match: Double Bottom"],
-          ADAPT: ["Regime shift detected", "Adjusting risk weights", "Mahoraga cycle step"],
-          RISK: ["Exposure limit checked", "Drawdown within bounds", "VaR updated"]
-        };
-
-        const msgList = messages[randCat];
-        const newLog: LogEntry = {
-          id: `log-${Date.now()}-${Math.floor(Math.random()*1000)}`,
-          timestamp: new Date(),
-          level: randLevel,
-          category: randCat,
-          message: msgList[Math.floor(Math.random() * msgList.length)] + (randLevel === "ERROR" ? " (FAILED)" : "")
-        };
-
-        setLogs(prev => [...prev, newLog].slice(-200)); // keep last 200 logs
+        if (msg.type === "log_history") {
+          const loadedLogs = msg.data.map((l: any, i: number) => ({
+            id: `hist-${Date.now()}-${i}`,
+            timestamp: new Date(),
+            level: l.level as LogLevel,
+            category: "EXEC",
+            message: l.message
+          }));
+          setLogs(loadedLogs);
+        } else if (msg.type === "log_event") {
+          const l = msg.data;
+          setLogs(prev => {
+            const newLogs = [...prev, {
+              id: `log-${Date.now()}-${Math.floor(Math.random()*1000)}`,
+              timestamp: new Date(),
+              level: l.level as LogLevel,
+              category: "EXEC",
+              message: l.message
+            }];
+            return newLogs.slice(-200); // keep last 200
+          });
+        } else if (msg.type === "state_update") {
+          const st = msg.data.system_stats;
+          const lat = msg.data.api_latency;
+          
+          setMetrics(prev => {
+            const lastTime = prev.length > 0 ? prev[prev.length - 1].time : 0;
+            const newMetric = {
+              time: lastTime + 1,
+              cpu: st.cpu || 0,
+              ram: st.memory || 0,
+              disk: st.disk || 0,
+              latency: lat || 0,
+              gpu: 0,
+              fps: 60
+            };
+            const newArr = [...prev, newMetric];
+            return newArr.length > 60 ? newArr.slice(1) : newArr;
+          });
+        }
+      } catch(e) {
+        // ignore parsing errors
       }
-
-      // Add new metric tick
-      setMetrics(prev => {
-        const last = prev.at(-1);
-        if (!last) return prev;
-        
-        const newMetric = {
-          time: last.time + 1,
-          cpu: Math.max(0, Math.min(100, last.cpu + (Math.random() - 0.5) * 10)),
-          ram: Math.max(0, Math.min(100, last.ram + (Math.random() - 0.5) * 2)),
-          gpu: Math.max(0, Math.min(100, last.gpu + (Math.random() - 0.5) * 15)),
-          disk: Math.max(0, 100 * Math.random() * (Math.random() > 0.9 ? 1 : 0.1)),
-          latency: Math.max(5, last.latency + (Math.random() - 0.5) * 4),
-          fps: Math.max(30, Math.min(60, last.fps + (Math.random() - 0.5) * 2)),
-        };
-        return [...prev.slice(1), newMetric];
-      });
-
-    }, 1000);
-
-    return () => clearInterval(interval);
+    };
+    
+    return () => ws.close();
   }, []);
 
   useEffect(() => {
