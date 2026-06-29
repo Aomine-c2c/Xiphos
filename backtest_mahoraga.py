@@ -81,6 +81,7 @@ def run_backtest(): # NOSONAR
     # State tracking
     open_trades = []  # dicts of active trades
     trade_history = []
+    mahoraga_adaptation_log = []
     
     # Start simulation
     for i, current_time in enumerate(sorted_times):
@@ -166,8 +167,18 @@ def run_backtest(): # NOSONAR
             recent_win_rate = (recent_wins / len(recent_trades) * 100) if len(recent_trades) > 0 else 50.0
             
             # Evaluate Mahoraga
+            prev_spins = mahoraga_engine.get_parameters(sym).adaptation_spins
             mahoraga_engine.evaluate(sym, ind_data, recent_win_rate)
             params = mahoraga_engine.get_parameters(sym)
+            
+            if params.adaptation_spins > prev_spins:
+                mahoraga_adaptation_log.append({
+                    'time': current_time,
+                    'symbol': sym,
+                    'phenomenon': params.phenomenon,
+                    'spins': params.adaptation_spins,
+                    'is_adapted': params.is_adapted
+                })
             
             # Wire dynamic parameters into standard strategy data
             fast_ema_key = f"ema_{params.fast_ema}"
@@ -223,12 +234,14 @@ def run_backtest(): # NOSONAR
             trade_a = {
                 'symbol': sym, 'type': signal, 'role': 'Scalper', 'entry_time': current_time,
                 'entry_price': current_price, 'sl': dynamic_sl, 'volume': dynamic_volume,
-                'mfe': 0, 'mae': 0, 'is_risk_bearing': True, 'point': point, 'status': 'OPEN'
+                'mfe': 0, 'mae': 0, 'is_risk_bearing': True, 'point': point, 'status': 'OPEN',
+                'is_adapted': params.is_adapted, 'phenomenon': params.phenomenon
             }
             trade_b = {
                 'symbol': sym, 'type': signal, 'role': 'Runner', 'entry_time': current_time,
                 'entry_price': current_price, 'sl': dynamic_sl, 'volume': dynamic_volume,
-                'mfe': 0, 'mae': 0, 'is_risk_bearing': True, 'point': point, 'status': 'OPEN'
+                'mfe': 0, 'mae': 0, 'is_risk_bearing': True, 'point': point, 'status': 'OPEN',
+                'is_adapted': params.is_adapted, 'phenomenon': params.phenomenon
             }
             open_trades.extend([trade_a, trade_b])
             open_counts[sym] = open_counts.get(sym, 0) + 2
@@ -300,8 +313,39 @@ def run_backtest(): # NOSONAR
         print(f"Profit Factor: {profit_factor:.2f}")
         print(f"Total PnL (Estimated Points): {total_pnl:.2f}")
         
+        # Calculate Adapted vs Non-Adapted
+        adapted_trades = df_res[df_res['is_adapted'] == True]
+        non_adapted_trades = df_res[df_res['is_adapted'] == False]
+        
+        if len(adapted_trades) > 0:
+            awins = adapted_trades[adapted_trades['profit'] > 0]
+            alosses = adapted_trades[adapted_trades['profit'] <= 0]
+            awr = len(awins) / len(adapted_trades) * 100
+            apf = awins['profit'].sum() / abs(alosses['profit'].sum()) if abs(alosses['profit'].sum()) != 0 else float('inf')
+            print(f"\n--- FULLY ADAPTED TRADES (THE COUNTER-ATTACK) ---")
+            print(f"Trades: {len(adapted_trades)}")
+            print(f"Win Rate: {awr:.2f}%")
+            print(f"Profit Factor: {apf:.2f}")
+            print(f"PnL: {adapted_trades['profit'].sum():.2f}")
+            
+        if len(non_adapted_trades) > 0:
+            nwins = non_adapted_trades[non_adapted_trades['profit'] > 0]
+            nlosses = non_adapted_trades[non_adapted_trades['profit'] <= 0]
+            nwr = len(nwins) / len(non_adapted_trades) * 100
+            npf = nwins['profit'].sum() / abs(nlosses['profit'].sum()) if abs(nlosses['profit'].sum()) != 0 else float('inf')
+            print(f"\n--- LEARNING TRADES (SPINNING THE WHEEL) ---")
+            print(f"Trades: {len(non_adapted_trades)}")
+            print(f"Win Rate: {nwr:.2f}%")
+            print(f"Profit Factor: {npf:.2f}")
+            print(f"PnL: {non_adapted_trades['profit'].sum():.2f}")
+        
         df_res.to_csv("backtest_mahoraga_results.csv", index=False)
         print("Detailed results saved to backtest_mahoraga_results.csv")
+        
+        if len(mahoraga_adaptation_log) > 0:
+            df_log = pd.DataFrame(mahoraga_adaptation_log)
+            df_log.to_csv("mahoraga_adaptation_log.csv", index=False)
+            print("Adaptation log saved to mahoraga_adaptation_log.csv")
 
 if __name__ == "__main__":
     run_backtest()
