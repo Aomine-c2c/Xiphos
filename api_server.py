@@ -24,7 +24,7 @@ from mt5_executor import MT5Executor
 
 from core.correlation_engine import correlation_engine
 from core.mahoraga import mahoraga_engine
-from monitoring.metrics import get_memory_usage_mb, cpu_tracker
+from monitoring.metrics import get_memory_usage_mb, cpu_tracker, get_system_disk_usage_percent
 
 from api.routes import router
 from api.websockets import ws_manager
@@ -211,6 +211,7 @@ def compile_system_state():
 
     mem_mb = get_memory_usage_mb()
     cpu_pct = cpu_tracker.get_cpu_percent()
+    disk_pct = get_system_disk_usage_percent()
 
     return {
         "bot_running": _bot_running,
@@ -223,7 +224,11 @@ def compile_system_state():
         "gates": xiphos_engine.last_cycle_data.get("gates", {}),
         "ranked_signals": xiphos_engine.last_cycle_data.get("ranked_signals", []),
         "last_cycle_time": xiphos_engine.last_cycle_data.get("time", ""),
-        "system_stats": {"cpu": cpu_pct, "memory": mem_mb},
+        "system_stats": {
+            "cpu": cpu_pct,
+            "memory": mem_mb,
+            "disk": disk_pct
+        },
         "correlation_matrix": correlation_engine.get_matrix(),
         "performance_metrics": state_manager.get_performance_metrics(),
         "mahoraga_state": {sym: params.to_dict() for sym, params in mahoraga_engine.state.items()}

@@ -49,12 +49,12 @@ export default function AdaptationEngineView() {
   const activeHandle = handles[activeIndex].label;
 
 
-  const isFullyAdapted = adaptationSpins >= 8;
+  const isFullyAdapted = primaryState?.is_adapted || false;
 
   const aiThoughts = isFullyAdapted 
-    ? `FULL ADAPTATION COMPLETE. Phenomenon negated. Waiting for new market regime...`
+    ? `FULL ADAPTATION COMPLETE. ${primaryState?.phenomenon || "Unknown"} phenomenon negated. Waiting for new market regime...`
     : primaryState 
-      ? `Adapting to ${trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
+      ? `Adapting to ${primaryState?.phenomenon || trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
       : "Waiting for Mahoraga core synchronization...";
 
   const learningLog = useMemo(() => {
@@ -62,7 +62,7 @@ export default function AdaptationEngineView() {
     const log = [
       `Engine synchronized with ${Object.keys(mahoragaState || {}).length} symbols.`,
       `> Wheel shifted 45° — New Focus: [${activeHandle.toUpperCase()}]`,
-      `Regime shifted to: ${trendState}`,
+      `Phenomenon tracking: ${primaryState.phenomenon || trendState}`,
       `Momentum detected: ${momentumState}`,
       `Adjusted risk parameter SL: ${primaryState.sl_multiplier}x`,
       `Adjusted lot size sizing: ${primaryState.lot_multiplier}x`,
@@ -86,7 +86,7 @@ export default function AdaptationEngineView() {
         glowColor="purple"
         subtitle="Continuous autonomous adaptation matrix."
         actions={
-          <StatusBadge label="ADAPTING" variant="info" className="animate-pulse shadow-[0_0_10px_#06b6d4]" />
+          <StatusBadge label={isFullyAdapted ? "ADAPTED" : "ADAPTING"} variant={isFullyAdapted ? "success" : "info"} className={isFullyAdapted ? "shadow-[0_0_10px_#10b981]" : "animate-pulse shadow-[0_0_10px_#06b6d4]"} />
         }
       />
 

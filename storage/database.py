@@ -124,5 +124,24 @@ class Database:
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+            
+            # Oracle Decisions Table
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS oracle_decisions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    decision_type TEXT NOT NULL,
+                    query_text TEXT NOT NULL,
+                    data_core_event TEXT,
+                    data_core_details TEXT,
+                    mahoraga_reasoning TEXT,
+                    mahoraga_adjustment TEXT,
+                    risk_check TEXT,
+                    risk_status TEXT,
+                    risk_details TEXT,
+                    xiphos_action TEXT,
+                    xiphos_latency TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
 
 db = Database()

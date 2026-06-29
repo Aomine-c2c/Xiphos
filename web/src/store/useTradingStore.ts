@@ -143,6 +143,8 @@ export interface MahoragaState {
   slow_sma: number;
   lot_multiplier: number;
   sl_multiplier: number;
+  phenomenon: string;
+  is_adapted: boolean;
 }
 
 

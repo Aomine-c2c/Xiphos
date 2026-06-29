@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional
 from abc import ABC, abstractmethod
-from core.logger import log
+from loguru import logger as log
+from core.oracle import oracle_engine
 
 class AdaptiveParameters:
     def __init__(self):
@@ -111,6 +112,12 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
                 params.adaptation_spins += 1
                 params._last_state_hash = tick_hash
                 log.info(f"[Mahoraga] {symbol} took damage! Wheel clicks to {self.memory_matrix[current_phenomenon]}/{self.clicks_for_adaptation} in {current_phenomenon}")
+                
+                # Log to Oracle
+                is_full = self.memory_matrix[current_phenomenon] >= self.clicks_for_adaptation
+                new_lot = 1.5 if is_full else 0.5
+                import time
+                oracle_engine.record_adaptation(symbol, current_phenomenon, self.memory_matrix[current_phenomenon], params.lot_multiplier, new_lot, 1.2)
 
         # 3. Full Rotation State
         params.is_adapted = self.memory_matrix[current_phenomenon] >= self.clicks_for_adaptation

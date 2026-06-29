@@ -9,6 +9,10 @@ from core.config import settings
 from state_manager import StateManager
 from core.mahoraga import mahoraga_engine
 
+from state_manager import StateManager
+from core.mahoraga import mahoraga_engine
+from storage.database import db
+
 router = APIRouter()
 state_manager = StateManager()
 
@@ -78,3 +82,40 @@ async def get_chart_data(symbol: str):
         })
         
     return {"symbol": symbol, "data": candles}
+
+@router.get("/api/oracle/decisions")
+def get_oracle_decisions():
+    decisions = []
+    try:
+        with db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM oracle_decisions ORDER BY timestamp DESC LIMIT 50")
+            rows = cursor.fetchall()
+            for row in rows:
+                decisions.append({
+                    "id": f"DEC-{row['id']}",
+                    "query": row["query_text"],
+                    "type": row["decision_type"],
+                    "timestamp": row["timestamp"],
+                    "dataCore": {
+                        "event": row["data_core_event"],
+                        "details": row["data_core_details"]
+                    },
+                    "mahoraga": {
+                        "reasoning": row["mahoraga_reasoning"],
+                        "adjustment": row["mahoraga_adjustment"]
+                    },
+                    "riskGuardian": {
+                        "check": row["risk_check"],
+                        "status": row["risk_status"],
+                        "details": row["risk_details"]
+                    },
+                    "xiphos": {
+                        "action": row["xiphos_action"],
+                        "latency": row["xiphos_latency"]
+                    }
+                })
+    except Exception as e:
+        logger.error(f"Failed to fetch oracle decisions: {e}")
+        
+    return decisions

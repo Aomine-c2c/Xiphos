@@ -33,81 +33,30 @@ interface DecisionExplanation {
   };
 }
 
-const mockDecisions: DecisionExplanation[] = [
-  {
-    id: "DEC-1042",
-    query: "Why did we take Trade #1042 (LONG EURUSD)?",
-    type: "TRADE",
-    timestamp: "14:22:05 UTC",
-    dataCore: {
-      event: "Liquidity Sweep Detected",
-      details: "Price swept the previous daily low at 1.0845 on high volume (14K ticks/min)."
-    },
-    mahoraga: {
-      reasoning: "Matched 'Mean Reversion' pattern #44 with 89% confidence.",
-      adjustment: "Reduced target by 5% due to incoming ECB speech volatility."
-    },
-    riskGuardian: {
-      check: "Portfolio VaR & Drawdown Limit",
-      status: "APPROVED",
-      details: "Current VaR 0.4% (Limit 1.0%). Added exposure 0.15%."
-    },
-    xiphos: {
-      action: "Executed Buy Limit at 1.0847",
-      latency: "12ms"
-    }
-  },
-  {
-    id: "DEC-1043",
-    query: "Why was lot size reduced by 50%?",
-    type: "ADAPTATION",
-    timestamp: "09:15:30 UTC",
-    dataCore: {
-      event: "Volatility Regime Shift",
-      details: "VIX proxy spiked 22%. Average True Range (ATR) doubled over last 4 hours."
-    },
-    mahoraga: {
-      reasoning: "High-volatility regime identified (Regime C).",
-      adjustment: "Base lot size modifier reduced from 1.0x to 0.5x to preserve capital."
-    },
-    riskGuardian: {
-      check: "Dynamic Position Sizing (Kelly)",
-      status: "APPROVED",
-      details: "Kelly fraction constraint met. Max concurrent trades capped at 3."
-    },
-    xiphos: {
-      action: "Updated live risk parameters",
-      latency: "4ms"
-    }
-  },
-  {
-    id: "DEC-1044",
-    query: "Why did Risk Guardian block the GBPUSD short?",
-    type: "RISK_REJECTION",
-    timestamp: "11:05:10 UTC",
-    dataCore: {
-      event: "News Event Imminent",
-      details: "BoE Interest Rate Decision scheduled in 4 minutes."
-    },
-    mahoraga: {
-      reasoning: "Breakout strategy signaled SHORT with 78% conviction.",
-      adjustment: "Standard entry proposed."
-    },
-    riskGuardian: {
-      check: "Pre-News Block",
-      status: "REJECTED",
-      details: "Hard rule: No new entries within 5 minutes of Tier 1 macroeconomic data."
-    },
-    xiphos: {
-      action: "Order Cancelled",
-      latency: "2ms"
-    }
-  }
-];
-
 export default function OracleView() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDecision, setSelectedDecision] = useState<DecisionExplanation | null>(mockDecisions[0]);
+  const [decisions, setDecisions] = useState<DecisionExplanation[]>([]);
+  const [selectedDecision, setSelectedDecision] = useState<DecisionExplanation | null>(null);
+
+  React.useEffect(() => {
+    const fetchDecisions = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8001/api/oracle/decisions");
+        if (res.ok) {
+          const data = await res.json();
+          setDecisions(data);
+          if (data.length > 0 && !selectedDecision) {
+            setSelectedDecision(data[0]);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch oracle decisions", e);
+      }
+    };
+    fetchDecisions();
+    const intv = setInterval(fetchDecisions, 10000);
+    return () => clearInterval(intv);
+  }, []);
 
   return (
     <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
@@ -135,7 +84,7 @@ export default function OracleView() {
           </div>
 
           <div className="flex flex-wrap gap-3 max-w-3xl mx-auto justify-center">
-            {mockDecisions.map(dec => (
+            {decisions.filter(d => d.query.toLowerCase().includes(searchQuery.toLowerCase())).map(dec => (
               <Button
                 key={dec.id}
                 onClick={() => setSelectedDecision(dec)}

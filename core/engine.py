@@ -16,6 +16,7 @@ from risk.CorrelationGuard import CorrelationGuard
 from risk.SignalPriorityEngine import SignalPriorityEngine
 from state_manager import StateManager
 from core.mahoraga import mahoraga_engine
+from core.oracle import oracle_engine
 
 def generate_magic(symbol: str, role_id: int) -> int:
     bucket_id = 99
@@ -149,6 +150,7 @@ class XiphosEngine:
                 break
                 
         if bucket_name in session_blocked_buckets:
+            oracle_engine.record_risk_rejection(sym, "Session Bucket Filter", "Bucket already processed in this cycle.", ind.get('phenomenon', 'UNKNOWN'))
             return 0
             
         sess = settings.session_filter
@@ -159,9 +161,11 @@ class XiphosEngine:
         
         open_count = open_counts.get(sym, 0)
         if open_count >= 2:
+            oracle_engine.record_risk_rejection(sym, "Max Open Trades", "Asset already has maximum allowed positions (2).", ind.get('phenomenon', 'UNKNOWN'))
             return 0
             
         if CorrelationGuard.is_bucket_blocked(sym):
+            oracle_engine.record_risk_rejection(sym, "Correlation Guard", f"Bucket {bucket_name} is fully allocated.", ind.get('phenomenon', 'UNKNOWN'))
             return 0
             
         slots_consumed = 0
@@ -187,8 +191,11 @@ class XiphosEngine:
             sl_scalper = round(entry_price - (sl_raw_dist_a * sl_multiplier), 5)
             risk_a = mt5.order_calc_profit(order_type, sym, adapted_lot, entry_price, sl_scalper)
             if risk_a is None or abs(risk_a) <= 10.0:
+                start_exec = time.time()
                 res_a = open_trade(sym, typ, adapted_lot, sl_scalper, magic_a, sig=sig)
                 if res_a:
+                    exec_time = (time.time() - start_exec) * 1000
+                    oracle_engine.record_trade(sym, typ, entry_price, adapted_lot, ind.get('phenomenon', 'UNKNOWN'), exec_time)
                     open_count += 1
                     slots_consumed += 1
         
@@ -197,8 +204,11 @@ class XiphosEngine:
             sl_runner = round(entry_price - (sl_raw_dist_b * sl_multiplier), 5)
             risk_b = mt5.order_calc_profit(order_type, sym, adapted_lot, entry_price, sl_runner)
             if risk_b is None or abs(risk_b) <= 10.0:
+                start_exec = time.time()
                 res_b = open_trade(sym, typ, adapted_lot, sl_runner, magic_b, sig=sig)
                 if res_b:
+                    exec_time = (time.time() - start_exec) * 1000
+                    oracle_engine.record_trade(sym, typ, entry_price, adapted_lot, ind.get('phenomenon', 'UNKNOWN'), exec_time)
                     open_count += 1
                     slots_consumed += 1
 
