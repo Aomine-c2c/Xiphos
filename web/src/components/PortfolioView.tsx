@@ -126,8 +126,8 @@ export default function PortfolioView() {
           <div className="flex items-center gap-4">
             <span className="text-xs font-bold tracking-widest text-xiphos-muted uppercase">DOWNLOAD REPORTS:</span>
             <div className="flex gap-2">
-              <Button icon={FileText} label="PDF" colorClass="text-xiphos-cyan" onClick={() => {}} />
-              <Button icon={Download} label="EXCEL" colorClass="text-xiphos-emerald" onClick={() => {}} />
+              <Button icon={FileText} label="PDF" className="text-xiphos-cyan" onClick={() => {}} />
+              <Button icon={Download} label="EXCEL" className="text-xiphos-emerald" onClick={() => {}} />
             </div>
           </div>
         }
