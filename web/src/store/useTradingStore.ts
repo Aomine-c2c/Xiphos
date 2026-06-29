@@ -182,6 +182,7 @@ interface TradingStore {
   placeOrder: (symbol: string, type: string, volume: number, price: number, sl: number, tp: number) => void;
   cancelOrder: (ticket: number) => void;
   toggleFavorite: (symbol: string) => void;
+  simulateMahoraga: () => void;
 }
 
 // ─────────────────────────────────────────────
@@ -431,6 +432,31 @@ export const useTradingStore = create<TradingStore>((set) => ({
     } catch (e) {
       console.error("Failed to fetch Mahoraga state", e);
     }
+  },
+
+  simulateMahoraga: () => {
+    const trends = ["TRENDING", "RANGING", "SQUEEZE", "UNKNOWN"];
+    const momentums = ["OVERBOUGHT", "OVERSOLD", "NEUTRAL"];
+    set((state) => {
+      const currentSpins = state.mahoragaState?.["XAUUSD"]?.adaptation_spins || 0;
+      return {
+        mahoragaState: {
+          "XAUUSD": {
+            adaptation_spins: currentSpins + 1,
+            trend_state: trends[Math.floor(Math.random() * trends.length)],
+            momentum_state: momentums[Math.floor(Math.random() * momentums.length)],
+            confidence_score: Math.random() * 60 + 30,
+            sl_multiplier: Number((Math.random() * 0.7 + 0.8).toFixed(2)),
+            lot_multiplier: [0.5, 1.0, 1.5][Math.floor(Math.random() * 3)],
+            fast_ema: 13,
+            slow_ema: 50,
+            volatility_state: "HIGH",
+            filter_strictness: "NORMAL",
+            risk_scaling: 1.0
+          }
+        }
+      };
+    });
   },
 
   sendCommand: (type, data = {}) => {

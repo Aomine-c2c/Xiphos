@@ -10,13 +10,13 @@ import { StatusBadge } from "./ui/StatusBadge";
 import { useTradingStore } from "../store/useTradingStore";
 
 export default function AdaptationEngineView() {
-  const { mahoragaState, fetchMahoragaState } = useTradingStore();
+  const { mahoragaState, simulateMahoraga } = useTradingStore();
 
   useEffect(() => {
-    fetchMahoragaState();
-    const interval = setInterval(fetchMahoragaState, 5000);
+    simulateMahoraga();
+    const interval = setInterval(simulateMahoraga, 5000);
     return () => clearInterval(interval);
-  }, [fetchMahoragaState]);
+  }, [simulateMahoraga]);
 
   // Aggregate stats from all symbols or just use EURUSD as primary
   const primaryState = mahoragaState && Object.keys(mahoragaState).length > 0
@@ -34,22 +34,6 @@ export default function AdaptationEngineView() {
   const momentumState = primaryState?.momentum_state || "NEUTRAL";
   const strictness = primaryState?.filter_strictness || "NORMAL";
 
-  const aiThoughts = primaryState 
-    ? `Adapting to ${trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
-    : "Waiting for Mahoraga core synchronization...";
-
-  const learningLog = useMemo(() => {
-    if (!primaryState) return ["Waiting for state..."];
-    return [
-      `Engine synchronized with ${Object.keys(mahoragaState || {}).length} symbols.`,
-      `Regime shifted to: ${trendState}`,
-      `Momentum detected: ${momentumState}`,
-      `Adjusted risk parameter SL: ${primaryState.sl_multiplier}x`,
-      `Adjusted lot size sizing: ${primaryState.lot_multiplier}x`,
-      `Fast EMA set to: ${primaryState.fast_ema}`
-    ];
-  }, [primaryState, trendState, momentumState, mahoragaState]);
-
   const handles = [
     { label: "Risk", deg: 0 },
     { label: "Entries", deg: 45 },
@@ -60,6 +44,28 @@ export default function AdaptationEngineView() {
     { label: "Correlation", deg: 270 },
     { label: "Psychology", deg: 315 },
   ];
+
+  const activeIndex = (8 - (adaptationSpins % 8)) % 8;
+  const activeHandle = handles[activeIndex].label;
+
+  const aiThoughts = primaryState 
+    ? `Adapting to ${trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
+    : "Waiting for Mahoraga core synchronization...";
+
+  const learningLog = useMemo(() => {
+    if (!primaryState) return ["Waiting for state..."];
+    return [
+      `Engine synchronized with ${Object.keys(mahoragaState || {}).length} symbols.`,
+      `> Wheel shifted 45° — New Focus: [${activeHandle.toUpperCase()}]`,
+      `Regime shifted to: ${trendState}`,
+      `Momentum detected: ${momentumState}`,
+      `Adjusted risk parameter SL: ${primaryState.sl_multiplier}x`,
+      `Adjusted lot size sizing: ${primaryState.lot_multiplier}x`,
+      `Fast EMA set to: ${primaryState.fast_ema}`
+    ];
+  }, [primaryState, trendState, momentumState, mahoragaState, activeHandle]);
+
+
 
   return (
     <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-mono text-sm relative overflow-y-auto custom-scrollbar">
@@ -152,9 +158,9 @@ export default function AdaptationEngineView() {
                   <g key={i} transform={`rotate(${handle.deg} 100 100)`}>
                     {/* Spoke */}
                     <line x1="100" y1="70" x2="100" y2="20" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                    <line x1="100" y1="70" x2="100" y2="20" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" className="animate-pulse" />
+                    <line x1="100" y1="70" x2="100" y2="20" stroke={i === activeIndex ? "#FACC15" : "#8B5CF6"} strokeWidth="2" strokeLinecap="round" className={i === activeIndex ? "animate-pulse" : ""} />
                     {/* Handle End */}
-                    <circle cx="100" cy="20" r="8" fill="#0b0f17" stroke="white" strokeWidth="3" />
+                    <circle cx="100" cy="20" r="8" fill="#0b0f17" stroke={i === activeIndex ? "#FACC15" : "white"} strokeWidth="3" />
                   </g>
                 ))}
                 
@@ -163,6 +169,14 @@ export default function AdaptationEngineView() {
               </svg>
             </motion.div>
 
+            {/* Center Hub Status */}
+            <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center pt-2">
+              <span className="text-[7px] text-xiphos-muted tracking-[0.2em] mb-1">ADAPTING</span>
+              <span className="text-[11px] font-black text-xiphos-gold glow-gold tracking-widest uppercase text-center w-full">
+                {activeHandle}
+              </span>
+            </div>
+
             {/* Static Overlay Labels */}
             <div className="absolute inset-0 pointer-events-none">
               {handles.map((handle, i) => {
@@ -170,10 +184,13 @@ export default function AdaptationEngineView() {
                 const radius = 170; // Label distance
                 const x = Math.cos(rad) * radius;
                 const y = Math.sin(rad) * radius;
+                const isActive = i === activeIndex;
                 return (
                   <div 
                     key={i}
-                    className="absolute font-bold text-[10px] tracking-widest uppercase text-xiphos-cyan glow-cyan"
+                    className={`absolute font-bold text-[10px] tracking-widest uppercase transition-all duration-500 ${
+                      isActive ? 'text-xiphos-gold glow-gold scale-110 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-xiphos-cyan/40 glow-cyan opacity-50'
+                    }`}
                     style={{
                       left: `calc(50% + ${x}px)`,
                       top: `calc(50% + ${y}px)`,

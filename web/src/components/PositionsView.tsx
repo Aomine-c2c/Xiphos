@@ -160,8 +160,8 @@ export default function PositionsView() {
                             <td className="p-3 text-white font-bold">{pos.symbol}</td>
                             <td className="p-3 font-bold">
                               <StatusBadge
-                                status={pos.type}
-                                variant={pos.type === "BUY" ? "emerald" : "crimson"}
+                                label={pos.type}
+                                variant={pos.type === "BUY" ? "success" : "danger"}
                               />
                             </td>
                             <td className="p-3 text-right text-white">{pos.volume.toFixed(2)}</td>
@@ -178,8 +178,8 @@ export default function PositionsView() {
                             <td className="p-3 text-right text-xiphos-crimson/80">${comm.toFixed(2)}</td>
                             <td className="p-3 text-center">
                               <StatusBadge
-                                status={isFree ? "RISK FREE" : "BEARING"}
-                                variant={isFree ? "emerald" : "gold"}
+                                label={isFree ? "RISK FREE" : "BEARING"}
+                                variant={isFree ? "success" : "warning"}
                               />
                             </td>
                             <td className="p-3 text-center">
