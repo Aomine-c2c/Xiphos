@@ -3,6 +3,10 @@
 import React, { useState } from "react";
 import { useTradingStore } from "../store/useTradingStore";
 import { Briefcase, ShieldAlert, ChevronLeft, ChevronRight, X, Scissors, MoveVertical, Target, Navigation, Plus, Minus, BrainCircuit } from "lucide-react";
+import { GlassPanel } from "./ui/GlassPanel";
+import { GlassCard } from "./ui/GlassCard";
+import { PageHeader } from "./ui/PageHeader";
+import { StatusBadge } from "./ui/StatusBadge";
 
 export default function PositionsView() {
   const { positions, closePosition, breakeven, partialClose } = useTradingStore();
@@ -26,21 +30,22 @@ export default function PositionsView() {
   const paginatedPositions = positions.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300">
+    <GlassPanel glowColor="cyan" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300">
       
       {/* Title Header */}
-      <div className="glass-panel shrink-0 px-6 py-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)]">
-        <span className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
-          <Briefcase className="h-5 w-5 text-xiphos-cyan animate-pulse glow-cyan" />
-          <span className="glow-cyan">POSITIONS HUB</span>
-        </span>
-        <span className="text-sm text-white font-bold tracking-widest">
-          TOTAL EXPOSURE: <span className="text-xiphos-cyan glow-cyan">{totalLots.toFixed(2)} LOTS</span>
-        </span>
-      </div>
+      <PageHeader
+        title="POSITIONS HUB"
+        icon={Briefcase}
+        glowColor="cyan"
+        actions={
+          <span className="text-sm text-white font-bold tracking-widest">
+            TOTAL EXPOSURE: <span className="text-xiphos-cyan glow-cyan">{totalLots.toFixed(2)} LOTS</span>
+          </span>
+        }
+      />
 
-      <div className="flex-1 flex flex-col min-h-0 glass-panel overflow-hidden">
-        <div className="grid grid-cols-12 h-full p-6 gap-6">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="grid grid-cols-12 h-full p-6 pt-0 gap-6">
           {/* LEFT: Stats (3/12) */}
           <div className="col-span-3 flex flex-col justify-between gap-4">
             <div>
@@ -68,7 +73,7 @@ export default function PositionsView() {
               </div>
             </div>
 
-            <div className="glass-card p-4 rounded-xl">
+            <GlassCard className="p-4 rounded-xl">
               <div className="text-xs text-xiphos-muted font-bold uppercase tracking-widest block mb-4">
                 BUCKET ALLOCATION
               </div>
@@ -95,13 +100,13 @@ export default function PositionsView() {
               <div className="mt-4 text-[10px] text-xiphos-muted/80 uppercase leading-relaxed border-t border-[rgba(255,255,255,0.05)] pt-3">
                 ✓ Correlation guard blocks additions when same-bucket &gt;70%
               </div>
-            </div>
+            </GlassCard>
 
           </div>
 
           {/* RIGHT: Table (9/12) */}
           <div className="col-span-9 flex flex-col gap-6 overflow-hidden">
-            <div className="glass-card flex-1 flex flex-col min-h-0">
+            <GlassCard className="flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between p-4 border-b border-[rgba(255,255,255,0.05)] shrink-0">
                 <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest block">
                   ACTIVE TRADES REGISTRY ({positions.length})
@@ -153,7 +158,12 @@ export default function PositionsView() {
                           <tr key={pos.ticket} className="border-b border-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-all group duration-300 transform hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
                             <td className="p-3 text-xiphos-muted">#{pos.ticket}</td>
                             <td className="p-3 text-white font-bold">{pos.symbol}</td>
-                            <td className={`p-3 font-bold ${pos.type === "BUY" ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>{pos.type}</td>
+                            <td className="p-3 font-bold">
+                              <StatusBadge
+                                status={pos.type}
+                                variant={pos.type === "BUY" ? "emerald" : "crimson"}
+                              />
+                            </td>
                             <td className="p-3 text-right text-white">{pos.volume.toFixed(2)}</td>
                             <td className="p-3 text-right text-xiphos-muted">
                               {pos.price_open.toFixed(pos.symbol.includes("USD") && !pos.symbol.startsWith("X") ? 5 : 2)}
@@ -167,11 +177,10 @@ export default function PositionsView() {
                             <td className="p-3 text-right text-xiphos-crimson/80">${swap}</td>
                             <td className="p-3 text-right text-xiphos-crimson/80">${comm.toFixed(2)}</td>
                             <td className="p-3 text-center">
-                              <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${
-                                isFree ? "bg-xiphos-emerald/10 border-xiphos-emerald/30 text-xiphos-emerald glow-emerald" : "bg-xiphos-gold/10 border-xiphos-gold/30 text-xiphos-gold glow-gold"
-                              }`}>
-                                {isFree ? "RISK FREE" : "BEARING"}
-                              </span>
+                              <StatusBadge
+                                status={isFree ? "RISK FREE" : "BEARING"}
+                                variant={isFree ? "emerald" : "gold"}
+                              />
                             </td>
                             <td className="p-3 text-center">
                                <span className="flex items-center justify-center gap-1 text-xiphos-purple glow-purple font-black text-xs">
@@ -211,13 +220,13 @@ export default function PositionsView() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </GlassCard>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="glass-panel shrink-0 p-4 border-t border-[rgba(255,255,255,0.05)]">
+      <GlassCard className="shrink-0 p-4 rounded-none border-b-0 border-l-0 border-r-0">
         <div className="flex items-center justify-between text-sm font-bold tracking-widest">
           <div className="flex items-center gap-3 text-xiphos-gold glow-gold">
             <ShieldAlert className="h-5 w-5" />
@@ -227,7 +236,7 @@ export default function PositionsView() {
             ACTIVE EXPOSURE: <span className="text-xiphos-emerald glow-emerald font-black">{totalLots.toFixed(2)} LOTS (WITHIN LIMITS)</span>
           </span>
         </div>
-      </div>
-    </div>
+      </GlassCard>
+    </GlassPanel>
   );
 }

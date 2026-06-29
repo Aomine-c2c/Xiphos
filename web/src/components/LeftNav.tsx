@@ -64,7 +64,6 @@ export default function LeftNav({ activeTab, setActiveTab }: LeftNavProps) {
             <div className="w-4 h-4 rounded-full bg-xiphos-purple glow-purple"></div>
           </div>
         </div>
-        </div>
       </div>
       
       <div className="flex-1 overflow-y-auto px-2 py-2 w-full custom-scrollbar">

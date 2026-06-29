@@ -16,12 +16,18 @@ import {
 } from "recharts";
 import { useTradingStore } from "../store/useTradingStore";
 
+import { GlassPanel } from "./ui/GlassPanel";
+import { GlassCard } from "./ui/GlassCard";
+import { PageHeader } from "./ui/PageHeader";
+import { Button } from "./ui/Button";
+
+
 const MetricCard = ({ label, value, sub, colorClass }: { label: string, value: string, sub?: string, colorClass?: string }) => (
-  <div className="glass-card p-4 flex flex-col justify-center">
+  <GlassCard className="p-4 flex flex-col justify-center">
     <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest mb-1">{label}</span>
     <span className={`text-2xl font-black ${colorClass || "text-white"}`}>{value}</span>
     {sub && <span className="text-[9px] text-xiphos-muted uppercase tracking-widest mt-1 opacity-70">{sub}</span>}
-  </div>
+  </GlassCard>
 );
 
 export default function PortfolioView() {
@@ -109,26 +115,23 @@ export default function PortfolioView() {
     );
   };
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in zoom-in-95">
+    <GlassPanel glowColor="emerald" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in zoom-in-95">
       
       {/* 1. TOP HEADER */}
-      <div className="glass-panel rounded-xl flex items-center justify-between p-4 shrink-0 border border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.6)]">
-        <div className="flex items-center gap-3">
-          <PieChartIcon className="h-6 w-6 text-xiphos-cyan animate-pulse glow-cyan" />
-          <span className="text-xl font-black text-white uppercase tracking-widest drop-shadow-md">INSTITUTIONAL PORTFOLIO DASHBOARD</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-xs font-bold tracking-widest text-xiphos-muted uppercase">DOWNLOAD REPORTS:</span>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-[rgba(11,15,23,0.8)] hover:bg-white/10 border border-[rgba(255,255,255,0.1)] rounded-md text-xs font-bold tracking-widest text-white uppercase flex items-center gap-2 transition-all group" title="Export to PDF">
-              <FileText className="w-4 h-4 text-xiphos-cyan group-hover:scale-110 transition-transform" /> PDF
-            </button>
-            <button className="px-4 py-2 bg-[rgba(11,15,23,0.8)] hover:bg-white/10 border border-[rgba(255,255,255,0.1)] rounded-md text-xs font-bold tracking-widest text-white uppercase flex items-center gap-2 transition-all group" title="Export to Excel">
-              <Download className="w-4 h-4 text-xiphos-emerald group-hover:scale-110 transition-transform" /> EXCEL
-            </button>
+      <PageHeader
+        title="INSTITUTIONAL PORTFOLIO DASHBOARD"
+        icon={PieChartIcon}
+        glowColor="cyan"
+        actions={
+          <div className="flex items-center gap-4">
+            <span className="text-xs font-bold tracking-widest text-xiphos-muted uppercase">DOWNLOAD REPORTS:</span>
+            <div className="flex gap-2">
+              <Button icon={FileText} label="PDF" colorClass="text-xiphos-cyan" onClick={() => {}} />
+              <Button icon={Download} label="EXCEL" colorClass="text-xiphos-emerald" onClick={() => {}} />
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-4 pb-4">
         
@@ -140,7 +143,7 @@ export default function PortfolioView() {
           <MetricCard label="Free Margin" value={`$${account.margin_free.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-emerald glow-emerald" />
           <MetricCard label="Max Drawdown" value={`-${performanceMetrics?.max_drawdown.toFixed(2)}%`} colorClass="text-xiphos-crimson glow-crimson" />
           <MetricCard label="ROI (YTD)" value={`+${roi.toFixed(2)}%`} colorClass="text-xiphos-emerald glow-emerald" />
-          <div className="glass-card p-4 flex flex-col justify-center bg-xiphos-purple/10 border-xiphos-purple/30 group hover:bg-xiphos-purple/20 transition-colors">
+          <GlassCard className="p-4 flex flex-col justify-center bg-xiphos-purple/10 border-xiphos-purple/30 group hover:bg-xiphos-purple/20 transition-colors">
             <span className="text-[10px] text-xiphos-purple font-bold uppercase tracking-widest mb-1">Risk Adjusted Return</span>
             <div className="flex justify-between items-end">
               <div>
@@ -152,13 +155,13 @@ export default function PortfolioView() {
                 <span className="text-[9px] ml-1 text-xiphos-muted">SORTINO</span>
               </div>
             </div>
-          </div>
+          </GlassCard>
         </div>
 
         {/* 3. MIDDLE ROW: CHARTS & CALENDAR */}
         <div className="grid grid-cols-12 gap-4 shrink-0 h-80">
           {/* Equity Chart */}
-          <div className="col-span-5 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col relative group">
+          <GlassCard className="col-span-5 p-4 flex flex-col relative group">
             <div className="flex justify-between items-center mb-4 shrink-0">
               <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-cyan transition-colors">
                 <TrendingUp className="w-4 h-4 text-xiphos-cyan" /> HISTORICAL GROWTH
@@ -171,10 +174,10 @@ export default function PortfolioView() {
             <div className="flex-1 min-h-0 w-full">
               {drawEquityChart()}
             </div>
-          </div>
+          </GlassCard>
 
           {/* Asset Allocation Pie Chart */}
-          <div className="col-span-3 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col group">
+          <GlassCard className="col-span-3 p-4 flex flex-col group">
             <h3 className="text-sm font-black tracking-widest uppercase mb-2 shrink-0 group-hover:text-white transition-colors">ASSET ALLOCATION</h3>
             <div className="flex-1 min-h-0 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
@@ -199,10 +202,10 @@ export default function PortfolioView() {
                 </div>
               </div>
             </div>
-          </div>
+          </GlassCard>
 
           {/* Performance Calendar */}
-          <div className="col-span-2 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col group">
+          <GlassCard className="col-span-2 p-4 flex flex-col group">
             <div className="flex justify-between items-center mb-4 shrink-0">
               <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-purple transition-colors">
                 <Target className="w-4 h-4 text-xiphos-purple" /> DAILY RETURNS
@@ -229,10 +232,10 @@ export default function PortfolioView() {
                 })}
               </div>
             </div>
-          </div>
+          </GlassCard>
 
           {/* Monthly Returns */}
-          <div className="col-span-2 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col group">
+          <GlassCard className="col-span-2 p-4 flex flex-col group">
             <div className="flex justify-between items-center mb-4 shrink-0">
               <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-purple transition-colors">
                 <Target className="w-4 h-4 text-xiphos-purple" /> MONTHLY
@@ -264,14 +267,14 @@ export default function PortfolioView() {
                 })}
               </div>
             </div>
-          </div>
+          </GlassCard>
         </div>
 
         {/* 4. BOTTOM ROW: TABLES & METRICS */}
         <div className="grid grid-cols-12 gap-4 flex-1 min-h-[250px] shrink-0">
           
           {/* Winning & Worst Assets */}
-          <div className="col-span-4 glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col gap-4">
+          <GlassCard className="col-span-4 p-4 flex flex-col gap-4">
             <div className="flex-1 flex flex-col overflow-hidden group">
               <h3 className="text-[11px] text-xiphos-muted font-bold tracking-widest uppercase mb-2 group-hover:text-white transition-colors">WINNING ASSETS</h3>
               <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
@@ -300,11 +303,11 @@ export default function PortfolioView() {
                 ))}
               </div>
             </div>
-          </div>
+          </GlassCard>
 
           {/* Operational Metrics */}
           <div className="col-span-8 grid grid-cols-2 gap-4">
-            <div className="glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col justify-between group">
+            <GlassCard className="p-4 flex flex-col justify-between group">
               <div>
                 <h3 className="text-xs text-xiphos-cyan font-bold tracking-widest uppercase flex items-center gap-2 mb-4 group-hover:text-white transition-colors">
                   <Activity className="w-4 h-4 text-xiphos-cyan" /> PROFIT BREAKDOWN (M30)
@@ -342,9 +345,9 @@ export default function PortfolioView() {
                    </span>
                  </div>
               </div>
-            </div>
+            </GlassCard>
 
-            <div className="glass-panel rounded-xl border border-[rgba(255,255,255,0.05)] p-4 flex flex-col justify-between group">
+            <GlassCard className="p-4 flex flex-col justify-between group">
               <div>
                 <h3 className="text-xs text-xiphos-gold font-bold tracking-widest uppercase flex items-center gap-2 mb-4 group-hover:text-white transition-colors">
                   <PieChartIcon className="w-4 h-4 text-xiphos-gold" /> CAPITAL UTILIZATION
@@ -392,12 +395,12 @@ export default function PortfolioView() {
                   <span className="text-[10px] text-xiphos-emerald glow-emerald font-black uppercase tracking-widest">MARGIN LEVEL: {account.margin_level}%</span>
                 </div>
               </div>
-            </div>
+            </GlassCard>
           </div>
 
         </div>
 
       </div>
-    </div>
+    </GlassPanel>
   );
 }

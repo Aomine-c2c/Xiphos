@@ -3,6 +3,8 @@
 import React, { useState, useMemo } from "react";
 import { useTradingStore, MarketWatchItem } from "../store/useTradingStore";
 import { Activity, Search, Star, LayoutGrid, BarChart2, Hexagon } from "lucide-react";
+import { GlassPanel } from "./ui/GlassPanel";
+import { GlassCard } from "./ui/GlassCard";
 import AssetDeepDive from "./AssetDeepDive";
 import HeatMapPanel from "./HeatMapPanel";
 import CorrelationMatrix from "./CorrelationMatrix";
@@ -58,10 +60,10 @@ export default function MarketsView() {
   };
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300">
+    <GlassPanel glowColor="cyan" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300">
       
       {/* 1. TOP NAVIGATION / TOOLBAR */}
-      <div className="glass-panel rounded-xl flex flex-col shrink-0 border border-[rgba(255,255,255,0.05)] overflow-hidden">
+      <GlassCard className="flex flex-col shrink-0 border border-[rgba(255,255,255,0.05)] overflow-hidden">
         
         {/* Top row: Branding & Search */}
         <div className="flex items-center justify-between p-4 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.6)]">
@@ -130,7 +132,7 @@ export default function MarketsView() {
             </button>
           ))}
         </div>
-      </div>
+      </GlassCard>
 
       {/* 2. MAIN CONTENT AREA */}
       <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
@@ -138,7 +140,7 @@ export default function MarketsView() {
         {viewMode === "MATRIX" && (
           <>
             {/* LEFT PANE: Asset List */}
-            <div className="w-80 shrink-0 glass-panel border border-[rgba(255,255,255,0.05)] rounded-xl flex flex-col overflow-hidden">
+            <GlassCard className="w-80 shrink-0 border border-[rgba(255,255,255,0.05)] flex flex-col overflow-hidden">
               <div className="p-3 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)] flex justify-between items-center shrink-0">
                 <span className="text-[10px] text-xiphos-muted font-bold tracking-widest uppercase">ASSET LIST ({filteredMarkets.length})</span>
               </div>
@@ -190,19 +192,19 @@ export default function MarketsView() {
                   })
                 )}
               </div>
-            </div>
+            </GlassCard>
 
             {/* RIGHT PANE: Asset Deep Dive */}
             <div className="flex-1 min-w-0 overflow-hidden">
               {selectedAsset ? (
                 <AssetDeepDive asset={selectedAsset} />
               ) : (
-                <div className="w-full h-full glass-panel border border-[rgba(255,255,255,0.05)] rounded-xl flex items-center justify-center">
+                <GlassCard className="w-full h-full border border-[rgba(255,255,255,0.05)] flex items-center justify-center">
                   <div className="text-center">
                     <Activity className="h-12 w-12 text-xiphos-muted mx-auto mb-4 opacity-30" />
                     <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest">SELECT AN ASSET TO VIEW DETAILS</span>
                   </div>
-                </div>
+                </GlassCard>
               )}
             </div>
           </>
@@ -211,7 +213,7 @@ export default function MarketsView() {
         {viewMode === "ANALYTICS" && (
           <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
             {/* HEATMAP */}
-            <div className="flex-1 glass-panel border border-[rgba(255,255,255,0.05)] rounded-xl flex flex-col overflow-hidden">
+            <GlassCard className="flex-1 border border-[rgba(255,255,255,0.05)] flex flex-col overflow-hidden">
                <div className="p-4 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)] shrink-0">
                  <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
                    <Activity className="h-4 w-4 text-xiphos-cyan" /> 
@@ -222,10 +224,10 @@ export default function MarketsView() {
                <div className="flex-1 overflow-hidden p-2">
                  <HeatMapPanel category={category} />
                </div>
-            </div>
+            </GlassCard>
 
             {/* CORRELATION MATRIX */}
-            <div className="flex-1 glass-panel border border-[rgba(255,255,255,0.05)] rounded-xl flex flex-col overflow-hidden">
+            <GlassCard className="flex-1 border border-[rgba(255,255,255,0.05)] flex flex-col overflow-hidden">
                <div className="p-4 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)] shrink-0">
                  <h2 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
                    <Hexagon className="h-4 w-4 text-xiphos-cyan" /> 
@@ -236,12 +238,12 @@ export default function MarketsView() {
                <div className="flex-1 overflow-hidden">
                  <CorrelationMatrix category={category} />
                </div>
-            </div>
+            </GlassCard>
           </div>
         )}
 
       </div>
 
-    </div>
+    </GlassPanel>
   );
 }

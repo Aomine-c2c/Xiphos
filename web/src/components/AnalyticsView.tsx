@@ -3,6 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import { AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { GlassPanel } from "./ui/GlassPanel";
+import { GlassCard } from "./ui/GlassCard";
+import { PageHeader } from "./ui/PageHeader";
+import { StatusBadge } from "./ui/StatusBadge";
 
 interface TradeRecord {
   ticket: number;
@@ -102,19 +106,17 @@ export default function AnalyticsView() {
   ];
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300">
-      <div className="glass-panel flex flex-col flex-1 min-h-0">
+    <GlassPanel glowColor="purple" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300">
         
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.05)] flex items-center justify-between bg-[rgba(11,15,23,0.4)] shrink-0">
-          <span className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-3">
-            <BarChart3 className="h-5 w-5 text-xiphos-purple animate-pulse glow-purple" />
-            <span className="glow-purple">PERFORMANCE ANALYTICS</span>
-          </span>
-        </div>
+      {/* Header */}
+      <PageHeader
+        title="PERFORMANCE ANALYTICS"
+        icon={BarChart3}
+        glowColor="purple"
+      />
 
-        {/* Split: 3 + 9 */}
-        <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden p-6 gap-6">
+      {/* Split: 3 + 9 */}
+      <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden p-6 gap-6 pt-0">
 
           {/* LEFT: KPI cards */}
           <div className="col-span-3 flex flex-col gap-4 overflow-hidden">
@@ -123,12 +125,12 @@ export default function AnalyticsView() {
             </span>
 
             {kpis.map(kpi => (
-              <div key={kpi.label} className="glass-card p-4 flex items-center justify-between">
+              <GlassCard key={kpi.label} className="p-4 flex items-center justify-between">
                 <div>
                   <div className="text-xs text-xiphos-muted font-bold uppercase tracking-widest mb-1">{kpi.label}</div>
                   <div className={`text-4xl font-black leading-none ${kpi.colorClass}`}>{kpi.value}</div>
                 </div>
-              </div>
+              </GlassCard>
             ))}
 
             {/* Strategy profit split */}
@@ -169,7 +171,7 @@ export default function AnalyticsView() {
           {/* RIGHT: History Log (7/12) */}
           <div className="col-span-9 flex flex-col min-h-0 shrink-0 gap-6">
             {/* Table Header */}
-            <div className="glass-card p-5 shrink-0 h-[220px] flex flex-col">
+            <GlassCard className="p-5 shrink-0 h-[220px] flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest">HISTORICAL EQUITY GROWTH CURVE</span>
                 <span className="text-xiphos-emerald glow-emerald font-black text-xl">$127.45 USD</span>
@@ -177,10 +179,10 @@ export default function AnalyticsView() {
               <div className="flex-1 min-h-0">
                 {drawEquityChart()}
               </div>
-            </div>
+            </GlassCard>
 
             {/* Trade history table */}
-            <div className="glass-card flex-1 min-h-0 flex flex-col">
+            <GlassCard className="flex-1 min-h-0 flex flex-col">
               <div className="flex items-center justify-between p-4 border-b border-[rgba(255,255,255,0.05)] shrink-0">
                 <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest">
                   TRADE HISTORY LOG
@@ -212,7 +214,12 @@ export default function AnalyticsView() {
                         <tr key={t.ticket} className="border-b border-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors">
                           <td className="p-3 text-xiphos-muted">#{t.ticket}</td>
                           <td className="p-3 text-white">{t.symbol}</td>
-                          <td className={`p-3 ${t.type === "BUY" ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>{t.type}</td>
+                          <td className="p-3">
+                            <StatusBadge
+                              status={t.type}
+                              variant={t.type === "BUY" ? "emerald" : "crimson"}
+                            />
+                          </td>
                           <td className="p-3 text-white text-right">{t.volume.toFixed(2)}</td>
                           <td className={`p-3 text-right ${t.profit >= 0 ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
                           {t.profit >= 0 ? "+" : ""}${t.profit.toFixed(2)}
@@ -223,13 +230,11 @@ export default function AnalyticsView() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </GlassCard>
             
           </div>
 
         </div>
-      </div>
-
-    </div>
+    </GlassPanel>
   );
 }
