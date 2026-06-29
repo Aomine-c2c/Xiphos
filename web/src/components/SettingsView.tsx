@@ -19,7 +19,7 @@ export default function SettingsView() {
   const [activeTab, setActiveTab] = useState<TabType>("GENERAL");
   const [saveIndicator, setSaveIndicator] = useState(false);
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setSaveIndicator(true);
     setTimeout(() => setSaveIndicator(false), 2000);
@@ -73,7 +73,10 @@ export default function SettingsView() {
             {tabs.map(tab => (
               <div 
                 key={tab.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => setActiveTab(tab.id)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActiveTab(tab.id); }}
                 className={`flex items-center gap-3 p-3 rounded cursor-pointer transition-all text-xs font-black tracking-widest uppercase ${activeTab === tab.id ? "bg-xiphos-purple/20 text-xiphos-purple border border-xiphos-purple/50 shadow-[0_0_10px_rgba(139,92,246,0.1)]" : "text-xiphos-muted hover:bg-white/5 hover:text-white border border-transparent"}`}
               >
                 <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "glow-purple" : ""}`} />
@@ -101,16 +104,16 @@ export default function SettingsView() {
                     </h2>
                     <GlassCard className="p-5 flex flex-col gap-6">
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">THEME ENGINE</label>
-                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                        <label htmlFor="settings-theme" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">THEME ENGINE</label>
+                        <select id="settings-theme" title="Theme engine" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
                           <option>Deep Space Dark (Default)</option>
                           <option>High Contrast OLED</option>
                           <option>Institutional Gray</option>
                         </select>
                       </div>
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">SYSTEM LANGUAGE</label>
-                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                        <label htmlFor="settings-lang" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">SYSTEM LANGUAGE</label>
+                        <select id="settings-lang" title="System language" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
                           <option>English (US)</option>
                           <option>Japanese (日本語)</option>
                           <option>German (Deutsch)</option>
@@ -128,8 +131,8 @@ export default function SettingsView() {
                     </h2>
                     <GlassCard className="p-5 flex flex-col gap-6">
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">PRIMARY BROKER</label>
-                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                        <label htmlFor="settings-broker" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">PRIMARY BROKER</label>
+                        <select id="settings-broker" title="Primary broker" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
                           <option>IC Markets (Raw Spread)</option>
                           <option>Pepperstone (Razor)</option>
                           <option>OANDA (Core)</option>
@@ -172,28 +175,28 @@ export default function SettingsView() {
                             <span className="text-sm font-bold text-white">Email Alerts</span>
                             <input type="checkbox" defaultChecked className="accent-xiphos-purple w-4 h-4" />
                           </div>
-                          <input type="email" placeholder="alerts@xiphos.ai" className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                          <input title="Email alerts address" type="email" placeholder="alerts@xiphos.ai" className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
                         </div>
                         <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-bold text-white">Discord Webhook</span>
-                            <input type="checkbox" defaultChecked className="accent-xiphos-purple w-4 h-4" />
+                            <input title="Discord webhook enabled" type="checkbox" defaultChecked className="accent-xiphos-purple w-4 h-4" />
                           </div>
-                          <input type="text" placeholder="https://discord.com/api/webhooks/..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                          <input title="Discord webhook URL" type="text" placeholder="https://discord.com/api/webhooks/..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
                         </div>
                         <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-bold text-white">Telegram Bot</span>
-                            <input type="checkbox" className="accent-xiphos-purple w-4 h-4" />
+                            <input title="Telegram bot enabled" type="checkbox" className="accent-xiphos-purple w-4 h-4" />
                           </div>
-                          <input type="text" placeholder="Bot Token..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                          <input title="Telegram bot token" type="text" placeholder="Bot Token..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
                         </div>
                         <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
                           <div className="flex justify-between items-center">
                             <span className="text-sm font-bold text-white">Slack Channel</span>
-                            <input type="checkbox" className="accent-xiphos-purple w-4 h-4" />
+                            <input title="Slack channel enabled" type="checkbox" className="accent-xiphos-purple w-4 h-4" />
                           </div>
-                          <input type="text" placeholder="Webhook URL..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
+                          <input title="Slack webhook URL" type="text" placeholder="Webhook URL..." className="bg-black border border-white/10 text-white p-2 text-xs rounded" />
                         </div>
                       </div>
                     </GlassCard>
@@ -207,38 +210,38 @@ export default function SettingsView() {
                     </h2>
                     <GlassCard className="p-5 flex flex-col gap-6">
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
+                        <label htmlFor="settings-local-llm" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
                           <HardDrive className="w-3 h-3" /> LOCAL LLM ENGINE
                         </label>
-                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                        <select id="settings-local-llm" title="Local LLM engine" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
                           <option>Llama-3.1-8B-Instruct (Ollama)</option>
                           <option>Mistral-Nemo-12B (Ollama)</option>
                           <option>Phi-3-Mini (LMStudio)</option>
                         </select>
                       </div>
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
+                        <label htmlFor="settings-cloud-llm" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
                           <Cloud className="w-3 h-3" /> CLOUD LLM ENGINE
                         </label>
-                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                        <select id="settings-cloud-llm" title="Cloud LLM engine" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
                           <option>Claude 3.5 Sonnet (Anthropic)</option>
                           <option>GPT-4o (OpenAI)</option>
                           <option>Gemini 1.5 Pro (Google)</option>
                         </select>
                       </div>
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
+                        <label htmlFor="settings-api-key" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
                           <Key className="w-3 h-3" /> CLOUD API KEY
                         </label>
-                        <input type="password" defaultValue="sk-ant-api03-xxxxxxxxxxxx" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm font-mono" />
+                        <input id="settings-api-key" title="Cloud API key" type="password" defaultValue="sk-ant-api03-xxxxxxxxxxxx" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm font-mono" />
                       </div>
                       <div className="border-t border-white/10 pt-4 mt-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1 mb-4">
+                        <label htmlFor="settings-learning-speed" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1 mb-4">
                           <SlidersHorizontal className="w-3 h-3" /> MAHORAGA LEARNING SPEED
                         </label>
                         <div className="flex items-center gap-4 max-w-md">
                           <span className="text-xs text-white">Conservative</span>
-                          <input type="range" min="1" max="100" defaultValue="75" className="flex-1 accent-xiphos-purple" />
+                          <input id="settings-learning-speed" title="Mahoraga learning speed" type="range" min="1" max="100" defaultValue="75" className="flex-1 accent-xiphos-purple" />
                           <span className="text-xs text-xiphos-crimson font-black">Aggressive</span>
                         </div>
                       </div>
@@ -254,20 +257,20 @@ export default function SettingsView() {
                     <GlassCard className="p-5 flex flex-col gap-6">
                       <div className="grid grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DEFAULT LOT SIZE</label>
-                          <input type="number" defaultValue={0.1} step="0.01" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                          <label htmlFor="settings-lot-size" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DEFAULT LOT SIZE</label>
+                          <input id="settings-lot-size" title="Default lot size" type="number" defaultValue={0.1} step="0.01" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
                         </div>
                         <div className="flex flex-col gap-2">
-                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX DRAWDOWN (%)</label>
-                          <input type="number" defaultValue={5.0} step="0.1" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                          <label htmlFor="settings-max-dd" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX DRAWDOWN (%)</label>
+                          <input id="settings-max-dd" title="Max drawdown percent" type="number" defaultValue={5} step="0.1" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
                         </div>
                         <div className="flex flex-col gap-2">
-                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX CORRELATION</label>
-                          <input type="number" defaultValue={75} className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                          <label htmlFor="settings-max-corr" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX CORRELATION</label>
+                          <input id="settings-max-corr" title="Max correlation" type="number" defaultValue={75} className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
                         </div>
                         <div className="flex flex-col gap-2">
-                          <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX OPEN POSITIONS</label>
-                          <input type="number" defaultValue={8} className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
+                          <label htmlFor="settings-max-pos" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">MAX OPEN POSITIONS</label>
+                          <input id="settings-max-pos" title="Max open positions" type="number" defaultValue={8} className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all" />
                         </div>
                       </div>
                     </GlassCard>
@@ -281,12 +284,12 @@ export default function SettingsView() {
                     </h2>
                     <GlassCard className="p-5 flex flex-col gap-6">
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DATABASE PATH</label>
-                        <input type="text" defaultValue="./storage/xiphos.sqlite" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm font-mono outline-none focus:border-xiphos-purple rounded transition-all" />
+                        <label htmlFor="settings-db-path" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DATABASE PATH</label>
+                        <input id="settings-db-path" title="Database path" type="text" defaultValue="./storage/xiphos.sqlite" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm font-mono outline-none focus:border-xiphos-purple rounded transition-all" />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">LOG ROTATION</label>
-                        <select className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
+                        <label htmlFor="settings-log-rotation" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">LOG ROTATION</label>
+                        <select id="settings-log-rotation" title="Log rotation" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
                           <option>10 MB / 7 Days</option>
                           <option>50 MB / 30 Days</option>
                           <option>No Limit</option>

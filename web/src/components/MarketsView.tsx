@@ -74,6 +74,7 @@ export default function MarketsView() {
 
           <div className="flex items-center gap-4">
             <button 
+              title="Toggle favorites filter" aria-label="Toggle favorites filter"
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               className={`p-2 rounded-md border transition-colors flex items-center justify-center ${
                 showFavoritesOnly 
@@ -154,7 +155,10 @@ export default function MarketsView() {
                     return (
                       <div 
                         key={item.symbol}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setSelectedAsset(item)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedAsset(item); }}
                         className={`group p-3 rounded-lg border cursor-pointer transition-all flex flex-col gap-2 ${
                           isSelected 
                             ? "bg-[rgba(76,201,240,0.1)] border-xiphos-cyan/30 shadow-[inset_0_0_20px_rgba(76,201,240,0.05)]" 
@@ -164,6 +168,7 @@ export default function MarketsView() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <button 
+                              title="Toggle favorite" aria-label={`Toggle favorite for ${item.symbol}`}
                               onClick={(e) => { e.stopPropagation(); toggleFavorite(item.symbol); }}
                               className="text-xiphos-muted hover:text-xiphos-gold transition-colors"
                             >

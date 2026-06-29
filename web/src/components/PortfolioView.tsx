@@ -190,7 +190,7 @@ export default function PortfolioView() {
                   <Tooltip 
                     contentStyle={{ backgroundColor: "rgba(11,15,23,0.9)", borderColor: "rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: "12px", fontFamily: "monospace", fontWeight: "bold" }}
                     itemStyle={{ color: "#fff" }}
-                    formatter={(value: any) => `$${Number(value).toLocaleString()}`}
+                    formatter={(value) => `$${Number(value).toLocaleString()}`}
                   />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "10px", fontWeight: "bold" }} />
                 </PieChart>

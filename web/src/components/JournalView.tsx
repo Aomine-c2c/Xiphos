@@ -73,21 +73,21 @@ export default function JournalView() {
           />
         </div>
         
-        <select className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={assetFilter} onChange={e => setAssetFilter(e.target.value)}>
+        <select title="Filter by asset" className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={assetFilter} onChange={e => setAssetFilter(e.target.value)}>
           {assets.map(a => <option key={a} value={a}>{a === "ALL" ? "All Assets" : a}</option>)}
         </select>
 
-        <select className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={strategyFilter} onChange={e => setStrategyFilter(e.target.value)}>
+        <select title="Filter by strategy" className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={strategyFilter} onChange={e => setStrategyFilter(e.target.value)}>
           {strategies.map(s => <option key={s} value={s}>{s === "ALL" ? "All Strategies" : s}</option>)}
         </select>
 
-        <select className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={outcomeFilter} onChange={e => setOutcomeFilter(e.target.value)}>
+        <select title="Filter by outcome" className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={outcomeFilter} onChange={e => setOutcomeFilter(e.target.value)}>
           <option value="ALL">All Outcomes</option>
           <option value="WIN">Wins Only</option>
           <option value="LOSS">Losses Only</option>
         </select>
 
-        <select className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={sessionFilter} onChange={e => setSessionFilter(e.target.value)}>
+        <select title="Filter by session" className="bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] rounded-md px-3 py-2 text-white focus:outline-none" value={sessionFilter} onChange={e => setSessionFilter(e.target.value)}>
           {sessions.map(s => <option key={s} value={s}>{s === "ALL" ? "All Sessions" : s}</option>)}
         </select>
       </div>
@@ -218,7 +218,7 @@ export default function JournalView() {
                   <div className={`text-2xl font-black ${selectedTrade.winLoss === "WIN" ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
                     {selectedTrade.profit > 0 ? "+" : ""}{selectedTrade.profit.toLocaleString(undefined, {minimumFractionDigits: 2})}
                   </div>
-                  <button onClick={() => setSelectedTrade(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                  <button title="Close" aria-label="Close trade detail" onClick={() => setSelectedTrade(null)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
                     <X className="w-6 h-6 text-xiphos-muted hover:text-white" />
                   </button>
                 </div>

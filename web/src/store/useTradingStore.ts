@@ -386,7 +386,7 @@ const MOCK_CORRELATION: Record<string, Record<string, string>> = {
 // STORE
 // ─────────────────────────────────────────────
 
-export const useTradingStore = create<TradingStore>((set) => ({
+export const useTradingStore = create<TradingStore>((set, get) => ({
   connected:    true,
   botRunning:   true,
   mt5Connected: true,
@@ -492,55 +492,73 @@ export const useTradingStore = create<TradingStore>((set) => ({
   },
 
   sendCommand: (type, data = {}) => {
-    console.info(`[MOCK] Command: ${type}`, data);
+    const ws = get().ws;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type, data }));
+    } else {
+      console.warn(`[WS Offline] Cannot send command: ${type}`, data);
+    }
   },
 
   sendChatMessage: (text) => {
     if (!text.trim()) return;
     const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    
+    // Optimistic UI update
     set((state) => ({
       chatMessages: [...state.chatMessages, { sender: "user", text, timestamp: ts }],
     }));
-    setTimeout(() => {
-      const reply = "Vincent AI (Demo Mode): I'm running on mock data. Connect the XIPHOS api_server.py to enable live reasoning and real-time analysis.";
-      set((state) => ({
-        chatMessages: [...state.chatMessages, { sender: "vincent", text: reply, timestamp: ts }],
-      }));
-    }, 900);
+
+    const ws = get().ws;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "chat_message", data: { text } }));
+    } else {
+      // Fallback if WS is down
+      setTimeout(() => {
+        const reply = "Vincent AI (Offline): I cannot reach the backend api_server.py. Please ensure it is running.";
+        set((state) => ({
+          chatMessages: [...state.chatMessages, { sender: "vincent", text: reply, timestamp: ts }],
+        }));
+      }, 900);
+    }
   },
 
-  modifySL: (ticket, symbol, newSL) => console.info("[MOCK] modifySL", { ticket, symbol, newSL }),
-  modifyTP: (ticket, symbol, newTP) => console.info("[MOCK] modifyTP", { ticket, symbol, newTP }),
+  modifySL: (ticket, symbol, newSL) => {
+    get().sendCommand("modify_sl", { ticket, symbol, new_sl: newSL });
+  },
+  
+  modifyTP: (ticket, symbol, newTP) => {
+    get().sendCommand("modify_tp", { ticket, symbol, new_tp: newTP });
+  },
 
   closePosition: (ticket) => {
-    set((state) => ({ positions: state.positions.filter((p) => p.ticket !== ticket) }));
+    // We don't have the symbol directly in the args here, so we find it from state
+    const pos = get().positions.find((p) => p.ticket === ticket);
+    if (pos) {
+      get().sendCommand("close_position", { ticket, symbol: pos.symbol });
+    }
   },
 
   breakeven: (ticket) => {
-    set((state) => ({
-      positions: state.positions.map((p) =>
-        p.ticket === ticket ? { ...p, sl: p.price_open, risk_status: "FREE" } : p
-      ),
-    }));
+    const pos = get().positions.find((p) => p.ticket === ticket);
+    if (pos) {
+      get().sendCommand("breakeven", { ticket, symbol: pos.symbol });
+    }
   },
 
   partialClose: (ticket) => {
-    set((state) => ({
-      positions: state.positions.map((p) =>
-        p.ticket === ticket ? { ...p, volume: parseFloat((p.volume / 2).toFixed(2)) } : p
-      ),
-    }));
+    const pos = get().positions.find((p) => p.ticket === ticket);
+    if (pos) {
+      get().sendCommand("partial_close", { ticket, symbol: pos.symbol });
+    }
   },
 
   placeOrder: (symbol, type, volume, price, sl, tp) => {
-    const ticket = Date.now();
-    set((state) => ({
-      orders: [...state.orders, { ticket, symbol, type, volume, price_open: price, sl, tp, comment: "MANUAL" }],
-    }));
+    get().sendCommand("place_order", { symbol, type, volume, price, sl, tp });
   },
 
   cancelOrder: (ticket) => {
-    set((state) => ({ orders: state.orders.filter((o) => o.ticket !== ticket) }));
+    get().sendCommand("cancel_order", { ticket });
   },
 
   toggleFavorite: (symbol) => {

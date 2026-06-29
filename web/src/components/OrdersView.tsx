@@ -113,12 +113,12 @@ export default function OrdersView() {
             <div className="shrink-0 glass-card p-4 border-l-4 border-l-xiphos-purple">
               <form onSubmit={handlePlaceOrder} className="flex gap-4 items-end">
                 <div className="flex flex-col gap-1.5 flex-1">
-                  <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">SYMBOL</label>
-                  <input type="text" value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
+                  <label htmlFor="order-symbol" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">SYMBOL</label>
+                  <input id="order-symbol" title="Symbol" type="text" value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
                 </div>
                 <div className="flex flex-col gap-1.5 flex-1">
-                  <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">TYPE</label>
-                  <select value={type} onChange={e => setType(e.target.value)} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all appearance-none cursor-pointer">
+                  <label htmlFor="order-type" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">TYPE</label>
+                  <select id="order-type" title="Order type" value={type} onChange={e => setType(e.target.value)} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all appearance-none cursor-pointer">
                     <option value="BUY LIMIT">BUY LIMIT</option>
                     <option value="SELL LIMIT">SELL LIMIT</option>
                     <option value="BUY STOP">BUY STOP</option>
@@ -126,20 +126,20 @@ export default function OrdersView() {
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5 w-20">
-                  <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">LOTS</label>
-                  <input type="number" step="0.01" value={volume} onChange={e => setVolume(parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
+                  <label htmlFor="order-lots" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">LOTS</label>
+                  <input id="order-lots" title="Lot size" type="number" step="0.01" value={volume} onChange={e => setVolume(Number.parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
                 </div>
                 <div className="flex flex-col gap-1.5 flex-1">
-                  <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">PRICE</label>
-                  <input type="number" step="0.00001" value={price} onChange={e => setPrice(parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
+                  <label htmlFor="order-price" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">PRICE</label>
+                  <input id="order-price" title="Entry price" type="number" step="0.00001" value={price} onChange={e => setPrice(Number.parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
                 </div>
                 <div className="flex flex-col gap-1.5 flex-1">
-                  <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">SL</label>
-                  <input type="number" step="0.00001" value={sl} onChange={e => setSl(parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
+                  <label htmlFor="order-sl" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">SL</label>
+                  <input id="order-sl" title="Stop loss" type="number" step="0.00001" value={sl} onChange={e => setSl(Number.parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
                 </div>
                 <div className="flex flex-col gap-1.5 flex-1">
-                  <label className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">TP</label>
-                  <input type="number" step="0.00001" value={tp} onChange={e => setTp(parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
+                  <label htmlFor="order-tp" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">TP</label>
+                  <input id="order-tp" title="Take profit" type="number" step="0.00001" value={tp} onChange={e => setTp(Number.parseFloat(e.target.value))} className="bg-black/40 border border-white/10 text-white p-2 text-sm outline-none focus:border-xiphos-purple rounded-sm transition-all" />
                 </div>
                 <button type="submit" className="h-[38px] px-6 bg-xiphos-cyan/20 text-xiphos-cyan border border-xiphos-cyan/50 hover:bg-xiphos-cyan hover:text-black font-black uppercase text-sm tracking-widest rounded-sm transition-all flex items-center gap-2">
                   <Send className="w-4 h-4" /> DISPATCH
@@ -154,11 +154,11 @@ export default function OrdersView() {
                   PENDING ORDER QUEUE
                 </span>
                 <div className="flex items-center gap-3 text-sm">
-                  <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="text-xiphos-muted hover:text-white disabled:opacity-30 transition-colors">
+                  <button title="Previous page" aria-label="Previous page" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="text-xiphos-muted hover:text-white disabled:opacity-30 transition-colors">
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <span className="text-xiphos-muted tracking-widest">PG <span className="text-white">{page + 1}</span> / {totalPages}</span>
-                  <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="text-xiphos-muted hover:text-white disabled:opacity-30 transition-colors">
+                  <button title="Next page" aria-label="Next page" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="text-xiphos-muted hover:text-white disabled:opacity-30 transition-colors">
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
@@ -210,7 +210,7 @@ export default function OrdersView() {
                               {order.comment || "—"}
                             </td>
                             <td className="p-3 pr-4 text-right">
-                              <button onClick={() => handleCancel(order.ticket)} className="opacity-0 group-hover:opacity-100 p-1.5 text-xiphos-muted hover:text-xiphos-crimson hover:bg-xiphos-crimson/10 rounded transition-all cursor-pointer">
+                              <button title="Cancel order" aria-label="Cancel order" onClick={() => handleCancel(order.ticket)} className="opacity-0 group-hover:opacity-100 p-1.5 text-xiphos-muted hover:text-xiphos-crimson hover:bg-xiphos-crimson/10 rounded transition-all cursor-pointer">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </td>

@@ -181,6 +181,7 @@ export default function MonitoringView() {
               <div className="flex items-center gap-2 text-xs">
                 <Filter className="w-3 h-3 text-xiphos-muted" />
                 <select 
+                  title="Filter by log level"
                   value={filterLevel} 
                   onChange={(e) => setFilterLevel(e.target.value as LogLevel | "ALL")}
                   className="bg-black/50 border border-white/10 text-white py-1.5 px-2 rounded outline-none text-xs uppercase"
@@ -191,6 +192,7 @@ export default function MonitoringView() {
                   <option value="ERROR">ERROR</option>
                 </select>
                 <select 
+                  title="Filter by category"
                   value={filterCategory} 
                   onChange={(e) => setFilterCategory(e.target.value as LogCategory | "ALL")}
                   className="bg-black/50 border border-white/10 text-white py-1.5 px-2 rounded outline-none text-xs uppercase"
@@ -207,12 +209,14 @@ export default function MonitoringView() {
 
               <div className="flex items-center gap-2 text-xs font-bold text-xiphos-muted">
                 <input 
+                  id="auto-scroll-toggle"
+                  title="Toggle auto-scroll"
                   type="checkbox" 
                   checked={autoScroll} 
                   onChange={(e) => setAutoScroll(e.target.checked)} 
                   className="accent-xiphos-cyan"
                 />
-                AUTO-SCROLL
+                <label htmlFor="auto-scroll-toggle">AUTO-SCROLL</label>
               </div>
             </div>
 

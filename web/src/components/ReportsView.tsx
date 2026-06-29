@@ -183,7 +183,7 @@ export default function ReportsView() {
                         <td className="p-3 font-mono text-xiphos-muted">{r.date}</td>
                         <td className="p-3 text-right text-xiphos-muted">{r.size}</td>
                         <td className="p-3 pr-4 text-right">
-                          <button className="opacity-0 group-hover:opacity-100 p-1.5 text-xiphos-muted hover:text-white hover:bg-white/10 rounded transition-all">
+                          <button title="Download report" aria-label="Download report" className="opacity-0 group-hover:opacity-100 p-1.5 text-xiphos-muted hover:text-white hover:bg-white/10 rounded transition-all">
                             <Download className="w-4 h-4" />
                           </button>
                         </td>
