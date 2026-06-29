@@ -419,7 +419,58 @@ export const useTradingStore = create<TradingStore>((set) => ({
 
   // No-op in mock mode
   connectWebSocket: () => {
-    console.info("XIPHOS: Running in mock/demo mode. WebSocket disabled.");
+    const ws = new WebSocket("ws://127.0.0.1:8001/ws");
+
+    ws.onopen = () => {
+      set({ connected: true, wsRetries: 0, ws });
+      console.info("XIPHOS WebSocket Connected");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload.type === "state_update") {
+          const data = payload.data;
+          set({
+            botRunning: data.bot_running,
+            mt5Connected: data.mt5_connected,
+            apiLatency: data.api_latency,
+            account: data.account,
+            positions: data.positions,
+            orders: data.orders,
+            marketWatch: data.market_watch,
+            gates: data.gates,
+            rankedSignals: data.ranked_signals,
+            lastCycleTime: data.last_cycle_time,
+            systemStats: data.system_stats,
+            correlationMatrix: data.correlation_matrix,
+            performanceMetrics: data.performance_metrics,
+            mahoragaState: data.mahoraga_state || null,
+          });
+        } else if (payload.type === "log_history") {
+          set({ logs: payload.data });
+        } else if (payload.type === "log_event") {
+          set((state) => ({ logs: [...state.logs, payload.data].slice(-1000) }));
+        } else if (payload.type === "chat_response") {
+          set((state) => ({ chatMessages: [...state.chatMessages, { sender: "vincent", text: payload.data.bot_response, timestamp: payload.data.timestamp }] }));
+        }
+      } catch (e) {
+        console.error("WS Parse Error", e);
+      }
+    };
+
+    ws.onclose = () => {
+      set((state) => ({ connected: false, ws: null }));
+      setTimeout(() => {
+        set((state) => {
+          if (state.wsRetries < 5) {
+            state.connectWebSocket();
+            return { wsRetries: state.wsRetries + 1 };
+          }
+          return state;
+        });
+      }, 5000);
+    };
   },
 
   fetchMahoragaState: async () => {
@@ -434,35 +485,10 @@ export const useTradingStore = create<TradingStore>((set) => ({
     }
   },
 
+  // Backend Mahoraga streaming integration
+  // Real state comes through the websocket connectWebSocket -> set({ mahoragaState: data })
   simulateMahoraga: () => {
-    const trends = ["TRENDING", "RANGING", "SQUEEZE", "UNKNOWN"];
-    const momentums = ["OVERBOUGHT", "OVERSOLD", "NEUTRAL"];
-    set((state) => {
-      const currentSpins = state.mahoragaState?.["XAUUSD"]?.adaptation_spins || 0;
-      
-      // Lore mechanics: Mahoraga's wheel stops spinning once it completes a full cycle (8 spins)
-      if (currentSpins >= 8) {
-        return state;
-      }
-      
-      return {
-        mahoragaState: {
-          "XAUUSD": {
-            adaptation_spins: currentSpins + 1,
-            trend_state: trends[Math.floor(Math.random() * trends.length)],
-            momentum_state: momentums[Math.floor(Math.random() * momentums.length)],
-            confidence_score: Math.random() * 60 + 30,
-            sl_multiplier: Number((Math.random() * 0.7 + 0.8).toFixed(2)),
-            lot_multiplier: [0.5, 1.0, 1.5][Math.floor(Math.random() * 3)],
-            fast_ema: 13,
-            slow_ema: 50,
-            volatility_state: "HIGH",
-            filter_strictness: "NORMAL",
-            risk_scaling: 1.0
-          }
-        }
-      };
-    });
+    // Deprecated: Moving to live backend state stream
   },
 
   sendCommand: (type, data = {}) => {

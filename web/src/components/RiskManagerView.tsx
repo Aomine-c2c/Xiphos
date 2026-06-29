@@ -268,9 +268,9 @@ export default function RiskManagerView() {
                     domain={['auto', 'auto']}
                   />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: "rgba(5, 8, 15, 0.9)", borderColor: "rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: "12px" }}
+                    contentStyle={{ backgroundColor: "rgba(5, 8, 15, 0.9)", borderColor: "rgba(103, 232, 249, 0.2)", borderRadius: "8px" }}
                     itemStyle={{ color: "#fff" }}
-                    formatter={(value: number) => [`$${value.toFixed(2)}`, "Equity"]}
+                    formatter={(value: any) => [`$${Number(value).toFixed(2)}`, "Equity"]}
                   />
                   <Line type="monotone" dataKey="path0" stroke="rgba(139, 92, 246, 0.4)" strokeWidth={1} dot={false} isAnimationActive={false} />
                   <Line type="monotone" dataKey="path1" stroke="rgba(6, 182, 212, 0.4)" strokeWidth={1} dot={false} isAnimationActive={false} />

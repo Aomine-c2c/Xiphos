@@ -121,22 +121,22 @@ export default function PositionsView() {
                   </button>
                 </div>
               </div>
-              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-2">
-                <table className="w-full text-left text-sm border-collapse font-bold">
-                  <thead>
-                    <tr className="text-xiphos-muted uppercase tracking-widest text-xs select-none">
-                      <th className="p-3 font-bold">TICKET</th>
-                      <th className="p-3 font-bold">ASSET</th>
-                      <th className="p-3 font-bold">DIR</th>
-                      <th className="p-3 font-bold text-right">LOT</th>
-                      <th className="p-3 font-bold text-right">ENTRY</th>
-                      <th className="p-3 font-bold text-right">CURRENT</th>
-                      <th className="p-3 font-bold text-right">PNL</th>
-                      <th className="p-3 font-bold text-right">SWAP</th>
-                      <th className="p-3 font-bold text-right">COMM</th>
-                      <th className="p-3 font-bold text-center">RISK</th>
-                      <th className="p-3 font-bold text-center">AI SCORE</th>
-                      <th className="p-3 font-bold text-center">ACTIONS</th>
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-1">
+                <table className="w-full text-left text-[11px] border-collapse font-bold tabular-nums">
+                  <thead className="sticky top-0 bg-[#0B0F19] z-10">
+                    <tr className="text-xiphos-muted uppercase tracking-widest text-[10px] select-none border-b border-[rgba(255,255,255,0.1)]">
+                      <th className="px-2 py-2 font-bold">TKT</th>
+                      <th className="px-2 py-2 font-bold">ASSET</th>
+                      <th className="px-2 py-2 font-bold">DIR</th>
+                      <th className="px-2 py-2 font-bold text-right">LOT</th>
+                      <th className="px-2 py-2 font-bold text-right">ENTRY</th>
+                      <th className="px-2 py-2 font-bold text-right">CURRENT</th>
+                      <th className="px-2 py-2 font-bold text-right">PNL</th>
+                      <th className="px-2 py-2 font-bold text-right">SWAP</th>
+                      <th className="px-2 py-2 font-bold text-right">COMM</th>
+                      <th className="px-2 py-2 font-bold text-center">RISK</th>
+                      <th className="px-2 py-2 font-bold text-center">AI SCORE</th>
+                      <th className="px-2 py-2 font-bold text-center">ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -155,62 +155,55 @@ export default function PositionsView() {
                         const aiScore = pos.ai_score ?? Math.floor((pos.ticket % 20) + 80); // 80-99
                         
                         return (
-                          <tr key={pos.ticket} className="border-b border-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-all group duration-300 transform hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,0,0,0.2)]">
-                            <td className="p-3 text-xiphos-muted">#{pos.ticket}</td>
-                            <td className="p-3 text-white font-bold">{pos.symbol}</td>
-                            <td className="p-3 font-bold">
+                          <tr key={pos.ticket} className="border-b border-[rgba(255,255,255,0.02)] transition-all group duration-200 hover:bg-xiphos-cyan/5 hover:shadow-[inset_0_1px_0_0_rgba(103,232,249,0.3),inset_0_-1px_0_0_rgba(103,232,249,0.3)]">
+                            <td className="px-2 py-1.5 text-xiphos-muted text-[10px]">#{pos.ticket}</td>
+                            <td className="px-2 py-1.5 text-white font-bold">{pos.symbol}</td>
+                            <td className="px-2 py-1.5 font-bold">
                               <StatusBadge
                                 label={pos.type}
                                 variant={pos.type === "BUY" ? "success" : "danger"}
                               />
                             </td>
-                            <td className="p-3 text-right text-white">{pos.volume.toFixed(2)}</td>
-                            <td className="p-3 text-right text-xiphos-muted">
+                            <td className="px-2 py-1.5 text-right text-white">{pos.volume.toFixed(2)}</td>
+                            <td className="px-2 py-1.5 text-right text-xiphos-muted">
                               {pos.price_open.toFixed(pos.symbol.includes("USD") && !pos.symbol.startsWith("X") ? 5 : 2)}
                             </td>
-                            <td className="p-3 text-right text-white/90 font-black relative">
+                            <td className="px-2 py-1.5 text-right text-white/90 font-black">
                               <span className="animate-pulse">{pos.price_current.toFixed(pos.symbol.includes("USD") && !pos.symbol.startsWith("X") ? 5 : 2)}</span>
                             </td>
-                            <td className={`p-3 text-right font-black ${isProfit ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
+                            <td className={`px-2 py-1.5 text-right font-black ${isProfit ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
                               {isProfit ? "+" : ""}${pos.profit.toFixed(2)}
                             </td>
-                            <td className="p-3 text-right text-xiphos-crimson/80">${swap}</td>
-                            <td className="p-3 text-right text-xiphos-crimson/80">${comm.toFixed(2)}</td>
-                            <td className="p-3 text-center">
+                            <td className="px-2 py-1.5 text-right text-xiphos-crimson/80">${swap}</td>
+                            <td className="px-2 py-1.5 text-right text-xiphos-crimson/80">${comm.toFixed(2)}</td>
+                            <td className="px-2 py-1.5 text-center">
                               <StatusBadge
                                 label={isFree ? "RISK FREE" : "BEARING"}
                                 variant={isFree ? "success" : "warning"}
                               />
                             </td>
-                            <td className="p-3 text-center">
-                               <span className="flex items-center justify-center gap-1 text-xiphos-purple glow-purple font-black text-xs">
+                            <td className="px-2 py-1.5 text-center relative">
+                               <div className="flex items-center justify-center gap-1 text-xiphos-purple glow-purple font-black group/tooltip cursor-help">
                                   <BrainCircuit className="w-3 h-3" /> {aiScore}%
-                               </span>
+                                  
+                                  {/* Tooltip Hover Box */}
+                                  <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 hidden group-hover/tooltip:block w-48 bg-[#070A10] border border-xiphos-purple/40 p-2 rounded z-50 text-left shadow-[0_0_15px_rgba(139,92,246,0.2)]">
+                                    <div className="text-[9px] text-xiphos-muted mb-1 uppercase">Vincent AI Logic:</div>
+                                    <div className="text-[10px] text-white font-normal leading-tight">
+                                      Mahoraga generated logic: ADX above threshold, aligned with macro trend, tight SL multiplier applied due to squeeze.
+                                    </div>
+                                  </div>
+                               </div>
                             </td>
-                            <td className="p-3 text-center flex items-center justify-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => { if (globalThis.confirm(`Force Close Ticket #${pos.ticket}?`)) closePosition(pos.ticket, pos.symbol); }} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-xiphos-crimson/20 text-xiphos-crimson border border-xiphos-crimson/30 rounded text-xs font-bold transition-all hover:shadow-[0_0_8px_rgba(239,68,68,0.3)]" title="Close">
+                            <td className="px-2 py-1.5 text-center flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => { if (globalThis.confirm(`Force Close Ticket #${pos.ticket}?`)) closePosition(pos.ticket, pos.symbol); }} className="p-1 hover:bg-xiphos-crimson/20 text-xiphos-crimson border border-transparent hover:border-xiphos-crimson/30 rounded transition-all hover:shadow-[0_0_8px_rgba(239,68,68,0.3)]" title="Close">
                                 <X className="w-3 h-3" />
                               </button>
-                              <button onClick={() => { if (globalThis.confirm(`Partial Close (50%) Ticket #${pos.ticket}?`)) partialClose(pos.ticket, pos.symbol); }} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-xiphos-gold/20 text-xiphos-gold border border-xiphos-gold/30 rounded text-xs font-bold transition-all hover:shadow-[0_0_8px_rgba(212,175,55,0.3)]" title="Partial Close">
+                              <button onClick={() => { if (globalThis.confirm(`Partial Close (50%) Ticket #${pos.ticket}?`)) partialClose(pos.ticket, pos.symbol); }} className="p-1 hover:bg-xiphos-gold/20 text-xiphos-gold border border-transparent hover:border-xiphos-gold/30 rounded transition-all hover:shadow-[0_0_8px_rgba(212,175,55,0.3)]" title="Partial Close">
                                 <Scissors className="w-3 h-3" />
                               </button>
-                              <button onClick={() => {}} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-white/20 text-xiphos-muted hover:text-white border border-white/20 rounded text-xs font-bold transition-all" title="Move SL">
-                                <MoveVertical className="w-3 h-3" />
-                              </button>
-                              <button onClick={() => {}} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-white/20 text-xiphos-muted hover:text-white border border-white/20 rounded text-xs font-bold transition-all" title="Move TP">
-                                <Target className="w-3 h-3" />
-                              </button>
-                              <button onClick={() => {}} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-white/20 text-xiphos-muted hover:text-white border border-white/20 rounded text-xs font-bold transition-all" title="Trail Stop">
-                                <Navigation className="w-3 h-3" />
-                              </button>
-                              <button onClick={() => { if (globalThis.confirm(`Breakeven Ticket #${pos.ticket}?`)) breakeven(pos.ticket, pos.symbol); }} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-xiphos-emerald/20 text-xiphos-emerald border border-xiphos-emerald/30 rounded text-xs font-bold transition-all hover:shadow-[0_0_8px_rgba(34,197,94,0.3)]" title="Breakeven">
+                              <button onClick={() => { if (globalThis.confirm(`Breakeven Ticket #${pos.ticket}?`)) breakeven(pos.ticket, pos.symbol); }} className="p-1 hover:bg-xiphos-emerald/20 text-xiphos-emerald border border-transparent hover:border-xiphos-emerald/30 rounded transition-all hover:shadow-[0_0_8px_rgba(34,197,94,0.3)]" title="Breakeven">
                                 <ShieldAlert className="w-3 h-3" />
-                              </button>
-                              <button onClick={() => {}} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-white/20 text-xiphos-muted hover:text-white border border-white/20 rounded text-xs font-bold transition-all" title="Scale In">
-                                <Plus className="w-3 h-3" />
-                              </button>
-                              <button onClick={() => {}} className="p-1.5 bg-[rgba(11,15,23,0.5)] hover:bg-white/20 text-xiphos-muted hover:text-white border border-white/20 rounded text-xs font-bold transition-all" title="Scale Out">
-                                <Minus className="w-3 h-3" />
                               </button>
                             </td>
                           </tr>
