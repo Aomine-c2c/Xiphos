@@ -83,8 +83,8 @@ export default function AdaptationEngineView() {
 
 
   return (
-    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-mono text-sm relative overflow-y-auto custom-scrollbar">
-      <GlassPanel glowColor="gold" className="p-0 gap-6" noOverflowHidden>
+    <div className="flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-mono text-[10px] relative overflow-hidden">
+      <GlassPanel glowColor="gold" className="p-0 gap-2" noOverflowHidden>
       {/* HEADER */}
       <PageHeader
         title="MAHORAGA ENGINE"
@@ -96,15 +96,15 @@ export default function AdaptationEngineView() {
         }
       />
 
-      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-[500px] px-6">
+      <div className="flex flex-col lg:flex-row gap-3 flex-1 min-h-0 px-4">
         
         {/* LEFT PANEL - Live Feed & AI Thoughts */}
-        <div className="w-full lg:w-1/4 flex flex-col gap-6 shrink-0">
-          <GlassCard className="p-5 flex-1 flex flex-col min-h-0">
+        <div className="w-full lg:w-1/4 flex flex-col gap-3 shrink-0 min-h-0">
+          <GlassCard className="p-3 flex-1 flex flex-col min-h-0">
             <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2 shrink-0">
               <Zap className="w-3 h-3 text-xiphos-gold" /> Live Learning Feed
             </h3>
-            <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar flex flex-col justify-end">
+            <div className="flex-1 overflow-hidden space-y-1 flex flex-col justify-end text-[9px]">
               <AnimatePresence>
                 {learningLog.map((log, idx) => (
                   <motion.div 
@@ -120,18 +120,18 @@ export default function AdaptationEngineView() {
             </div>
           </GlassCard>
 
-          <GlassCard className="p-5 shrink-0 border border-xiphos-purple/30 shadow-[0_0_20px_rgba(139,92,246,0.1)]">
+          <GlassCard className="p-3 shrink-0 border border-xiphos-purple/30 shadow-[0_0_20px_rgba(139,92,246,0.1)]">
             <h3 className="text-xiphos-purple tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
               <BrainCircuit className="w-3 h-3" /> Live AI Thoughts
             </h3>
-            <p className="text-gray-300 text-xs leading-relaxed italic">
+            <p className="text-gray-300 text-[10px] leading-tight italic">
               &quot;{aiThoughts}&quot;
             </p>
           </GlassCard>
         </div>
 
         {/* CENTER PANEL - Mahoraga Wheel */}
-        <GlassCard className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
+        <GlassCard className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden min-h-0">
           
           {/* Background Neural Grid */}
           {/* eslint-disable-next-line react/forbid-dom-props */}
@@ -141,7 +141,7 @@ export default function AdaptationEngineView() {
             <Fingerprint className="w-3 h-3" /> Adaptive Core
           </h3>
 
-          <div className="relative w-80 h-80 flex items-center justify-center">
+          <div className="relative w-48 h-48 flex items-center justify-center">
             
             {/* Shockwave Effect */}
             <AnimatePresence>
@@ -222,10 +222,10 @@ export default function AdaptationEngineView() {
         </GlassCard>
 
         {/* RIGHT PANEL - Status & Sliders */}
-        <div className="w-full lg:w-1/4 flex flex-col gap-6 shrink-0">
+        <div className="w-full lg:w-1/4 flex flex-col gap-3 shrink-0 min-h-0">
           
           {/* Scores */}
-          <GlassCard className="p-5 shrink-0">
+          <GlassCard className="p-3 shrink-0">
             <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
               <Activity className="w-3 h-3 text-xiphos-emerald" /> Adaptation Score
             </h3>
@@ -261,7 +261,7 @@ export default function AdaptationEngineView() {
           </GlassCard>
 
           {/* Current State */}
-          <GlassCard className="p-5 shrink-0 flex-1 flex flex-col overflow-y-auto custom-scrollbar min-h-[250px]">
+          <GlassCard className="p-3 shrink-0 flex-1 flex flex-col overflow-hidden min-h-0">
             <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
               <AlertTriangle className="w-3 h-3 text-xiphos-gold" /> Current Market Regime
             </h3>
@@ -278,7 +278,7 @@ export default function AdaptationEngineView() {
               <Network className="w-3 h-3" /> Adaptive Parameters
             </h3>
             
-            <div className="space-y-5 flex-1 justify-center flex flex-col">
+            <div className="space-y-3 flex-1 justify-center flex flex-col">
               {[
                 { label: "Stop Loss Tightness", val: primaryState ? Math.min((primaryState.sl_multiplier / 2) * 100, 100) : 50 },
                 { label: "Position Sizing", val: primaryState ? Math.min((primaryState.lot_multiplier / 2) * 100, 100) : 50 },
@@ -304,8 +304,8 @@ export default function AdaptationEngineView() {
       </div>
 
       {/* BOTTOM PANEL - Evolution Tree & History */}
-      <div className="px-6 pb-6">
-        <GlassCard className="p-5 shrink-0 h-48 flex flex-col overflow-x-auto custom-scrollbar">
+      <div className="px-4 pb-2">
+        <GlassCard className="p-3 shrink-0 h-24 flex flex-col overflow-hidden">
           <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2 shrink-0">
           <GitMerge className="w-3 h-3 text-xiphos-cyan" /> Evolution Tree / History
         </h3>

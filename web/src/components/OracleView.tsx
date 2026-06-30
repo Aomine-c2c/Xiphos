@@ -60,7 +60,7 @@ export default function OracleView() {
 
   return (
     <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
-      <GlassPanel glowColor="white">
+      <GlassPanel glowColor="white" className="p-0 gap-2 flex flex-col h-full" noOverflowHidden>
 
         {/* Header */}
         <PageHeader 
@@ -71,19 +71,19 @@ export default function OracleView() {
         />
 
         {/* Search & Suggestions */}
-        <div className="p-6 border-b border-white/5 bg-black/20 shrink-0 z-10">
-          <div className="relative max-w-3xl mx-auto mb-6">
+        <div className="p-3 border-b border-white/5 bg-black/20 shrink-0 z-10 flex flex-col gap-2">
+          <div className="relative max-w-3xl mx-auto w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
             <input 
               type="text" 
               placeholder="Ask Oracle: 'Why did we take Trade #1492?'" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-black/50 border border-white/10 text-white pl-12 pr-4 py-4 rounded-xl outline-none focus:border-white/40 transition-colors text-sm font-bold placeholder:text-white/20"
+              className="w-full bg-black/50 border border-white/10 text-white pl-10 pr-4 py-2 rounded-lg outline-none focus:border-white/40 transition-colors text-xs font-bold placeholder:text-white/20"
             />
           </div>
 
-          <div className="flex flex-wrap gap-3 max-w-3xl mx-auto justify-center">
+          <div className="flex flex-wrap gap-2 max-w-3xl mx-auto justify-center scale-90">
             {decisions.filter(d => d.query.toLowerCase().includes(searchQuery.toLowerCase())).map(dec => (
               <Button
                 key={dec.id}
@@ -98,7 +98,7 @@ export default function OracleView() {
         </div>
 
         {/* Explanation Canvas */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar z-10 relative flex justify-center">
+        <div className="flex-1 overflow-hidden p-2 z-10 relative flex justify-center min-h-0">
           <AnimatePresence mode="wait">
             {selectedDecision && (
               <motion.div 
@@ -107,74 +107,76 @@ export default function OracleView() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3 }}
-                className="w-full max-w-4xl flex flex-col gap-6"
+                className="w-full max-w-4xl flex flex-col gap-2 min-h-0"
               >
                 
-                <div className="text-center mb-4">
-                  <h2 className="text-2xl font-black text-white">{selectedDecision.query}</h2>
-                  <p className="text-xiphos-muted text-sm tracking-widest mt-2">TIMESTAMP: {selectedDecision.timestamp}</p>
+                <div className="text-center shrink-0">
+                  <h2 className="text-sm font-black text-white">{selectedDecision.query}</h2>
+                  <p className="text-xiphos-muted text-[9px] tracking-widest mt-1">TIMESTAMP: {selectedDecision.timestamp}</p>
                 </div>
 
                 {/* Vertical Timeline / Tree */}
-                <div className="relative pl-8 pb-8">
+                <div className="relative pl-6 pb-2 flex-1 flex flex-col gap-2 justify-center">
                   {/* Timeline Line */}
-                  <div className="absolute left-11 top-4 bottom-4 w-px bg-gradient-to-b from-white/20 via-white/5 to-transparent"></div>
+                  <div className="absolute left-9 top-2 bottom-2 w-px bg-gradient-to-b from-white/20 via-white/5 to-transparent"></div>
 
                   {/* 1. Neural Data Core */}
-                  <div className="relative flex items-start gap-6 mb-12">
-                    <div className="w-6 h-6 rounded-full bg-black border-2 border-xiphos-cyan flex items-center justify-center shrink-0 z-10 mt-1">
-                      <Database className="w-3 h-3 text-xiphos-cyan" />
+                  <div className="relative flex items-start gap-4 shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-black border-2 border-xiphos-cyan flex items-center justify-center shrink-0 z-10 mt-1">
+                      <Database className="w-2 h-2 text-xiphos-cyan" />
                     </div>
-                    <GlassCard className="flex-1 p-5 border-l-4 border-l-xiphos-cyan hover:bg-white/5 transition-colors">
-                      <h3 className="text-xs font-black text-xiphos-cyan tracking-widest uppercase mb-1">NEURAL DATA CORE</h3>
-                      <p className="text-lg font-bold text-white mb-2">{selectedDecision.dataCore.event}</p>
-                      <p className="text-sm text-xiphos-muted leading-relaxed">{selectedDecision.dataCore.details}</p>
+                    <GlassCard className="flex-1 p-2 border-l-4 border-l-xiphos-cyan hover:bg-white/5 transition-colors">
+                      <h3 className="text-[9px] font-black text-xiphos-cyan tracking-widest uppercase mb-1">NEURAL DATA CORE</h3>
+                      <p className="text-xs font-bold text-white mb-1">{selectedDecision.dataCore.event}</p>
+                      <p className="text-[9px] text-xiphos-muted leading-tight">{selectedDecision.dataCore.details}</p>
                     </GlassCard>
                   </div>
 
                   {/* 2. Mahoraga Engine */}
-                  <div className="relative flex items-start gap-6 mb-12">
-                    <div className="w-6 h-6 rounded-full bg-black border-2 border-xiphos-purple flex items-center justify-center shrink-0 z-10 mt-1">
-                      <Network className="w-3 h-3 text-xiphos-purple" />
+                  <div className="relative flex items-start gap-4 shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-black border-2 border-xiphos-purple flex items-center justify-center shrink-0 z-10 mt-1">
+                      <Network className="w-2 h-2 text-xiphos-purple" />
                     </div>
-                    <GlassCard className="flex-1 p-5 border-l-4 border-l-xiphos-purple hover:bg-white/5 transition-colors">
-                      <h3 className="text-xs font-black text-xiphos-purple tracking-widest uppercase mb-1">MAHORAGA ADAPTATION ENGINE</h3>
-                      <p className="text-lg font-bold text-white mb-2">{selectedDecision.mahoraga.reasoning}</p>
-                      <p className="text-sm text-xiphos-muted leading-relaxed flex items-center gap-2">
-                        <ArrowRight className="w-4 h-4 text-xiphos-purple" />
+                    <GlassCard className="flex-1 p-2 border-l-4 border-l-xiphos-purple hover:bg-white/5 transition-colors">
+                      <h3 className="text-[9px] font-black text-xiphos-purple tracking-widest uppercase mb-1">MAHORAGA ADAPTATION ENGINE</h3>
+                      <p className="text-xs font-bold text-white mb-1">{selectedDecision.mahoraga.reasoning}</p>
+                      <p className="text-[9px] text-xiphos-muted leading-tight flex items-center gap-1">
+                        <ArrowRight className="w-3 h-3 text-xiphos-purple" />
                         {selectedDecision.mahoraga.adjustment}
                       </p>
                     </GlassCard>
                   </div>
 
                   {/* 3. Risk Guardian */}
-                  <div className="relative flex items-start gap-6 mb-12">
-                    <div className="w-6 h-6 rounded-full bg-black border-2 border-xiphos-gold flex items-center justify-center shrink-0 z-10 mt-1">
-                      <ShieldCheck className="w-3 h-3 text-xiphos-gold" />
+                  <div className="relative flex items-start gap-4 shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-black border-2 border-xiphos-gold flex items-center justify-center shrink-0 z-10 mt-1">
+                      <ShieldCheck className="w-2 h-2 text-xiphos-gold" />
                     </div>
-                    <GlassCard className="flex-1 p-5 border-l-4 border-l-xiphos-gold hover:bg-white/5 transition-colors">
-                      <h3 className="text-xs font-black text-xiphos-gold tracking-widest uppercase mb-1">RISK GUARDIAN</h3>
-                      <div className="flex items-center gap-3 mb-2">
-                        <p className="text-lg font-bold text-white">{selectedDecision.riskGuardian.check}</p>
-                        <StatusBadge 
-                          label={selectedDecision.riskGuardian.status} 
-                          variant={selectedDecision.riskGuardian.status === 'APPROVED' ? 'success' : 'danger'} 
-                        />
+                    <GlassCard className="flex-1 p-2 border-l-4 border-l-xiphos-gold hover:bg-white/5 transition-colors">
+                      <h3 className="text-[9px] font-black text-xiphos-gold tracking-widest uppercase mb-1">RISK GUARDIAN</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-xs font-bold text-white">{selectedDecision.riskGuardian.check}</p>
+                        <div className="scale-75 origin-left">
+                          <StatusBadge 
+                            label={selectedDecision.riskGuardian.status} 
+                            variant={selectedDecision.riskGuardian.status === 'APPROVED' ? 'success' : 'danger'} 
+                          />
+                        </div>
                       </div>
-                      <p className="text-sm text-xiphos-muted leading-relaxed">{selectedDecision.riskGuardian.details}</p>
+                      <p className="text-[9px] text-xiphos-muted leading-tight">{selectedDecision.riskGuardian.details}</p>
                     </GlassCard>
                   </div>
 
                   {/* 4. Xiphos Execution */}
-                  <div className="relative flex items-start gap-6">
-                    <div className="w-6 h-6 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 z-10 mt-1">
-                      <Zap className="w-3 h-3 text-white" />
+                  <div className="relative flex items-start gap-4 shrink-0">
+                    <div className="w-5 h-5 rounded-full bg-black border-2 border-white flex items-center justify-center shrink-0 z-10 mt-1">
+                      <Zap className="w-2 h-2 text-white" />
                     </div>
-                    <GlassCard className="flex-1 p-5 border-l-4 border-l-white hover:bg-white/5 transition-colors">
-                      <h3 className="text-xs font-black text-white/50 tracking-widest uppercase mb-1">XIPHOS EXECUTION ENGINE</h3>
+                    <GlassCard className="flex-1 p-2 border-l-4 border-l-white hover:bg-white/5 transition-colors">
+                      <h3 className="text-[9px] font-black text-white/50 tracking-widest uppercase mb-1">XIPHOS EXECUTION ENGINE</h3>
                       <div className="flex items-center justify-between">
-                        <p className="text-lg font-bold text-white">{selectedDecision.xiphos.action}</p>
-                        <span className="text-xs font-mono text-white/50 flex items-center gap-1">
+                        <p className="text-xs font-bold text-white">{selectedDecision.xiphos.action}</p>
+                        <span className="text-[8px] font-mono text-white/50 flex items-center gap-1">
                           LATENCY <span className="text-white font-bold">{selectedDecision.xiphos.latency}</span>
                         </span>
                       </div>

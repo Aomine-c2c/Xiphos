@@ -123,7 +123,7 @@ export default function RiskManagerView() {
 
   return (
     <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
-      <GlassPanel glowColor="crimson" className="p-0 gap-6" noOverflowHidden>
+      <GlassPanel glowColor="crimson" className="p-0 gap-2 flex flex-col h-full" noOverflowHidden>
       {/* HEADER */}
       <PageHeader 
         title="INSTITUTIONAL RISK CENTER" 
@@ -141,9 +141,9 @@ export default function RiskManagerView() {
       />
 
       {/* TOP METRICS GRID */}
-      <div className="grid grid-cols-4 xl:grid-cols-8 gap-4 shrink-0 px-6">
+      <div className="grid grid-cols-4 xl:grid-cols-8 gap-2 shrink-0 px-4">
         {metrics.map((m) => (
-          <GlassCard key={`metric-${m.label}`} className="p-4 flex flex-col justify-center">
+          <GlassCard key={`metric-${m.label}`} className="p-2 flex flex-col justify-center">
             <span className="text-[9px] text-xiphos-muted font-bold tracking-widest uppercase mb-2">
               {m.label}
             </span>
@@ -152,18 +152,18 @@ export default function RiskManagerView() {
         ))}
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col xl:flex-row gap-6 px-6 pb-6">
+      <div className="flex-1 min-h-0 flex flex-col xl:flex-row gap-2 px-4 pb-4">
         
         {/* LEFT COLUMN */}
-        <div className="w-full xl:w-1/3 flex flex-col gap-6 shrink-0">
+        <div className="w-full xl:w-1/3 flex flex-col gap-2 shrink-0 min-h-0">
           
           {/* CIRCUIT BREAKERS */}
-          <GlassCard className="p-5 border-l-2 border-l-xiphos-crimson relative overflow-hidden">
+          <GlassCard className="p-3 border-l-2 border-l-xiphos-crimson relative overflow-hidden shrink-0">
             <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
               <XOctagon className="w-3 h-3 text-xiphos-crimson" /> Circuit Breakers (Hold to Confirm)
             </h3>
             
-            <div className="space-y-4 relative z-10">
+            <div className="space-y-2 relative z-10">
               <HoldButton 
                 label="EMERGENCY STOP (FLATTEN ALL)" 
                 onTrigger={() => handleTrigger("Flattened all positions!")} 
@@ -201,13 +201,13 @@ export default function RiskManagerView() {
           </GlassCard>
 
           {/* AI RISK SUGGESTIONS */}
-          <GlassCard className="p-5 flex-1 flex flex-col min-h-0">
+          <GlassCard className="p-3 flex-1 flex flex-col min-h-0">
             <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
               <BrainCircuit className="w-3 h-3 text-xiphos-purple" /> AI Risk Suggestions
             </h3>
-            <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar">
+            <div className="flex-1 overflow-hidden space-y-1 flex flex-col">
               {aiSuggestions.map((sug, i) => (
-                <div key={`sug-${i}`} className="p-3 bg-white/5 border-l-2 border-xiphos-gold/50 rounded-r text-xs text-gray-300 leading-relaxed">
+                <div key={`sug-${i}`} className="p-2 bg-white/5 border-l-2 border-xiphos-gold/50 rounded-r text-[9px] text-gray-300 leading-tight">
                   {sug}
                 </div>
               ))}
@@ -217,10 +217,10 @@ export default function RiskManagerView() {
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="flex-1 flex flex-col gap-6 min-h-0">
+        <div className="flex-1 flex flex-col gap-2 min-h-0">
           
           {/* RISK HEAT MAP */}
-          <GlassCard className="p-5 h-64 shrink-0 flex flex-col">
+          <GlassCard className="p-3 shrink-0 flex flex-col min-h-0">
             <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
               <Maximize2 className="w-3 h-3" /> Portfolio Risk Heat Map (Sector/Asset Exposure)
             </h3>
@@ -237,9 +237,9 @@ export default function RiskManagerView() {
                 const isMed = block.risk > 40 && block.risk <= 70;
                 const color = isHigh ? "bg-xiphos-crimson/80" : (isMed ? "bg-xiphos-gold/80" : "bg-xiphos-emerald/80");
                 return (
-                  <div key={block.symbol} className={`${block.size} ${color} rounded-sm p-2 flex flex-col justify-between hover:opacity-80 transition-opacity cursor-pointer border border-white/10`}>
-                    <span className="text-white font-black text-sm tracking-wider">{block.symbol}</span>
-                    <span className="text-white/80 font-bold text-xs">{block.risk}% RISK</span>
+                  <div key={block.symbol} className={`${block.size} ${color} rounded-sm p-1 flex flex-col justify-between hover:opacity-80 transition-opacity cursor-pointer border border-white/10`}>
+                    <span className="text-white font-black text-[10px] tracking-wider">{block.symbol}</span>
+                    <span className="text-white/80 font-bold text-[8px]">{block.risk}% RISK</span>
                   </div>
                 );
               })}
@@ -247,8 +247,8 @@ export default function RiskManagerView() {
           </GlassCard>
 
           {/* MONTE CARLO SIMULATION */}
-          <GlassCard className="p-5 flex-1 min-h-0 flex flex-col">
-            <div className="flex justify-between items-center mb-4">
+          <GlassCard className="p-3 flex-1 min-h-0 flex flex-col">
+            <div className="flex justify-between items-center mb-1">
               <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase font-bold flex items-center gap-2">
                 <PlayCircle className="w-3 h-3 text-xiphos-cyan" /> Monte Carlo Stress Test (30 Days)
               </h3>
@@ -283,12 +283,12 @@ export default function RiskManagerView() {
               </ResponsiveContainer>
               
               {/* Overlay stats */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
-                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-2 rounded text-right">
+              <div className="absolute top-2 right-2 flex flex-col gap-1">
+                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-1 rounded text-right">
                   <div className="text-[9px] text-xiphos-muted tracking-widest mb-1">PROJECTED MEAN</div>
                   <div className="text-white font-black">$102,450</div>
                 </div>
-                <div className="bg-black/40 backdrop-blur-md border border-xiphos-crimson/30 p-2 rounded text-right">
+                <div className="bg-black/40 backdrop-blur-md border border-xiphos-crimson/30 p-1 rounded text-right">
                   <div className="text-[9px] text-xiphos-muted tracking-widest mb-1">WORST CASE (5th %ile)</div>
                   <div className="text-xiphos-crimson font-black">$86,200</div>
                 </div>
