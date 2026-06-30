@@ -41,22 +41,22 @@ export default function MonitoringView() {
         const msg = JSON.parse(event.data);
         
         if (msg.type === "log_history") {
-          const loadedLogs = msg.data.map((l: any, i: number) => ({
+          const loadedLogs = msg.data.map((l: Record<string, string>, i: number) => ({
             id: `hist-${Date.now()}-${i}`,
             timestamp: new Date(),
             level: l.level as LogLevel,
-            category: "EXEC",
+            category: "EXEC" as LogCategory,
             message: l.message
           }));
           setLogs(loadedLogs);
         } else if (msg.type === "log_event") {
           const l = msg.data;
           setLogs(prev => {
-            const newLogs = [...prev, {
+            const newLogs: LogEntry[] = [...prev, {
               id: `log-${Date.now()}-${Math.floor(Math.random()*1000)}`,
               timestamp: new Date(),
               level: l.level as LogLevel,
-              category: "EXEC",
+              category: "EXEC" as LogCategory,
               message: l.message
             }];
             return newLogs.slice(-200); // keep last 200
@@ -78,7 +78,7 @@ export default function MonitoringView() {
           }
           
           setMetrics(prev => {
-            const lastTime = prev.length > 0 ? prev[prev.length - 1].time : 0;
+            const lastTime = prev.length > 0 ? (prev.at(-1)?.time ?? 0) : 0;
             const newMetric = {
               time: lastTime + 1,
               cpu: st.cpu || 0,
@@ -92,8 +92,8 @@ export default function MonitoringView() {
             return newArr.length > 60 ? newArr.slice(1) : newArr;
           });
         }
-      } catch(e) {
-        // ignore parsing errors
+      } catch {
+        // WebSocket parsing errors are non-fatal; silently discard malformed frames
       }
     };
     
@@ -228,7 +228,7 @@ export default function MonitoringView() {
                     <span className="w-20 shrink-0 text-white/50 font-bold tracking-widest">
                       [{log.category}]
                     </span>
-                    <span className={log.level === "ERROR" ? "text-xiphos-crimson font-bold" : (log.level === "WARNING" ? "text-xiphos-gold" : "text-white/80")}>
+                    <span className={`text-white/80 ${log.level === "ERROR" ? "!text-xiphos-crimson font-bold" : ""} ${log.level === "WARNING" ? "!text-xiphos-gold" : ""}`}>
                       {log.message}
                     </span>
                   </motion.div>
@@ -279,12 +279,12 @@ export default function MonitoringView() {
                 <span className="text-xs font-bold text-xiphos-muted flex items-center gap-2"><Clock className="w-4 h-4 text-xiphos-purple"/> DB Health</span>
                 <StatusBadge label="SYNCED" variant="success" />
               </div>
-              <div className="flex justify-between items-center bg-black/40 border border-[#D4AF37]/30 p-3 rounded glow-gold-subtle">
+              <div className="flex justify-between items-center bg-black/40 border border-xiphos-gold/30 p-3 rounded glow-gold-subtle">
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#D4AF37] flex items-center gap-2"><Zap className="w-4 h-4"/> Mahoraga Trigger</span>
-                  <span className="text-[9px] text-[#D4AF37]/50 uppercase mt-1">{mahoragaInfo.phenomenon.replace(/_/g, ' ')}</span>
+                  <span className="text-xs font-bold text-xiphos-gold flex items-center gap-2"><Zap className="w-4 h-4"/> Mahoraga Trigger</span>
+                  <span className="text-[9px] text-xiphos-gold/50 uppercase mt-1">{mahoragaInfo.phenomenon.replaceAll('_', ' ')}</span>
                 </div>
-                <span className="text-xl font-black text-[#D4AF37]">{mahoragaInfo.ema} EMA</span>
+                <span className="text-xl font-black text-xiphos-gold">{mahoragaInfo.ema} EMA</span>
               </div>
             </div>
 
