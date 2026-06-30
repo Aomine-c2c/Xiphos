@@ -412,12 +412,9 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   mahoragaState:      null,
 
   chatMessages: [
-    { sender: "vincent", text: "Welcome to the XIPHOS Command Core. I am Vincent, the system reasoning agent. Ask me about active setups, risk exposures, or skipped signals.", timestamp: "14:28" },
-    { sender: "user",    text: "Why did you skip GBPUSD?", timestamp: "14:30" },
-    { sender: "vincent", text: "GBPUSD is in the same correlation bucket as EURUSD. Opening another trade would violate the correlation guard rule and increase concentration risk beyond the 70% ceiling.", timestamp: "14:30" },
-    { sender: "user",    text: "Why did you choose XAUUSD?", timestamp: "14:31" },
-    { sender: "vincent", text: "XAUUSD ranked #1 by lowest projected risk (1.23%). Strong bullish fan alignment confirmed on M30. EMA13 > EMA50 > SMA200. High-probability institutional structure with low correlation load.", timestamp: "14:31" },
+    { sender: "vincent", text: "Welcome to the XIPHOS Command Core. I am Vincent, wielding the Mahoraga Technique. Ask me about active setups, risk exposures, or skipped signals.", timestamp: "14:28" }
   ],
+  isTyping: false,
 
   ws: null,
 

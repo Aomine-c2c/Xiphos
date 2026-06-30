@@ -39,8 +39,12 @@ export default function LoginPage() {
       const data = await response.json();
       login(data.access_token);
       router.push("/");
-    } catch (err: any) {
-      setError(err.message || "Failed to connect to the server.");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to connect to the server.");
+      }
     } finally {
       setLoading(false);
     }

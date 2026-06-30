@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import React, { useRef, useEffect } from "react";
 import { useTradingStore } from "../store/useTradingStore";
 import { Activity, Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -73,9 +72,9 @@ export default function DecisionFeed() {
                 {/* Simulated metadata row */}
                 <div className="flex items-center gap-3 text-[8px] uppercase tracking-widest opacity-60 font-black mb-1">
                   <span className="text-xiphos-emerald glow-emerald">{log.timestamp}</span>
-                  <span className="text-xiphos-muted bg-white/5 px-1 rounded">LATENCY: {Math.floor(Math.random() * 20 + 5)}ms</span>
-                  <span className="text-xiphos-purple">SRC: {Math.random() > 0.5 ? "LLaMA-3" : "KRONOS-V4"}</span>
-                  <span className="text-xiphos-cyan">CONF: {Math.floor(Math.random() * 20 + 80)}%</span>
+                  <span className="text-xiphos-muted bg-white/5 px-1 rounded">LATENCY: {((i * 13) % 20) + 5}ms</span>
+                  <span className="text-xiphos-purple">SRC: {i % 2 === 0 ? "LLaMA-3" : "KRONOS-V4"}</span>
+                  <span className="text-xiphos-cyan">CONF: {((i * 7) % 20) + 80}%</span>
                 </div>
                 
                 <div className="flex items-start gap-3">

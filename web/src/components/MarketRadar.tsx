@@ -25,7 +25,6 @@ export default function MarketRadar() {
   // Evolve Typography: Title +40% (text-[17px] -> text-[21px])
   // Section Headers +30% (text-[15px] -> text-[17px])
   return (
-  return (
     <div className="glass-panel flex flex-col overflow-hidden font-mono select-none h-full justify-between transition-all duration-300">
       
       {/* Title Header */}
