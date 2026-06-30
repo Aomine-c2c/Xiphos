@@ -28,7 +28,7 @@ export default function AdaptationEngineView() {
   const adaptationSpins = primaryState?.adaptation_spins || 0;
   const rotation = adaptationSpins * 45;
   const success = Math.min(confidence * 1.1, 99.9).toFixed(1);
-  const failure = (100 - parseFloat(success)).toFixed(1);
+  const failure = (100 - Number.parseFloat(success)).toFixed(1);
 
   const trendState = primaryState?.trend_state || "UNKNOWN";
   const momentumState = primaryState?.momentum_state || "NEUTRAL";
@@ -51,11 +51,17 @@ export default function AdaptationEngineView() {
 
   const isFullyAdapted = primaryState?.is_adapted || false;
 
-  const aiThoughts = isFullyAdapted 
-    ? `FULL ADAPTATION COMPLETE. ${primaryState?.phenomenon || "Unknown"} phenomenon negated. Waiting for new market regime...`
-    : primaryState 
-      ? `Adapting to ${primaryState?.phenomenon || trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`
-      : "Waiting for Mahoraga core synchronization...";
+  const getAiThoughts = () => {
+    if (isFullyAdapted) {
+      return `FULL ADAPTATION COMPLETE. ${primaryState?.phenomenon || "Unknown"} phenomenon negated. Waiting for new market regime...`;
+    }
+    if (primaryState) {
+      return `Adapting to ${primaryState?.phenomenon || trendState} regime. Momentum is ${momentumState}. Filter strictness set to ${strictness}.`;
+    }
+    return "Waiting for Mahoraga core synchronization...";
+  };
+
+  const aiThoughts = getAiThoughts();
 
   const learningLog = useMemo(() => {
     if (!primaryState) return ["Waiting for state..."];
@@ -102,7 +108,7 @@ export default function AdaptationEngineView() {
               <AnimatePresence>
                 {learningLog.map((log, idx) => (
                   <motion.div 
-                    key={idx}
+                    key={`learn-${idx}-${log.slice(0, 16)}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="text-xs text-gray-400 border-l-2 border-xiphos-gold/30 pl-2 py-1"
@@ -128,6 +134,7 @@ export default function AdaptationEngineView() {
         <GlassCard className="flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden">
           
           {/* Background Neural Grid */}
+          {/* eslint-disable-next-line react/forbid-dom-props */}
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at center, #8B5CF6 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
           
           <h3 className="absolute top-5 left-5 text-xiphos-muted tracking-widest text-[10px] uppercase font-bold flex items-center gap-2">
@@ -164,7 +171,7 @@ export default function AdaptationEngineView() {
                 
                 {/* 8 Handles */}
                 {handles.map((handle, i) => (
-                  <g key={i} transform={`rotate(${handle.deg} 100 100)`}>
+                  <g key={handle.label} transform={`rotate(${handle.deg} 100 100)`}>
                     {/* Spoke */}
                     <line x1="100" y1="70" x2="100" y2="20" stroke="white" strokeWidth="6" strokeLinecap="round" />
                     <line x1="100" y1="70" x2="100" y2="20" stroke={isFullyAdapted || i === activeIndex ? "#FACC15" : "#8B5CF6"} strokeWidth="2" strokeLinecap="round" className={isFullyAdapted || i === activeIndex ? "animate-pulse" : ""} />
@@ -196,7 +203,7 @@ export default function AdaptationEngineView() {
                 const isActive = i === activeIndex || isFullyAdapted;
                 return (
                   <div 
-                    key={i}
+                    key={handle.label}
                     className={`absolute font-bold text-[10px] tracking-widest uppercase transition-all duration-500 ${
                       isActive ? 'text-xiphos-gold glow-gold scale-110 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]' : 'text-xiphos-cyan/40 glow-cyan opacity-50'
                     }`}
@@ -314,9 +321,9 @@ export default function AdaptationEngineView() {
               { time: "NOW", event: "Liquidity Sweep", adapt: "Fading breakouts", current: true },
               { time: "+1h", event: "FOMC Minutes", adapt: "Preparing to close all positions", future: true },
             ].map((node, i) => (
-              <div key={i} className="relative flex flex-col items-center group">
+              <div key={node.time} className="relative flex flex-col items-center group">
                 {/* Node */}
-                <div className={`w-4 h-4 rounded-full border-2 z-10 ${node.current ? 'bg-xiphos-purple border-xiphos-purple glow-purple animate-pulse' : node.future ? 'bg-[#0b0f17] border-gray-600 border-dashed' : 'bg-[#0b0f17] border-xiphos-cyan'}`}></div>
+                <div className={`w-4 h-4 rounded-full border-2 z-10 ${node.current ? 'bg-xiphos-purple border-xiphos-purple glow-purple animate-pulse' : ''} ${node.future ? 'bg-[#0b0f17] border-gray-600 border-dashed' : ''} ${!node.current && !node.future ? 'bg-[#0b0f17] border-xiphos-cyan' : ''}`}></div>
                 
                 {/* Labels */}
                 <div className="absolute top-6 flex flex-col items-center text-center w-32">
