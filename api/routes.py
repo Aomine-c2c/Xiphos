@@ -82,7 +82,7 @@ async def save_web_settings(req_settings: dict, current_user: Annotated[str, Dep
     return {"status": "success"}
 
 @router.get("/api/history")
-def get_web_history(limit: int = 50, current_user: Annotated[str, Depends(get_current_user)]):
+def get_web_history(current_user: Annotated[str, Depends(get_current_user)], limit: int = 50):
     return state_manager.get_trade_history(limit=limit)
 
 @router.get("/api/performance")
