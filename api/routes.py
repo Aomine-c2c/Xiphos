@@ -48,7 +48,7 @@ async def chat_with_vincent(request: ChatRequest, current_user: Annotated[str, D
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/auth/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     # Simple single-tenant authentication (Bypassed: allowing ANY credentials for now)
     if False: # form_data.username != MASTER_USER or not verify_password(form_data.password, MASTER_HASH):
         raise HTTPException(
@@ -64,12 +64,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/api/settings")
-def get_web_settings(current_user: str = Depends(get_current_user)):
+def get_web_settings(current_user: Annotated[str, Depends(get_current_user)]):
     with open("config/settings.yaml", "r") as f:
         return yaml.safe_load(f)
 
 @router.post("/api/settings")
-async def save_web_settings(req_settings: dict, current_user: str = Depends(get_current_user)):
+async def save_web_settings(req_settings: dict, current_user: Annotated[str, Depends(get_current_user)]):
     def _write_yaml():
         with open("config/settings.yaml", "w") as f:
             yaml.dump(req_settings, f)
@@ -82,22 +82,22 @@ async def save_web_settings(req_settings: dict, current_user: str = Depends(get_
     return {"status": "success"}
 
 @router.get("/api/history")
-def get_web_history(limit: int = 50, current_user: str = Depends(get_current_user)):
+def get_web_history(limit: int = 50, current_user: Annotated[str, Depends(get_current_user)]):
     return state_manager.get_trade_history(limit=limit)
 
 @router.get("/api/performance")
-def get_web_performance(current_user: str = Depends(get_current_user)):
+def get_web_performance(current_user: Annotated[str, Depends(get_current_user)]):
     return {
         "global": state_manager.get_performance_metrics(),
         "strategy": state_manager.get_strategy_performance_metrics()
     }
 
 @router.get("/api/mahoraga/state")
-def get_mahoraga_state(current_user: str = Depends(get_current_user)):
+def get_mahoraga_state(current_user: Annotated[str, Depends(get_current_user)]):
     return {sym: params.to_dict() for sym, params in mahoraga_engine.state.items()}
 
 @router.get("/api/chart/{symbol}")
-async def get_chart_data(symbol: str, current_user: str = Depends(get_current_user)):
+async def get_chart_data(symbol: str, current_user: Annotated[str, Depends(get_current_user)]):
     # Fetch 250 M30 candles
     rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M30, 0, 250)
     if rates is None or len(rates) == 0:
@@ -131,7 +131,7 @@ async def get_chart_data(symbol: str, current_user: str = Depends(get_current_us
     return {"symbol": symbol, "data": candles}
 
 @router.get("/api/oracle/decisions")
-def get_oracle_decisions(current_user: str = Depends(get_current_user)):
+def get_oracle_decisions(current_user: Annotated[str, Depends(get_current_user)]):
     decisions = []
     try:
         with db.get_connection() as conn:
