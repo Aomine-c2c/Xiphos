@@ -60,3 +60,4 @@ logging:
 
 database:
   path: "storage/xiphos.sqlite"
+  url: "postgresql://postgres:password@127.0.0.1:5432/xiphos"

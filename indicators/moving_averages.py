@@ -135,5 +135,10 @@ def get_m30_indicators(symbol: str, count: int = 250, fast: int = 13, medium: in
         "prev_ema_fast": prev_bar['ema_fast'],
     }
     
+    if len(_indicator_cache) > 500:
+        # Extremely basic LRU: just clear the dict if it gets too large
+        # Since M30 runs every 30 minutes, 500 cache combinations is plenty.
+        _indicator_cache.clear()
+        
     _indicator_cache[cache_key] = {'time': last_closed_time, 'data': result}
     return result

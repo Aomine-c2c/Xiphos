@@ -1,8 +1,6 @@
 from core.config import settings
-from logger_setup import setup_logger
+from core.logger import log as logger
 import os
-
-logger = setup_logger()
 
 mode = settings.execution.mode.upper()
 if mode == "AUTO":

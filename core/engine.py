@@ -14,7 +14,7 @@ from strategies.trend_following import evaluate_signal
 from risk.RiskSlotManager import RiskSlotManager
 from risk.CorrelationGuard import CorrelationGuard
 from risk.SignalPriorityEngine import SignalPriorityEngine
-from state_manager import StateManager
+from core.state_manager import StateManager
 from core.mahoraga import mahoraga_engine
 from core.oracle import oracle_engine
 

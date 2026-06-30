@@ -37,6 +37,7 @@ class LoggingConfig(BaseModel):
 
 class DatabaseConfig(BaseModel):
     path: str
+    url: str = "postgresql://postgres:password@127.0.0.1:5432/xiphos"
 
 class Settings(BaseModel):
     execution: ExecutionConfig

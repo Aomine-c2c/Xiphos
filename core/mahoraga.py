@@ -135,7 +135,13 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
         if params.is_adapted:
             # === FULLY ADAPTED STATE (The Counter-Attack) ===
             params.filter_strictness = "NORMAL" # Adapted to see through noise
-            params.fast_ema = 13 if volatility_ratio < 1.5 else 17 # Locked perfect EMA
+            
+            # Dynamic continuous trigger expansion (baseline 13)
+            # Volatility ratio stretches the EMA to filter noise exactly.
+            target_ema = int(13 * volatility_ratio)
+            # Fully adapted state narrows the bounds slightly for extreme precision
+            params.fast_ema = max(7, min(target_ema, 25)) 
+            
             params.sl_multiplier = 0.9 # Optimized tighter stops, as we know the exact regime
             params.lot_multiplier = 1.5 # Aggressive counter-attack
             params.confidence_score = 95.0
@@ -144,21 +150,20 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
             # === SUBOPTIMAL LEARNING STATE ===
             if params.trend_state == "RANGING":
                 params.filter_strictness = "EXTREME_STRICT"
-                params.fast_ema = 13
+            elif params.trend_state == "SQUEEZE":
+                params.filter_strictness = "RELAXED"
             else:
                 if volatility_ratio > 1.5:
-                    params.fast_ema = 17
                     params.filter_strictness = "STRICT"
                 elif volatility_ratio < 0.7:
-                    params.fast_ema = 9
                     params.filter_strictness = "RELAXED"
                 else:
-                    params.fast_ema = 13
                     params.filter_strictness = "NORMAL"
             
-            if params.trend_state == "SQUEEZE":
-                params.filter_strictness = "RELAXED"
-                
+            # Dynamic learning EMA (wilder bounds because it hasn't adapted)
+            target_ema = int(13 * volatility_ratio)
+            params.fast_ema = max(5, min(target_ema, 35))
+            
             params.sl_multiplier = min(max(volatility_ratio, 0.8), 1.5)
             params.lot_multiplier = 0.5 # Defensive posture while learning
             

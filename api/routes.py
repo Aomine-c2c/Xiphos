@@ -6,10 +6,10 @@ from loguru import logger
 
 from bridge.proxy import mt5
 from core.config import settings
-from state_manager import StateManager
+from core.state_manager import StateManager
 from core.mahoraga import mahoraga_engine
 
-from state_manager import StateManager
+from core.state_manager import StateManager
 from core.mahoraga import mahoraga_engine
 from storage.database import db
 

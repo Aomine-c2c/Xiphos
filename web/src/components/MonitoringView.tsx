@@ -30,6 +30,7 @@ export default function MonitoringView() {
   const [autoScroll, setAutoScroll] = useState(true);
   
   const [metrics, setMetrics] = useState<Record<string, number>[]>([]);
+  const [mahoragaInfo, setMahoragaInfo] = useState<{ema: number, phenomenon: string}>({ema: 13, phenomenon: "UNKNOWN"});
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,6 +64,18 @@ export default function MonitoringView() {
         } else if (msg.type === "state_update") {
           const st = msg.data.system_stats;
           const lat = msg.data.api_latency;
+          const mahoragaMap = msg.data.mahoraga_state;
+          
+          if (mahoragaMap) {
+            // Just grab the first symbol's state as a proxy for the overall adaptation engine state for monitoring
+            const keys = Object.keys(mahoragaMap);
+            if (keys.length > 0) {
+                setMahoragaInfo({
+                    ema: mahoragaMap[keys[0]].fast_ema || 13,
+                    phenomenon: mahoragaMap[keys[0]].phenomenon || "UNKNOWN"
+                });
+            }
+          }
           
           setMetrics(prev => {
             const lastTime = prev.length > 0 ? prev[prev.length - 1].time : 0;
@@ -265,6 +278,13 @@ export default function MonitoringView() {
               <div className="flex justify-between items-center bg-black/40 border border-white/10 p-3 rounded">
                 <span className="text-xs font-bold text-xiphos-muted flex items-center gap-2"><Clock className="w-4 h-4 text-xiphos-purple"/> DB Health</span>
                 <StatusBadge label="SYNCED" variant="success" />
+              </div>
+              <div className="flex justify-between items-center bg-black/40 border border-[#D4AF37]/30 p-3 rounded glow-gold-subtle">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-[#D4AF37] flex items-center gap-2"><Zap className="w-4 h-4"/> Mahoraga Trigger</span>
+                  <span className="text-[9px] text-[#D4AF37]/50 uppercase mt-1">{mahoragaInfo.phenomenon.replace(/_/g, ' ')}</span>
+                </div>
+                <span className="text-xl font-black text-[#D4AF37]">{mahoragaInfo.ema} EMA</span>
               </div>
             </div>
 

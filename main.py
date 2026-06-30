@@ -1,331 +1,501 @@
+import os
+# Set TUI environment variable immediately to suppress raw stdout/stderr console logging from imports
+os.environ["XIPHOS_TUI"] = "1"
+
+import asyncio
+import threading
 import time
-import datetime
-import zlib
+from datetime import datetime
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
+
 from bridge.proxy import mt5
 from core.config import settings
-from core.logger import log
 from execution.connection import mt5_conn
-from execution.orders import open_trade
+from execution.orders import modify_sl
 from execution.trailing import trail_positions
 from monitoring.scheduler import scheduler
-from dashboard.cli import generate_dashboard
-from indicators.moving_averages import get_m30_indicators
-from strategies.trend_following import evaluate_signal
 from risk.RiskSlotManager import RiskSlotManager
-from risk.CorrelationGuard import CorrelationGuard
-from risk.SignalPriorityEngine import SignalPriorityEngine
-from state_manager import StateManager
-from rich.live import Live
+
+from core.engine import xiphos_engine
+from core.state_manager import StateManager
+from execution.executor import MT5Executor
+
+from core.correlation_engine import correlation_engine
 from core.mahoraga import mahoraga_engine
+from monitoring.metrics import get_memory_usage_mb, cpu_tracker, get_system_disk_usage_percent
+
+from api.routes import router
+from api.websockets import ws_manager
+
+app = FastAPI(title="Xiphos Institutional Web API")
+
+# Configure CORS to allow Next.js development server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(router)
 
 state_manager = StateManager()
+mt5_executor = MT5Executor()
 
-def generate_magic(symbol: str, role_id: int) -> int:
-    bucket_id = 99
-    for i, (name, symbols) in enumerate(settings.correlation_groups.items()):
-        if symbol in symbols:
-            bucket_id = i + 1
-            break
-            
-    asset_id = zlib.crc32(symbol.encode('utf-8')) % 1000
-    # Format: 13 (Bot) | Bucket (2 digits) | Asset (3 digits) | Role (1 digit)
-    return int(f"13{bucket_id:02d}{asset_id:03d}{role_id}")
+# Bot Loop Control
+_bot_running = False
+_bot_thread = None
+_log_history = []
 
-last_processed_candles = {}
-
-last_cycle_data = {
-    "time": "",
-    "ranked_signals": [],
-    "gates": {
-        "gate_1_risk_slot": "PASS",
-        "gate_1_details": "0 / 4 USED",
-        "gate_2_correlation": "PASS",
-        "gate_2_details": "NO BLOCK",
-        "gate_3_fan_alignment": "PASS",
-        "gate_3_details": "VALID",
-        "gate_4_priority_filter": "PASS",
-        "gate_4_details": "0 SIGNALS RANKED",
-        "gate_5_hard_sl": "PASS",
-        "gate_5_details": "ENFORCED"
-    }
-}
-
-def _evaluate_gate_1(slots_available, slots_used, slots_limit) -> bool:
-    if slots_available <= 0:
-        last_cycle_data["gates"]["gate_1_risk_slot"] = "FAIL"
-        last_cycle_data["gates"]["gate_1_details"] = f"{slots_used} / {slots_limit} USED"
-        last_cycle_data["gates"]["gate_2_correlation"] = "N/A"
-        last_cycle_data["gates"]["gate_3_fan_alignment"] = "N/A"
-        last_cycle_data["gates"]["gate_4_priority_filter"] = "N/A"
-        last_cycle_data["gates"]["gate_4_details"] = "0 RANKED"
-        last_cycle_data["ranked_signals"] = []
-        log.info("Max risk slots reached. Skipping new signal evaluation.")
-        return False
-    
-    last_cycle_data["gates"]["gate_1_risk_slot"] = "PASS"
-    last_cycle_data["gates"]["gate_1_details"] = f"{slots_used} / {slots_limit} USED"
-    return True
-
-def _evaluate_gate_2():
-    blocked_count = 0
-    for name, symbols in settings.correlation_groups.items():
-        if symbols:
-            blocking = CorrelationGuard.get_blocking_positions(symbols[0], magic_filter=[135001, 135002])
-            if blocking:
-                blocked_count += 1
-    last_cycle_data["gates"]["gate_2_correlation"] = "PASS"
-    last_cycle_data["gates"]["gate_2_details"] = f"{blocked_count} BLOCKED" if blocked_count > 0 else "NO BLOCK"
-
-def _gather_signals(recent_win_rate: float) -> list:
-    # Only scan symbols explicitly defined in settings.yaml correlation_groups
-    all_symbols = []
-    for group_symbols in settings.correlation_groups.values():
-        all_symbols.extend(group_symbols)
-    
-    signals = []
-    for sym in all_symbols:
-        info = mt5.symbol_info(sym)
-        if not info or info.volume_min > 0.01:
-            if info and info.volume_min > 0.01:
-                log.debug(f"Skipping {sym} - volume_min {info.volume_min} > 0.01")
-            continue
-            
-        # Initial fetch to get ATR for Mahoraga
-        ind_data = get_m30_indicators(sym)
-        if not ind_data:
-            continue
-            
-        mahoraga_engine.evaluate(sym, ind_data, recent_win_rate)
-        params = mahoraga_engine.get_parameters(sym)
+# Loguru interceptor
+def websocket_log_sink(message):
+    try:
+        record = message.record
+        level = record["level"].name
+        ts = record["time"].strftime("%H:%M:%S")
+        text = f"{ts} | {level:<8} | {record['message']}"
         
-        # Re-fetch indicators with adapted parameters
-        ind_data = get_m30_indicators(sym, fast=params.fast_ema, medium=params.medium_ema, slow=params.slow_sma)
-        if not ind_data:
-            continue
+        log_item = {
+            "timestamp": ts,
+            "level": level,
+            "message": record['message'],
+            "formatted": text
+        }
+        _log_history.append(log_item)
+        if len(_log_history) > 1000:
+            _log_history.pop(0)
             
-        # Inject mahoraga params into ind_data for the strategy evaluator
-        ind_data["filter_strictness"] = params.filter_strictness
-        ind_data["lot_multiplier"] = params.lot_multiplier
-        ind_data["sl_multiplier"] = params.sl_multiplier
-            
-        candle_time = ind_data.get('time', 0)
-        if candle_time <= last_processed_candles.get(sym, 0):
-            continue
-            
-        signal = evaluate_signal(ind_data)
-        if signal:
-            signals.append({"symbol": sym, "type": signal, "ind_data": ind_data})
-    return signals
+        # Broadcast immediately to clients
+        payload = {
+            "type": "log_event",
+            "data": log_item
+        }
+        if main_event_loop and not main_event_loop.is_closed():
+            asyncio.run_coroutine_threadsafe(ws_manager.broadcast(payload), loop=main_event_loop)
+    except Exception:
+        pass
 
-def _evaluate_gate_3(signals) -> bool:
-    if not signals:
-        last_cycle_data["gates"]["gate_3_fan_alignment"] = "FAIL"
-        last_cycle_data["gates"]["gate_3_details"] = "NO SIGNAL"
-        last_cycle_data["gates"]["gate_4_priority_filter"] = "N/A"
-        last_cycle_data["gates"]["gate_4_details"] = "0 RANKED"
-        last_cycle_data["ranked_signals"] = []
-        log.info("No valid signals detected on this cycle.")
-        return False
-        
-    last_cycle_data["gates"]["gate_3_fan_alignment"] = "PASS"
-    last_cycle_data["gates"]["gate_3_details"] = f"{len(signals)} ALIGNED"
-    return True
+logger.add(websocket_log_sink, colorize=False)
 
-def _build_ranked_signal_payload(ranked_signals) -> list:
-    return [{
-        "priority": i + 1,
-        "symbol": sig["symbol"],
-        "direction": sig["type"],
-        "price": sig["ind_data"]["close"],
-        "sma200": sig["ind_data"]["sma_slow"],
-        "distance": int(sig["distance"] / (mt5.symbol_info(sig["symbol"]).point if mt5.symbol_info(sig["symbol"]) else 0.00001)),
-        "projected_risk": sig["projected_risk"],
-        "status": "PENDING"
-    } for i, sig in enumerate(ranked_signals)]
-
-def _execute_signal(sig, slots_available, open_counts, session_blocked_buckets) -> int:
-    ind = sig["ind_data"]
-    typ = sig["type"]
-    
-    # === ASYMMETRICAL STOP LOSS ===
-    # Scalper SL: candle extreme (tight = "lose pennies")   → trails 50 EMA
-    # Runner  SL: 200 SMA (wide = let it breathe)           → trails 200 SMA until macro trend dies
-    if typ == "BUY":
-        sl_a = ind["low"]       # Scalper — candle low
-        sl_b = ind["sma_slow"]  # Runner  — 200 SMA
-    else:
-        sl_a = ind["high"]      # Scalper — candle high
-        sl_b = ind["sma_slow"]  # Runner  — 200 SMA
-    
-    sym = sig["symbol"]
-    
-    bucket_name = None
-    for name, symbols in settings.correlation_groups.items():
-        if sym in symbols:
-            bucket_name = name
-            break
-            
-    if bucket_name in session_blocked_buckets:
-        log.info(f"Skipping {sym} - bucket {bucket_name} was dynamically blocked in this exact cycle.")
-        return 0
-        
-    # Time-of-Day Filter (Fiat Kill Zone)
-    sess = settings.session_filter
-    if sess.enabled and bucket_name not in sess.exempt_groups:
-        current_hour = datetime.datetime.now(datetime.timezone.utc).hour
-        if not (sess.start_hour <= current_hour < sess.end_hour):
-            log.info(f"Skipping {sym} - outside allowed fiat session ({current_hour} UTC is not between {sess.start_hour}-{sess.end_hour}).")
-            return 0
-    
-    open_count = open_counts.get(sym, 0)
-    if open_count >= 2:
-        log.info(f"Skipping {sym} - 2 or more trades already open.")
-        return 0
-        
-    if CorrelationGuard.is_bucket_blocked(sym):
-        return 0
-        
-    slots_consumed = 0
-    magic_a = generate_magic(sym, 1)
-    magic_b = generate_magic(sym, 2)
-    
-    tick = mt5.symbol_info_tick(sym)
-    if tick:
-        entry_price = tick.ask if typ == "BUY" else tick.bid
-    else:
-        entry_price = ind["close"]
-    
-    # ADAPTIVE LOT SIZING
-    base_lot = settings.trading.lot_size
-    lot_multiplier = ind.get("lot_multiplier", 1.0)
-    sl_multiplier = ind.get("sl_multiplier", 1.0)
-    
-    # Cap maximum lot at 0.05 as per risk boundaries
-    adapted_lot = min(round(base_lot * lot_multiplier, 2), 0.05)
-    
-    lot_a = adapted_lot
-    lot_b = adapted_lot
-    
-    order_type = mt5.ORDER_TYPE_BUY if typ == "BUY" else mt5.ORDER_TYPE_SELL
-    
-    # Trade A (Scalper)
-    if open_count < 2 and slots_available > 0:
-        sl_raw_dist_a = entry_price - float(sl_a)
-        sl_scalper = round(entry_price - (sl_raw_dist_a * sl_multiplier), 5)
-        # HARD RISK CAP: Reject if risk > $10.00
-        risk_a = mt5.order_calc_profit(order_type, sym, lot_a, entry_price, sl_scalper)
-        if risk_a is not None and abs(risk_a) > 10.0:
-            log.warning(f"Skipping {sym} Scalper - Stop Loss distance too large (Risk: ${abs(risk_a):.2f} > $10 Cap)")
-        else:
-            res_a = open_trade(sym, typ, lot_a, sl_scalper, magic_a, sig=sig)
-            if res_a:
-                open_count += 1
-                slots_consumed += 1
-    
-    # Trade B (Runner)
-    if open_count < 2 and slots_available > slots_consumed:
-        sl_raw_dist_b = entry_price - float(sl_b)
-        sl_runner = round(entry_price - (sl_raw_dist_b * sl_multiplier), 5)
-        # HARD RISK CAP: Reject if risk > $10.00
-        risk_b = mt5.order_calc_profit(order_type, sym, lot_b, entry_price, sl_runner)
-        if risk_b is not None and abs(risk_b) > 10.0:
-            log.warning(f"Skipping {sym} Runner - Stop Loss distance too large (Risk: ${abs(risk_b):.2f} > $10 Cap)")
-        else:
-            res_b = open_trade(sym, typ, lot_b, sl_runner, magic_b, sig=sig)
-            if res_b:
-                open_count += 1
-                slots_consumed += 1
-
-    if slots_consumed > 0:
-        last_processed_candles[sym] = sig['ind_data'].get('time', 0)
-        if bucket_name:
-            session_blocked_buckets.add(bucket_name)
-        for rs in last_cycle_data["ranked_signals"]:
-            if rs["symbol"] == sym:
-                rs["status"] = "APPROVED"
-                
-    return slots_consumed
-
-def process_m30_cycle(): # NOSONAR
-    log.info("M30 Candle Close Detected. Initiating Evaluation Cycle...")
-    
-    last_cycle_data["time"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    last_cycle_data["gates"]["gate_5_hard_sl"] = "PASS"
-    last_cycle_data["gates"]["gate_5_details"] = "ENFORCED"
-    
-    if not mt5_conn.check_health():
-        return
-        
-    slots_limit = settings.trading.max_risk_trades
-    slots_available = RiskSlotManager.get_available_slots(magic_filter=[135001, 135002])
-    slots_used = slots_limit - slots_available
-    
-    if not _evaluate_gate_1(slots_available, slots_used, slots_limit):
-        return
-
-    _evaluate_gate_2()
-    
-    positions = mt5.positions_get()
-    
-    # Sync database with MT5 reality
-    state_manager.reconcile(positions)
-    
-    open_counts = {}
-    if positions:
-        for p in positions:
-            open_counts[p.symbol] = open_counts.get(p.symbol, 0) + 1
-
-    global_metrics = state_manager.get_performance_metrics()
-    recent_win_rate = global_metrics.get("win_rate", 50.0)
-
-    signals = _gather_signals(recent_win_rate)
-    
-    if not _evaluate_gate_3(signals):
-        return
-
-    ranked_signals = SignalPriorityEngine.rank_signals(signals)
-    last_cycle_data["gates"]["gate_4_priority_filter"] = "PASS"
-    last_cycle_data["gates"]["gate_4_details"] = f"{len(ranked_signals)} RANKED"
-    last_cycle_data["ranked_signals"] = _build_ranked_signal_payload(ranked_signals)
-    
-    session_blocked_buckets = set()
-    
-    for sig in ranked_signals:
-        if slots_available <= 0:
-            log.info("Risk slots exhausted during execution phase.")
-            break
-            
-        slots_consumed = _execute_signal(sig, slots_available, open_counts, session_blocked_buckets)
-        
-        if slots_consumed > 0:
-            slots_available -= slots_consumed
-            log.info(f"Slots remaining after {sig['symbol']}: {max(0, slots_available)}")
-        else:
-            log.warning(f"Orders failed or skipped for {sig['symbol']}. Slots unchanged: {slots_available}")
-
-
-def main():
-    log.info("Initializing Xiphos Trading Framework...")
-    
-    if not mt5_conn.connect():
-        log.critical("Startup failed.")
-        return
-        
-    scheduler.add_m30_job(process_m30_cycle)
+def _bot_loop():
+    global _bot_running
+    logger.info("Bot execution loop started via API.")
+    scheduler.add_m30_job(xiphos_engine.process_m30_cycle)
     scheduler.add_trailing_job(trail_positions)
     scheduler.start()
     
     try:
-        with Live(generate_dashboard(), refresh_per_second=1) as live:
-            while True:
-                live.update(generate_dashboard())
-                time.sleep(1)
-    except KeyboardInterrupt:
-        log.info("Keyboard interrupt received. Shutting down...")
+        xiphos_engine.process_m30_cycle()
+    except Exception as e:
+        logger.error(f"Immediate startup cycle error: {e}")
+        
+    try:
+        while _bot_running:
+            time.sleep(0.5)
     finally:
         scheduler.stop()
-        mt5_conn.disconnect()
-        log.info("Xiphos Framework offline.")
+        logger.info("Bot execution loop stopped via API.")
+
+def start_bot_execution():
+    global _bot_running, _bot_thread
+    if _bot_running:
+        return
+    _bot_running = True
+    _bot_thread = threading.Thread(target=_bot_loop, daemon=True)
+    _bot_thread.start()
+
+def stop_bot_execution():
+    global _bot_running
+    if not _bot_running:
+        return
+    _bot_running = False
+
+# Active state compilation helper
+def _compile_account_data(account):
+    if not account:
+        return {"balance": 0.0, "equity": 0.0, "margin_free": 0.0, "margin_level": 0.0, "profit": 0.0}
+    return {
+        "balance": account.balance,
+        "equity": account.equity,
+        "margin_free": account.margin_free,
+        "margin_level": account.margin_level if hasattr(account, 'margin_level') else 100.0,
+        "profit": account.profit
+    }
+
+def _compile_positions_data():
+    positions = mt5.positions_get() or []
+    pos_list = []
+    for pos in positions:
+        if pos.magic <= 0:
+            continue
+            
+        typ = "BUY" if pos.type == mt5.ORDER_TYPE_BUY else "SELL"
+        role_id = pos.magic % 10
+        if role_id == 1:
+            role = "Scalper"
+        elif role_id == 2:
+            role = "Runner"
+        else:
+            role = f"Algo-{role_id}"
+        is_free = pos.sl > 0 and ((pos.type == mt5.ORDER_TYPE_BUY and pos.sl >= pos.price_open) or (pos.type == mt5.ORDER_TYPE_SELL and pos.sl <= pos.price_open))
+        pos_list.append({
+            "ticket": pos.ticket, "symbol": pos.symbol, "type": typ,
+            "volume": pos.volume, "price_open": pos.price_open,
+            "price_current": pos.price_current, "sl": pos.sl, "tp": pos.tp,
+            "profit": pos.profit, "role": role,
+            "risk_status": "FREE" if is_free else "RISK"
+        })
+    return pos_list
+
+def _get_order_type_str(ord_type):
+    if ord_type == mt5.ORDER_TYPE_BUY_LIMIT:
+        return "BUY_LIMIT"
+    if ord_type == mt5.ORDER_TYPE_SELL_LIMIT:
+        return "SELL_LIMIT"
+    if ord_type == mt5.ORDER_TYPE_BUY_STOP:
+        return "BUY_STOP"
+    if ord_type == mt5.ORDER_TYPE_SELL_STOP:
+        return "SELL_STOP"
+    return str(ord_type)
+
+def _compile_orders_data():
+    orders = mt5.orders_get() or []
+    ord_list = []
+    for ord in orders:
+        typ_ord = _get_order_type_str(ord.type)
+        ord_list.append({
+            "ticket": ord.ticket, "symbol": ord.symbol, "type": typ_ord,
+            "volume": ord.volume, "price_open": ord.price_open,
+            "sl": ord.sl, "tp": ord.tp, "comment": ord.comment or ""
+        })
+    return ord_list
+
+def _compile_market_watch_data():
+    from indicators.moving_averages import get_m30_indicators
+    mw_list = []
+    all_symbols = []
+    for bucket in settings.correlation_groups.values():
+        all_symbols.extend(bucket)
+        
+    for sym in all_symbols[:15]:
+        tick = mt5.symbol_info_tick(sym)
+        if not tick:
+            continue
+        ind_data = get_m30_indicators(sym)
+        e13 = e50 = s200 = 0.0
+        s_info = mt5.symbol_info(sym)
+        point = s_info.point if s_info else 0.00001
+        if ind_data and point > 0:
+            e13 = (tick.bid - ind_data['ema_fast']) / point
+            e50 = (tick.bid - ind_data['ema_medium']) / point
+            s200 = (tick.bid - ind_data['sma_slow']) / point
+            
+        mw_list.append({
+            "symbol": sym, "price": tick.bid, "e13_dist": e13,
+            "e50_dist": e50, "s200_dist": s200, "signal": "NONE"
+        })
+    return mw_list
+
+def compile_system_state():
+    account = mt5.account_info()
+    is_connected = account is not None
+    
+    latency = 0.0
+    if is_connected:
+        start_ping = time.perf_counter()
+        mt5.terminal_info()
+        latency = (time.perf_counter() - start_ping) * 1000.0
+
+    mem_mb = get_memory_usage_mb()
+    cpu_pct = cpu_tracker.get_cpu_percent()
+    disk_pct = get_system_disk_usage_percent()
+
+    return {
+        "bot_running": _bot_running,
+        "mt5_connected": is_connected,
+        "api_latency": latency,
+        "account": _compile_account_data(account),
+        "positions": _compile_positions_data(),
+        "orders": _compile_orders_data(),
+        "market_watch": _compile_market_watch_data(),
+        "gates": xiphos_engine.last_cycle_data.get("gates", {}),
+        "ranked_signals": xiphos_engine.last_cycle_data.get("ranked_signals", []),
+        "last_cycle_time": xiphos_engine.last_cycle_data.get("time", ""),
+        "system_stats": {
+            "cpu": cpu_pct,
+            "memory": mem_mb,
+            "disk": disk_pct
+        },
+        "correlation_matrix": correlation_engine.get_matrix(),
+        "performance_metrics": state_manager.get_performance_metrics(),
+        "mahoraga_state": {sym: params.to_dict() for sym, params in mahoraga_engine.state.items()}
+    }
+
+async def periodical_websocket_broadcaster():
+    while True:
+        try:
+            if ws_manager.active_connections:
+                state = compile_system_state()
+                payload = {
+                    "type": "state_update",
+                    "data": state
+                }
+                await ws_manager.broadcast(payload)
+        except Exception:
+            pass
+        await asyncio.sleep(1.0)
+
+def _handle_bot_commands(cmd_type: str):
+    if cmd_type == "start_bot":
+        start_bot_execution()
+    elif cmd_type == "stop_bot":
+        stop_bot_execution()
+    elif cmd_type == "force_cycle":
+        threading.Thread(target=xiphos_engine.process_m30_cycle, daemon=True).start()
+    elif cmd_type == "panic_close":
+        threading.Thread(target=close_all_positions, daemon=True).start()
+
+def _handle_trade_commands(cmd_type: str, cmd_data: dict):
+    if cmd_type == "modify_sl":
+        threading.Thread(target=modify_sl, args=(int(cmd_data["ticket"]), cmd_data["symbol"], float(cmd_data["new_sl"])), daemon=True).start()
+    elif cmd_type == "modify_tp":
+        threading.Thread(target=modify_position_tp, args=(int(cmd_data["ticket"]), cmd_data["symbol"], float(cmd_data["new_tp"])), daemon=True).start()
+    elif cmd_type == "close_position":
+        threading.Thread(target=close_single_position, args=(int(cmd_data["ticket"]), cmd_data["symbol"]), daemon=True).start()
+    elif cmd_type == "breakeven":
+        threading.Thread(target=move_to_breakeven, args=(int(cmd_data["ticket"]), cmd_data["symbol"]), daemon=True).start()
+    elif cmd_type == "partial_close":
+        threading.Thread(target=close_partial_position, args=(int(cmd_data["ticket"]), cmd_data["symbol"]), daemon=True).start()
+
+def _handle_order_commands(cmd_type: str, cmd_data: dict):
+    if cmd_type == "place_order":
+        threading.Thread(target=place_limit_order, args=(
+            cmd_data.get("symbol"), cmd_data.get("type"), float(cmd_data.get("volume", 0.01)),
+            float(cmd_data.get("price")), float(cmd_data.get("sl", 0.0)), float(cmd_data.get("tp", 0.0))
+        ), daemon=True).start()
+    elif cmd_type == "cancel_order":
+        threading.Thread(target=cancel_pending_order, args=(int(cmd_data.get("ticket")),), daemon=True).start()
+
+async def _process_ws_command(websocket: WebSocket, data: dict):
+    cmd_type = data.get("type")
+    cmd_data = data.get("data", {})
+    
+    if cmd_type in ["start_bot", "stop_bot", "force_cycle", "panic_close"]:
+        _handle_bot_commands(cmd_type)
+    elif cmd_type in ["modify_sl", "modify_tp", "close_position", "breakeven", "partial_close"]:
+        _handle_trade_commands(cmd_type, cmd_data)
+    elif cmd_type in ["place_order", "cancel_order"]:
+        _handle_order_commands(cmd_type, cmd_data)
+    elif cmd_type == "chat_message":
+        # Mock Vincent AI Response
+        msg_text = cmd_data.get("text", "")
+        await websocket.send_json({
+            "type": "chat_response",
+            "data": {
+                "user_message": msg_text,
+                "bot_response": "Vincent AI: Architecture refactor active. System decoupled.",
+                "timestamp": datetime.now().strftime("%H:%M:%S")
+            }
+        })
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket): # NOSONAR
+    await ws_manager.connect(websocket)
+    try:
+        await websocket.send_json({"type": "state_update", "data": compile_system_state()})
+        await websocket.send_json({"type": "log_history", "data": _log_history})
+    except Exception:
+        pass
+        
+    try:
+        while True:
+            data = await websocket.receive_json()
+            await _process_ws_command(websocket, data)
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception:
+        ws_manager.disconnect(websocket)
+
+# Helper execution functions
+def close_all_positions():
+    logger.warning("PANIC CLOSE initiated from Web Interface!")
+    positions = mt5.positions_get()
+    if not positions:
+        return
+    closed = 0
+    for pos in positions:
+        tick = mt5.symbol_info_tick(pos.symbol)
+        if not tick:
+            continue
+        type_mt5 = mt5.ORDER_TYPE_SELL if pos.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
+        price = tick.bid if pos.type == mt5.ORDER_TYPE_BUY else tick.ask
+        req = {
+            "action": mt5.TRADE_ACTION_DEAL,
+            "symbol": pos.symbol,
+            "volume": pos.volume,
+            "type": type_mt5,
+            "position": pos.ticket,
+            "price": price,
+            "deviation": 20,
+            "magic": pos.magic,
+            "comment": "Panic Close via Web UI",
+        }
+        res = mt5_executor._retry_wrapper(mt5.order_send, req)
+        if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+            closed += 1
+    logger.info(f"Panic close completed. {closed}/{len(positions)} trades closed.")
+    stop_bot_execution()
+
+def close_single_position(ticket: int, symbol: str):
+    pos = mt5.positions_get(ticket=ticket)
+    if not pos:
+        return
+    pos = pos[0]
+    tick = mt5.symbol_info_tick(symbol)
+    if not tick:
+        return
+    type_mt5 = mt5.ORDER_TYPE_SELL if pos.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
+    price = tick.bid if pos.type == mt5.ORDER_TYPE_BUY else tick.ask
+    req = {
+        "action": mt5.TRADE_ACTION_DEAL,
+        "symbol": pos.symbol,
+        "volume": pos.volume,
+        "type": type_mt5,
+        "position": pos.ticket,
+        "price": price,
+        "deviation": 20,
+        "magic": pos.magic,
+        "comment": "Manual Close via Web UI",
+    }
+    res = mt5_executor._retry_wrapper(mt5.order_send, req)
+    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+        logger.info(f"Position {ticket} closed manually.")
+
+def modify_position_tp(ticket: int, symbol: str, new_tp: float):
+    positions = mt5.positions_get(ticket=ticket)
+    if not positions:
+        return
+    pos = positions[0]
+    req = {
+        "action": mt5.TRADE_ACTION_SLTP,
+        "symbol": symbol,
+        "sl": float(pos.sl) if pos.sl else 0.0,
+        "tp": float(new_tp),
+        "position": ticket
+    }
+    res = mt5_executor._retry_wrapper(mt5.order_send, req)
+    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+        logger.info(f"Position {ticket} TP updated to {new_tp}.")
+
+def move_to_breakeven(ticket: int, symbol: str):
+    positions = mt5.positions_get(ticket=ticket)
+    if not positions:
+        return
+    pos = positions[0]
+    res = modify_sl(ticket, symbol, pos.price_open)
+    if res:
+        logger.info(f"Position {ticket} moved to breakeven at {pos.price_open:.5f}.")
+
+def close_partial_position(ticket: int, symbol: str):
+    positions = mt5.positions_get(ticket=ticket)
+    if not positions:
+        return
+    pos = positions[0]
+    half_vol = round(pos.volume / 2.0, 2)
+    if half_vol < 0.01:
+        return
+    tick = mt5.symbol_info_tick(symbol)
+    if not tick:
+        return
+    type_mt5 = mt5.ORDER_TYPE_SELL if pos.type == mt5.ORDER_TYPE_BUY else mt5.ORDER_TYPE_BUY
+    price = tick.bid if pos.type == mt5.ORDER_TYPE_BUY else tick.ask
+    req = {
+        "action": mt5.TRADE_ACTION_DEAL,
+        "symbol": pos.symbol,
+        "volume": half_vol,
+        "type": type_mt5,
+        "position": pos.ticket,
+        "price": price,
+        "deviation": 20,
+        "magic": pos.magic,
+        "comment": "Partial Close via Web UI",
+    }
+    res = mt5_executor._retry_wrapper(mt5.order_send, req)
+    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+        logger.info(f"Position {ticket} partially closed (50% = {half_vol} lots).")
+
+def place_limit_order(symbol: str, type_str: str, volume: float, price: float, sl: float, tp: float):
+    mt5_type = None
+    if type_str == "BUY_LIMIT":
+        mt5_type = mt5.ORDER_TYPE_BUY_LIMIT
+    elif type_str == "SELL_LIMIT":
+        mt5_type = mt5.ORDER_TYPE_SELL_LIMIT
+    elif type_str == "BUY_STOP":
+        mt5_type = mt5.ORDER_TYPE_BUY_STOP
+    elif type_str == "SELL_STOP":
+        mt5_type = mt5.ORDER_TYPE_SELL_STOP
+        
+    if mt5_type is None:
+        logger.error(f"Invalid order type for limit placement: {type_str}")
+        return
+        
+    req = {
+        "action": mt5.TRADE_ACTION_PENDING,
+        "symbol": symbol,
+        "volume": volume,
+        "type": mt5_type,
+        "price": price,
+        "sl": sl,
+        "tp": tp,
+        "type_time": mt5.ORDER_TIME_GTC,
+        "comment": "Limit order via Web UI",
+    }
+    res = mt5_executor._retry_wrapper(mt5.order_send, req)
+    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+        logger.info(f"Pending order placed: {type_str} {volume} lots of {symbol} at {price}")
+    else:
+        err_msg = getattr(res, "comment", "Unknown MT5 error") if res else "No response"
+        logger.error(f"Failed to place pending order: {err_msg}")
+
+def cancel_pending_order(ticket: int):
+    req = {
+        "action": mt5.TRADE_ACTION_REMOVE,
+        "order": ticket,
+    }
+    res = mt5_executor._retry_wrapper(mt5.order_send, req)
+    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+        logger.info(f"Pending order {ticket} cancelled successfully.")
+    else:
+        err_msg = getattr(res, "comment", "Unknown MT5 error") if res else "No response"
+        logger.error(f"Failed to cancel pending order {ticket}: {err_msg}")
+
+main_event_loop = None
+_bg_tasks = set()
+
+@app.on_event("startup")
+async def startup_event():
+    global main_event_loop
+    main_event_loop = asyncio.get_running_loop()
+    
+    if mt5_conn.connect():
+        logger.info("MT5 interface initialized in API server.")
+    else:
+        logger.error("MT5 connection failed in API server.")
+        
+    start_bot_execution()
+    
+    _bg_task = asyncio.create_task(periodical_websocket_broadcaster())
+    _bg_tasks.add(_bg_task)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    stop_bot_execution()
+    mt5_conn.disconnect()
+    logger.info("API server offline.")
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8001)
