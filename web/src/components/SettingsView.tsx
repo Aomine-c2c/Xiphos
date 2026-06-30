@@ -39,7 +39,7 @@ export default function SettingsView() {
   return (
     <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
       <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col relative">
-        <GlassPanel glowColor="purple">
+        <GlassPanel glowColor="purple" className="flex flex-col h-full p-0" noOverflowHidden>
 
           {/* Header */}
           <PageHeader 
@@ -69,13 +69,13 @@ export default function SettingsView() {
         <div className="flex-1 min-h-0 flex overflow-hidden z-10">
           
           {/* LEFT SIDEBAR NAVIGATION */}
-          <div className="w-64 border-r border-white/5 bg-black/20 flex flex-col p-4 gap-2 overflow-y-auto shrink-0">
+          <div className="w-48 border-r border-white/5 bg-black/20 flex flex-col p-2 gap-1 overflow-hidden shrink-0">
             {tabs.map(tab => (
               <button 
                 type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 p-3 rounded cursor-pointer text-left transition-all text-xs font-black tracking-widest uppercase ${activeTab === tab.id ? "bg-xiphos-purple/20 text-xiphos-purple border border-xiphos-purple/50 shadow-[0_0_10px_rgba(139,92,246,0.1)]" : "text-xiphos-muted hover:bg-white/5 hover:text-white border border-transparent"}`}
+                className={`flex items-center gap-2 p-2 rounded cursor-pointer text-left transition-all text-[9px] font-black tracking-widest uppercase ${activeTab === tab.id ? "bg-xiphos-purple/20 text-xiphos-purple border border-xiphos-purple/50 shadow-[0_0_10px_rgba(139,92,246,0.1)]" : "text-xiphos-muted hover:bg-white/5 hover:text-white border border-transparent"}`}
               >
                 <tab.icon className={`w-4 h-4 ${activeTab === tab.id ? "glow-purple" : ""}`} />
                 {tab.label}
@@ -84,7 +84,7 @@ export default function SettingsView() {
           </div>
 
           {/* RIGHT CONTENT AREA */}
-          <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+          <div className="flex-1 p-4 overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -92,15 +92,15 @@ export default function SettingsView() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="max-w-3xl flex flex-col gap-8 pb-12"
+                className="max-w-3xl flex flex-col gap-4 h-full"
               >
                 
                 {activeTab === "GENERAL" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <Globe className="w-5 h-5 text-xiphos-cyan" /> General Settings
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <Globe className="w-4 h-4 text-xiphos-cyan" /> General Settings
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       <div className="flex flex-col gap-2">
                         <label htmlFor="settings-theme" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">THEME ENGINE</label>
                         <select id="settings-theme" title="Theme engine" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
@@ -124,10 +124,10 @@ export default function SettingsView() {
 
                 {activeTab === "ACCOUNTS" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <User className="w-5 h-5 text-xiphos-gold" /> Accounts & Brokers
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <User className="w-4 h-4 text-xiphos-gold" /> Accounts & Brokers
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       <div className="flex flex-col gap-2">
                         <label htmlFor="settings-broker" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">PRIMARY BROKER</label>
                         <select id="settings-broker" title="Primary broker" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm outline-none focus:border-xiphos-purple rounded transition-all w-full max-w-sm">
@@ -163,10 +163,10 @@ export default function SettingsView() {
 
                 {activeTab === "NOTIFICATIONS" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <Bell className="w-5 h-5 text-xiphos-purple" /> Notifications
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <Bell className="w-4 h-4 text-xiphos-purple" /> Notifications
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-black/40 border border-white/10 p-4 rounded flex flex-col gap-3">
                           <div className="flex justify-between items-center">
@@ -203,10 +203,10 @@ export default function SettingsView() {
 
                 {activeTab === "AI_MODELS" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <BrainCircuit className="w-5 h-5 text-xiphos-cyan" /> AI & Models
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <BrainCircuit className="w-4 h-4 text-xiphos-cyan" /> AI & Models
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       <div className="flex flex-col gap-2">
                         <label htmlFor="settings-local-llm" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-1">
                           <HardDrive className="w-3 h-3" /> LOCAL LLM ENGINE
@@ -249,10 +249,10 @@ export default function SettingsView() {
 
                 {activeTab === "RISK" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <ShieldAlert className="w-5 h-5 text-xiphos-crimson" /> Risk Limits
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <ShieldAlert className="w-4 h-4 text-xiphos-crimson" /> Risk Limits
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       <div className="grid grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
                           <label htmlFor="settings-lot-size" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DEFAULT LOT SIZE</label>
@@ -277,10 +277,10 @@ export default function SettingsView() {
 
                 {activeTab === "SYSTEM" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <Database className="w-5 h-5 text-xiphos-emerald" /> System & Data
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <Database className="w-4 h-4 text-xiphos-emerald" /> System & Data
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       <div className="flex flex-col gap-2">
                         <label htmlFor="settings-db-path" className="text-[11px] font-black text-xiphos-muted tracking-widest uppercase">DATABASE PATH</label>
                         <input id="settings-db-path" title="Database path" type="text" defaultValue="./storage/xiphos.sqlite" className="bg-black/40 border border-white/10 text-white p-2.5 text-sm font-mono outline-none focus:border-xiphos-purple rounded transition-all" />
@@ -306,10 +306,10 @@ export default function SettingsView() {
 
                 {activeTab === "SECURITY" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <ShieldCheck className="w-5 h-5 text-xiphos-gold" /> Security
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <ShieldCheck className="w-4 h-4 text-xiphos-gold" /> Security
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       <div className="bg-black/40 border border-white/10 p-4 rounded flex justify-between items-center">
                         <div className="flex flex-col gap-1">
                           <div className="text-sm font-bold text-white flex items-center gap-2">
@@ -338,10 +338,10 @@ export default function SettingsView() {
 
                 {activeTab === "PLUGINS" && (
                   <>
-                    <h2 className="text-xl font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-2">
-                      <Blocks className="w-5 h-5 text-xiphos-purple" /> Plugins & Updates
+                    <h2 className="text-sm font-black text-white tracking-widest uppercase flex items-center gap-2 border-b border-white/10 pb-1">
+                      <Blocks className="w-4 h-4 text-xiphos-purple" /> Plugins & Updates
                     </h2>
-                    <GlassCard className="p-5 flex flex-col gap-6">
+                    <GlassCard className="p-3 flex flex-col gap-3">
                       
                       <div className="flex justify-between items-center bg-xiphos-purple/10 border border-xiphos-purple/30 p-4 rounded">
                         <div className="flex flex-col gap-1">

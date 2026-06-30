@@ -116,7 +116,7 @@ export default function PortfolioView() {
     );
   };
   return (
-    <GlassPanel glowColor="emerald" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in zoom-in-95">
+    <GlassPanel glowColor="emerald" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2 p-0 transition-all duration-300 animate-in fade-in zoom-in-95" noOverflowHidden>
       
       {/* 1. TOP HEADER */}
       <PageHeader
@@ -134,17 +134,17 @@ export default function PortfolioView() {
         }
       />
 
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-4 pb-4">
+      <div className="flex-1 min-h-0 overflow-hidden px-4 flex flex-col gap-2 pb-2">
         
         {/* 2. TOP METRICS ROW */}
-        <div className="grid grid-cols-7 gap-4 shrink-0">
+        <div className="grid grid-cols-7 gap-2 shrink-0">
           <MetricCard label="Current Balance" value={`$${account.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`} />
           <MetricCard label="Equity" value={`$${account.equity.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-cyan glow-cyan" />
           <MetricCard label="Margin" value={`$${account.margin.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-purple glow-purple" />
           <MetricCard label="Free Margin" value={`$${account.margin_free.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-emerald glow-emerald" />
           <MetricCard label="Max Drawdown" value={`-${performanceMetrics?.max_drawdown.toFixed(2)}%`} colorClass="text-xiphos-crimson glow-crimson" />
           <MetricCard label="ROI (YTD)" value={`+${roi.toFixed(2)}%`} colorClass="text-xiphos-emerald glow-emerald" />
-          <GlassCard className="p-4 flex flex-col justify-center bg-xiphos-purple/10 border-xiphos-purple/30 group hover:bg-xiphos-purple/20 transition-colors">
+          <GlassCard className="p-2 flex flex-col justify-center bg-xiphos-purple/10 border-xiphos-purple/30 group hover:bg-xiphos-purple/20 transition-colors">
             <span className="text-[10px] text-xiphos-purple font-bold uppercase tracking-widest mb-1">Risk Adjusted Return</span>
             <div className="flex justify-between items-end">
               <div>
@@ -160,11 +160,11 @@ export default function PortfolioView() {
         </div>
 
         {/* 3. MIDDLE ROW: CHARTS & CALENDAR */}
-        <div className="grid grid-cols-12 gap-4 shrink-0 h-80">
+        <div className="grid grid-cols-12 gap-2 shrink-0 flex-1 min-h-0">
           {/* Equity Chart */}
-          <GlassCard className="col-span-5 p-4 flex flex-col relative group">
+          <GlassCard className="col-span-5 p-2 flex flex-col relative group">
             <div className="flex justify-between items-center mb-4 shrink-0">
-              <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-cyan transition-colors">
+              <h3 className="text-[10px] font-black tracking-widest uppercase flex items-center gap-1 group-hover:text-xiphos-cyan transition-colors">
                 <TrendingUp className="w-4 h-4 text-xiphos-cyan" /> HISTORICAL GROWTH
               </h3>
               <div className="flex items-center gap-3 text-[10px] font-bold">
@@ -178,8 +178,8 @@ export default function PortfolioView() {
           </GlassCard>
 
           {/* Asset Allocation Pie Chart */}
-          <GlassCard className="col-span-3 p-4 flex flex-col group">
-            <h3 className="text-sm font-black tracking-widest uppercase mb-2 shrink-0 group-hover:text-white transition-colors">ASSET ALLOCATION</h3>
+          <GlassCard className="col-span-3 p-2 flex flex-col group min-h-0">
+            <h3 className="text-[10px] font-black tracking-widest uppercase mb-1 shrink-0 group-hover:text-white transition-colors">ASSET ALLOCATION</h3>
             <div className="flex-1 min-h-0 w-full relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -207,14 +207,14 @@ export default function PortfolioView() {
           </GlassCard>
 
           {/* Performance Calendar */}
-          <GlassCard className="col-span-2 p-4 flex flex-col group">
-            <div className="flex justify-between items-center mb-4 shrink-0">
-              <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-purple transition-colors">
-                <Target className="w-4 h-4 text-xiphos-purple" /> DAILY RETURNS
+          <GlassCard className="col-span-2 p-2 flex flex-col group min-h-0">
+            <div className="flex justify-between items-center mb-1 shrink-0">
+              <h3 className="text-[10px] font-black tracking-widest uppercase flex items-center gap-1 group-hover:text-xiphos-purple transition-colors">
+                <Target className="w-3 h-3 text-xiphos-purple" /> DAILY RETURNS
               </h3>
-              <span className="text-[10px] text-xiphos-muted font-bold uppercase">30D Heatmap</span>
+              <span className="text-[8px] text-xiphos-muted font-bold uppercase">30D</span>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 overflow-hidden min-h-0">
               <div className="grid grid-cols-5 gap-1.5">
                 {calendarDays.map((day, i) => {
                   const isPos = day.return > 0;
@@ -224,7 +224,7 @@ export default function PortfolioView() {
                   return (
                     <div 
                       key={`cal-day-${day.day}`} 
-                      className="aspect-square rounded-sm flex items-center justify-center text-[10px] font-black border hover:scale-110 transition-transform cursor-pointer"
+                      className="aspect-square rounded-[1px] flex items-center justify-center text-[8px] font-black border hover:scale-110 transition-transform cursor-pointer"
                       // eslint-disable-next-line react/forbid-dom-props
                       style={{ backgroundColor: bg, borderColor: border, color: "white" }}
                       title={`Day ${day.day}: ${day.return > 0 ? "+" : ""}${day.return.toFixed(2)}%`}
@@ -238,13 +238,13 @@ export default function PortfolioView() {
           </GlassCard>
 
           {/* Monthly Returns */}
-          <GlassCard className="col-span-2 p-4 flex flex-col group">
-            <div className="flex justify-between items-center mb-4 shrink-0">
-              <h3 className="text-sm font-black tracking-widest uppercase flex items-center gap-2 group-hover:text-xiphos-purple transition-colors">
-                <Target className="w-4 h-4 text-xiphos-purple" /> MONTHLY
+          <GlassCard className="col-span-2 p-2 flex flex-col group min-h-0">
+            <div className="flex justify-between items-center mb-1 shrink-0">
+              <h3 className="text-[10px] font-black tracking-widest uppercase flex items-center gap-1 group-hover:text-xiphos-purple transition-colors">
+                <Target className="w-3 h-3 text-xiphos-purple" /> MONTHLY
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 overflow-hidden min-h-0">
               <div className="flex flex-col gap-1 justify-end h-full text-[9px] font-black">
                 {monthlyReturns.map((m, i) => {
                   const isPos = m.return > 0;
@@ -276,13 +276,13 @@ export default function PortfolioView() {
         </div>
 
         {/* 4. BOTTOM ROW: TABLES & METRICS */}
-        <div className="grid grid-cols-12 gap-4 flex-1 min-h-[250px] shrink-0">
+        <div className="grid grid-cols-12 gap-2 flex-1 min-h-0 shrink-0">
           
           {/* Winning & Worst Assets */}
-          <GlassCard className="col-span-4 p-4 flex flex-col gap-4">
+          <GlassCard className="col-span-4 p-2 flex gap-2">
             <div className="flex-1 flex flex-col overflow-hidden group">
-              <h3 className="text-[11px] text-xiphos-muted font-bold tracking-widest uppercase mb-2 group-hover:text-white transition-colors">WINNING ASSETS</h3>
-              <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+              <h3 className="text-[9px] text-xiphos-muted font-bold tracking-widest uppercase mb-1 group-hover:text-white transition-colors">WINNING ASSETS</h3>
+              <div className="flex-1 overflow-hidden flex flex-col gap-1 min-h-0">
                 {topAssets.map(a => (
                   <div key={a.symbol} className="flex justify-between items-center p-2 bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.02)] rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors">
                     <span className="font-bold text-white text-sm">{a.symbol}</span>
@@ -295,8 +295,8 @@ export default function PortfolioView() {
               </div>
             </div>
             <div className="flex-1 flex flex-col overflow-hidden group">
-              <h3 className="text-[11px] text-xiphos-muted font-bold tracking-widest uppercase mb-2 group-hover:text-white transition-colors">WORST ASSETS</h3>
-              <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+              <h3 className="text-[9px] text-xiphos-muted font-bold tracking-widest uppercase mb-1 group-hover:text-white transition-colors">WORST ASSETS</h3>
+              <div className="flex-1 overflow-hidden flex flex-col gap-1 min-h-0">
                 {worstAssets.map(a => (
                   <div key={a.symbol} className="flex justify-between items-center p-2 bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.02)] rounded hover:bg-[rgba(255,255,255,0.05)] transition-colors">
                     <span className="font-bold text-white text-sm">{a.symbol}</span>
@@ -311,10 +311,10 @@ export default function PortfolioView() {
           </GlassCard>
 
           {/* Operational Metrics */}
-          <div className="col-span-8 grid grid-cols-2 gap-4">
-            <GlassCard className="p-4 flex flex-col justify-between group">
+          <div className="col-span-8 grid grid-cols-2 gap-2">
+            <GlassCard className="p-2 flex flex-col justify-between group">
               <div>
-                <h3 className="text-xs text-xiphos-cyan font-bold tracking-widest uppercase flex items-center gap-2 mb-4 group-hover:text-white transition-colors">
+                <h3 className="text-[10px] text-xiphos-cyan font-bold tracking-widest uppercase flex items-center gap-1 mb-2 group-hover:text-white transition-colors">
                   <Activity className="w-4 h-4 text-xiphos-cyan" /> PROFIT BREAKDOWN (M30)
                 </h3>
                 <div className="space-y-4">
@@ -338,7 +338,7 @@ export default function PortfolioView() {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 pt-4 border-t border-[rgba(255,255,255,0.05)] grid grid-cols-2 gap-4">
+              <div className="mt-2 pt-2 border-t border-[rgba(255,255,255,0.05)] grid grid-cols-2 gap-2">
                  <div>
                    <span className="block text-[10px] text-xiphos-muted font-bold uppercase mb-1">EXPECTANCY</span>
                    <span className="text-2xl font-black text-white">${expectancy}</span>

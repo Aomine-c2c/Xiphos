@@ -25,12 +25,12 @@ export default function PositionsView() {
   const riskFreeCount = positions.filter(p => p.risk_status === "FREE").length;
 
   const [page, setPage] = useState(0);
-  const itemsPerPage = 6;
+  const itemsPerPage = 12;
   const totalPages = Math.max(1, Math.ceil(positions.length / itemsPerPage));
   const paginatedPositions = positions.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
   return (
-    <GlassPanel glowColor="cyan" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300">
+    <GlassPanel glowColor="cyan" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2 p-0 transition-all duration-300" noOverflowHidden>
       
       {/* Title Header */}
       <PageHeader
@@ -45,15 +45,15 @@ export default function PositionsView() {
       />
 
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        <div className="grid grid-cols-12 h-full p-6 pt-0 gap-6">
+        <div className="grid grid-cols-12 h-full p-4 pt-0 gap-2">
           {/* LEFT: Stats (3/12) */}
-          <div className="col-span-3 flex flex-col justify-between gap-4">
+          <div className="col-span-3 flex flex-col justify-between gap-2">
             <div>
-              <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest block mb-4 border-b border-[rgba(255,255,255,0.05)] pb-2">
+              <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block mb-2 border-b border-[rgba(255,255,255,0.05)] pb-1">
                 EXPOSURE METRICS
               </span>
               
-              <div className="space-y-4 text-sm font-bold tracking-widest">
+              <div className="space-y-2 text-[10px] font-bold tracking-widest">
                 <div className="flex justify-between items-center">
                   <span className="text-xiphos-muted">GROSS P/L</span>
                   <span className={`text-xl font-black ${totalPnL >= 0 ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
@@ -73,11 +73,11 @@ export default function PositionsView() {
               </div>
             </div>
 
-            <GlassCard className="p-4 rounded-xl">
-              <div className="text-xs text-xiphos-muted font-bold uppercase tracking-widest block mb-4">
+            <GlassCard className="p-3 rounded-xl min-h-0 shrink-0">
+              <div className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block mb-2">
                 BUCKET ALLOCATION
               </div>
-              <div className="space-y-4 font-bold text-xs tracking-widest">
+              <div className="space-y-2 font-bold text-[9px] tracking-widest">
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-xiphos-muted">CURRENCY (FX)</span>
@@ -105,24 +105,24 @@ export default function PositionsView() {
           </div>
 
           {/* RIGHT: Table (9/12) */}
-          <div className="col-span-9 flex flex-col gap-6 overflow-hidden">
+          <div className="col-span-9 flex flex-col gap-2 overflow-hidden">
             <GlassCard className="flex-1 flex flex-col min-h-0">
-              <div className="flex items-center justify-between p-4 border-b border-[rgba(255,255,255,0.05)] shrink-0">
-                <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest block">
+              <div className="flex items-center justify-between p-2 border-b border-[rgba(255,255,255,0.05)] shrink-0">
+                <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block">
                   ACTIVE TRADES REGISTRY ({positions.length})
                 </span>
                 <div className="flex items-center gap-3">
                   <button title="Previous Page" onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="text-xiphos-muted hover:text-white disabled:opacity-30 cursor-pointer transition-colors">
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  <span className="text-sm text-white font-bold uppercase tracking-widest">PAGE {page + 1} / {totalPages}</span>
+                  <span className="text-[10px] text-white font-bold uppercase tracking-widest">PAGE {page + 1} / {totalPages}</span>
                   <button title="Next Page" onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="text-xiphos-muted hover:text-white disabled:opacity-30 cursor-pointer transition-colors">
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-1">
-                <table className="w-full text-left text-[11px] border-collapse font-bold tabular-nums">
+              <div className="flex-1 min-h-0 overflow-hidden p-1 flex flex-col">
+                <table className="w-full text-left text-[9px] border-collapse font-bold tabular-nums">
                   <thead className="sticky top-0 bg-[#0B0F19] z-10">
                     <tr className="text-xiphos-muted uppercase tracking-widest text-[10px] select-none border-b border-[rgba(255,255,255,0.1)]">
                       <th className="px-2 py-2 font-bold">TKT</th>
@@ -219,10 +219,10 @@ export default function PositionsView() {
       </div>
 
       {/* Footer */}
-      <GlassCard className="shrink-0 p-4 rounded-none border-b-0 border-l-0 border-r-0">
-        <div className="flex items-center justify-between text-sm font-bold tracking-widest">
-          <div className="flex items-center gap-3 text-xiphos-gold glow-gold">
-            <ShieldAlert className="h-5 w-5" />
+      <GlassCard className="shrink-0 p-2 rounded-none border-b-0 border-l-0 border-r-0">
+        <div className="flex items-center justify-between text-[10px] font-bold tracking-widest px-4">
+          <div className="flex items-center gap-2 text-xiphos-gold glow-gold">
+            <ShieldAlert className="h-4 w-4" />
             <span>PORTFOLIO RISK CONTAINMENT FIELD</span>
           </div>
           <span className="text-xiphos-muted">
