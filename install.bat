@@ -35,8 +35,8 @@ if not exist "main.py" (
 
 :: 4. Setup Python Environment
 echo [*] Setting up Python Virtual Environment...
-python -m venv venv
-call venv\Scripts\activate.bat
+python -m venv .venv
+call .venv\Scripts\activate.bat
 
 echo [*] Upgrading pip...
 python -m pip install --upgrade pip
@@ -87,12 +87,12 @@ echo [*] Setting up 'Xiphos' launch command...
 echo @echo off > xiphos.bat
 echo cd /d "%CD%" >> xiphos.bat
 if "%UI_CHOICE%"=="1" (
-    echo start cmd /c "cd web && npm run start" >> xiphos.bat
-    echo call venv\Scripts\activate.bat >> xiphos.bat
-    echo python api_server.py >> xiphos.bat
+    echo start cmd /c "cd web && npm run dev" >> xiphos.bat
+    echo call .venv\Scripts\activate.bat >> xiphos.bat
+    echo python main.py >> xiphos.bat
 ) else (
-    echo call venv\Scripts\activate.bat >> xiphos.bat
-    echo python tui.py >> xiphos.bat
+    echo call .venv\Scripts\activate.bat >> xiphos.bat
+    echo python main.py >> xiphos.bat
 )
 
 if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
