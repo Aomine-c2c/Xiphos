@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useAuthStore } from "./useAuthStore";
 
 export interface AccountInfo {
   balance: number;
@@ -420,12 +421,31 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   ws: null,
 
   // No-op in mock mode
+  // Connect to websocket with exponential backoff and heartbeat
   connectWebSocket: () => {
-    const ws = new WebSocket("ws://127.0.0.1:8001/ws");
+    // Avoid double connections
+    if (get().ws?.readyState === WebSocket.OPEN || get().ws?.readyState === WebSocket.CONNECTING) return;
+
+    const token = useAuthStore.getState().token;
+    if (!token) {
+      console.error("WebSocket connection aborted: No authentication token found");
+      return;
+    }
+
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8001/ws";
+    const ws = new WebSocket(`${wsUrl}?token=${token}`);
+    let pingInterval: NodeJS.Timeout;
 
     ws.onopen = () => {
       set({ connected: true, wsRetries: 0, ws });
-      console.info("XIPHOS WebSocket Connected");
+      console.info("XIPHOS WebSocket Connected to", wsUrl);
+
+      // Start ping/pong heartbeat every 30 seconds
+      pingInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "ping" }));
+        }
+      }, 30000);
     };
 
     ws.onmessage = (event) => {
@@ -462,22 +482,35 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
     };
 
     ws.onclose = () => {
+      clearInterval(pingInterval);
       set((state) => ({ connected: false, ws: null }));
-      setTimeout(() => {
-        set((state) => {
-          if (state.wsRetries < 5) {
-            state.connectWebSocket();
-            return { wsRetries: state.wsRetries + 1 };
-          }
-          return state;
-        });
-      }, 5000);
+      
+      const { wsRetries } = get();
+      if (wsRetries < 7) {
+        const nextRetry = wsRetries + 1;
+        // Exponential backoff: 2s, 4s, 8s, 16s, 32s, 64s
+        const backoffMs = Math.min(1000 * Math.pow(2, nextRetry), 60000);
+        console.warn(`WebSocket closed. Reconnecting in ${backoffMs}ms... (Attempt ${nextRetry})`);
+        
+        setTimeout(() => {
+          set({ wsRetries: nextRetry });
+          get().connectWebSocket();
+        }, backoffMs);
+      } else {
+        console.error("WebSocket connection failed permanently after 7 retries.");
+      }
     };
   },
 
   fetchMahoragaState: async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8001/api/mahoraga/state");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+      const token = useAuthStore.getState().token;
+      const res = await fetch(`${apiUrl}/api/mahoraga/state`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         set({ mahoragaState: data });

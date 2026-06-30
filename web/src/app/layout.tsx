@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import BackgroundParticles from "@/components/BackgroundParticles";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +28,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col relative">
         <BackgroundParticles />
         <div className="relative z-10 flex-1 flex flex-col h-full min-h-0">
-          {children}
+          <ProtectedRoute>
+            {children}
+          </ProtectedRoute>
         </div>
       </body>
     </html>

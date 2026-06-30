@@ -2,6 +2,8 @@ import pandas as pd
 import MetaTrader5 as mt5
 import yaml
 import time
+from sqlalchemy import create_engine
+from core.config import settings as config_settings
 
 def load_settings():
     with open('config/settings.yaml', 'r') as f:
@@ -254,8 +256,13 @@ def run_backtest(): # NOSONAR
         print(f"Profit Factor: {profit_factor:.2f}")
         print(f"Total PnL (Estimated Points): {total_pnl:.2f}")
         
-        df_res.to_csv("backtest_results.csv", index=False)
-        print("Detailed results saved to backtest_results.csv")
+        try:
+            engine = create_engine(config_settings.database.url)
+            df_res.to_sql("backtest_trades", con=engine, if_exists="append", index=False)
+            print("Detailed results saved to PostgreSQL (backtest_trades table).")
+        except Exception as e:
+            print(f"PostgreSQL write failed: {e}. Falling back to CSV.")
+            df_res.to_csv("backtest_results.csv", index=False)
 
 if __name__ == "__main__":
     run_backtest()

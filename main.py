@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Set TUI environment variable immediately to suppress raw stdout/stderr console logging from imports
 os.environ["XIPHOS_TUI"] = "1"
 
@@ -6,7 +9,7 @@ import asyncio
 import threading
 import time
 from datetime import datetime
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
@@ -28,6 +31,7 @@ from monitoring.metrics import get_memory_usage_mb, cpu_tracker, get_system_disk
 
 from api.routes import router
 from api.websockets import ws_manager
+from core.security import verify_ws_token
 
 app = FastAPI(title="Xiphos Institutional Web API")
 
@@ -238,14 +242,15 @@ async def periodical_websocket_broadcaster():
     while True:
         try:
             if ws_manager.active_connections:
-                state = compile_system_state()
+                # Offload synchronous state compilation (MT5 polling) to a background thread
+                state = await asyncio.to_thread(compile_system_state)
                 payload = {
                     "type": "state_update",
                     "data": state
                 }
                 await ws_manager.broadcast(payload)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Broadcaster error: {e}")
         await asyncio.sleep(1.0)
 
 def _handle_bot_commands(cmd_type: str):
@@ -303,6 +308,11 @@ async def _process_ws_command(websocket: WebSocket, data: dict):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket): # NOSONAR
+    token = websocket.query_params.get("token")
+    if not token or not verify_ws_token(token):
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await ws_manager.connect(websocket)
     try:
         await websocket.send_json({"type": "state_update", "data": compile_system_state()})

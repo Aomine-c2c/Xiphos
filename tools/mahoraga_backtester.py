@@ -2,7 +2,9 @@ import pandas as pd
 import MetaTrader5 as mt5
 import yaml
 import time
+from sqlalchemy import create_engine
 from core.mahoraga import mahoraga_engine
+from core.config import settings as config_settings
 from indicators.moving_averages import calculate_atr, calculate_rsi, calculate_adx, calculate_bollinger_bands
 from strategies.trend_following import evaluate_signal
 
@@ -339,13 +341,25 @@ def run_backtest(): # NOSONAR
             print(f"Profit Factor: {npf:.2f}")
             print(f"PnL: {non_adapted_trades['profit'].sum():.2f}")
         
-        df_res.to_csv("backtest_mahoraga_results.csv", index=False)
-        print("Detailed results saved to backtest_mahoraga_results.csv")
-        
-        if len(mahoraga_adaptation_log) > 0:
-            df_log = pd.DataFrame(mahoraga_adaptation_log)
-            df_log.to_csv("mahoraga_adaptation_log.csv", index=False)
-            print("Adaptation log saved to mahoraga_adaptation_log.csv")
+        # Write to PostgreSQL
+        try:
+            engine = create_engine(config_settings.database.url)
+            
+            # Map columns to the performance table format or insert into trades if preferred
+            # For backtesting, we'll write to a dedicated backtest_trades table to avoid polluting live trades
+            df_res.to_sql("backtest_trades", con=engine, if_exists="append", index=False)
+            print("Detailed results saved to PostgreSQL (backtest_trades table).")
+            
+            if len(mahoraga_adaptation_log) > 0:
+                df_log = pd.DataFrame(mahoraga_adaptation_log)
+                df_log.to_sql("mahoraga_logs", con=engine, if_exists="append", index=False)
+                print("Adaptation log saved to PostgreSQL (mahoraga_logs table).")
+        except Exception as e:
+            print(f"PostgreSQL write failed: {e}. Falling back to CSV.")
+            df_res.to_csv("backtest_mahoraga_results.csv", index=False)
+            if len(mahoraga_adaptation_log) > 0:
+                df_log = pd.DataFrame(mahoraga_adaptation_log)
+                df_log.to_csv("mahoraga_adaptation_log.csv", index=False)
 
 if __name__ == "__main__":
     run_backtest()

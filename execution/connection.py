@@ -3,13 +3,28 @@ import MetaTrader5 as mt5
 from core.logger import log
 
 
+import os
+
 class MT5Connection:
     def __init__(self):
         self.connected = False
 
     def connect(self, max_retries=5, delay=5):
+        login = os.getenv("MT5_LOGIN")
+        password = os.getenv("MT5_PASSWORD")
+        server = os.getenv("MT5_SERVER")
+
         for attempt in range(max_retries):
+            # Attempt to initialize. If path is omitted, it finds the default MT5 installation.
             if mt5.initialize():
+                # Attempt to login if credentials are provided in .env
+                if login and password and server:
+                    authorized = mt5.login(int(login), password=password, server=server)
+                    if not authorized:
+                        log.error(f"MT5 Login failed. Error code: {mt5.last_error()}")
+                        time.sleep(delay)
+                        continue
+                
                 log.info("Successfully connected to MetaTrader 5 terminal.")
                 self.connected = True
                 return True

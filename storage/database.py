@@ -92,6 +92,12 @@ class Database:
         
         with self.get_connection() as conn:
             cursor = conn.cursor()
+
+            if self.use_postgres:
+                try:
+                    cursor.execute("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;")
+                except Exception as e:
+                    log.warning(f"Could not initialize timescaledb extension: {e}")
             
             # Trades Table
             cursor.execute(f"""
@@ -217,5 +223,35 @@ class Database:
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
+
+            # Mahoraga Logs Table (Replacement for CSV)
+            cursor.execute(f"""
+                CREATE TABLE IF NOT EXISTS mahoraga_logs (
+                    id {pk_type},
+                    symbol TEXT NOT NULL,
+                    trend_state TEXT,
+                    momentum_state TEXT,
+                    filter_strictness TEXT,
+                    confidence_score REAL,
+                    adaptation_spins INTEGER,
+                    fast_ema INTEGER,
+                    medium_ema INTEGER,
+                    slow_sma INTEGER,
+                    lot_multiplier REAL,
+                    sl_multiplier REAL,
+                    phenomenon TEXT,
+                    is_adapted BOOLEAN,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
+            if self.use_postgres:
+                try:
+                    # Convert to TimescaleDB hypertables
+                    cursor.execute("SELECT create_hypertable('signals', 'timestamp', if_not_exists => TRUE);")
+                    cursor.execute("SELECT create_hypertable('performance', 'timestamp', if_not_exists => TRUE);")
+                    cursor.execute("SELECT create_hypertable('mahoraga_logs', 'timestamp', if_not_exists => TRUE);")
+                except Exception as e:
+                    log.warning(f"Could not create hypertables: {e}")
 
 db = Database()

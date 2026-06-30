@@ -6,6 +6,9 @@ import time
 import csv
 import numpy as np
 import os
+import yaml
+from sqlalchemy import create_engine
+from core.config import settings as config_settings
 
 def calculate_atr(df, period=14):
     df = df.copy()
@@ -236,8 +239,13 @@ def run_deep_backtest():
     
     if len(trade_history) > 0:
         df_res = pd.DataFrame(trade_history)
-        df_res.to_csv("deep_backtest_results.csv", index=False)
-        print("Results saved to deep_backtest_results.csv")
+        try:
+            engine = create_engine(config_settings.database.url)
+            df_res.to_sql("backtest_trades", con=engine, if_exists="append", index=False)
+            print("Results saved to PostgreSQL (backtest_trades table)")
+        except Exception as e:
+            print(f"PostgreSQL write failed: {e}. Falling back to CSV.")
+            df_res.to_csv("deep_backtest_results.csv", index=False)
 
 if __name__ == "__main__":
     run_deep_backtest()
