@@ -1,6 +1,9 @@
 import yaml
 import asyncio
 import pandas as pd
+from pydantic import BaseModel
+from typing import List
+import pandas as pd
 from fastapi import APIRouter
 from loguru import logger
 
@@ -9,14 +12,13 @@ from core.config import settings
 from core.state_manager import StateManager
 from core.mahoraga import mahoraga_engine
 
-from core.state_manager import StateManager
-from core.mahoraga import mahoraga_engine
 from storage.database import db
 from core.security import get_current_user, create_access_token, verify_password, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 import os
+from core.llm import generate_chat_response
 
 router = APIRouter()
 state_manager = StateManager()
@@ -24,6 +26,26 @@ state_manager = StateManager()
 # Load master password from .env or config (Fallback for testing)
 MASTER_USER = os.getenv("XIPHOS_ADMIN_USER", "admin")
 MASTER_HASH = get_password_hash(os.getenv("XIPHOS_ADMIN_PASSWORD", "xiphos2026"))
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+
+@router.post("/api/chat")
+async def chat_with_vincent(request: ChatRequest, current_user: str = Depends(get_current_user)):
+    try:
+        # Get live context from State Manager
+        live_state = state_manager.get_performance_metrics()
+        state_context = f"Win Rate: {live_state.get('win_rate')} | Equity: {live_state.get('total_equity')}"
+        
+        # Query LLM
+        response_text = generate_chat_response([m.model_dump() for m in request.messages], state_context)
+        return {"response": response_text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/auth/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):

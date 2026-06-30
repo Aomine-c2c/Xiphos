@@ -1,6 +1,7 @@
 import time
 from loguru import logger as log
 from storage.database import db
+from core.llm import generate_oracle_rationale
 
 class OracleEngine:
     def __init__(self):
@@ -25,16 +26,19 @@ class OracleEngine:
         except Exception as e:
             log.error(f"Oracle failed to record decision: {e}")
 
-    def record_trade(self, symbol: str, direction: str, price: float, lot_size: float, phenomenon: str, exec_time_ms: float):
+    def record_trade(self, symbol: str, direction: str, price: float, lot_size: float, phenomenon: str, exec_time_ms: float, ind_data: dict = None):
         query_text = f"Why did we take Trade on {symbol} ({direction})?"
+        
+        # Call LLM to generate organic reasoning based on indicators
+        llm_decision = generate_oracle_rationale(symbol, direction, price, ind_data or {})
         
         self._insert_decision(
             decision_type="TRADE",
             query_text=query_text,
-            data_core_event="M30 Signal Alignment",
+            data_core_event="LLM Multi-Factor Alignment",
             data_core_details=f"Trend and indicators aligned for {symbol}.",
-            mahoraga_reasoning=f"Identified {phenomenon} regime.",
-            mahoraga_adjustment=f"Lot size optimized to {lot_size}.",
+            mahoraga_reasoning=llm_decision.mahoraga_reasoning,
+            mahoraga_adjustment=llm_decision.mahoraga_adjustment,
             risk_check="Gate 1-5 Checks",
             risk_status="APPROVED",
             risk_details="Within risk limits and correlation constraints.",

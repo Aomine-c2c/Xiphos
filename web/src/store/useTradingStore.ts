@@ -167,6 +167,7 @@ interface TradingStore {
   systemStats: { cpu: number; memory: number };
   logs: LogItem[];
   chatMessages: ChatMessage[];
+  isTyping: boolean;
   correlationMatrix: Record<string, Record<string, string>>;
   performanceMetrics: PerformanceMetrics;
   mahoragaState: Record<string, MahoragaState> | null;

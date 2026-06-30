@@ -2,6 +2,7 @@ from typing import Dict, Any, Optional
 from abc import ABC, abstractmethod
 from loguru import logger as log
 from core.oracle import oracle_engine
+from core.llm import evaluate_adaptation
 
 class AdaptiveParameters:
     def __init__(self):
@@ -113,14 +114,36 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
                 params._last_state_hash = tick_hash
                 log.info(f"[Mahoraga] {symbol} took damage! Wheel clicks to {self.memory_matrix[current_phenomenon]}/{self.clicks_for_adaptation} in {current_phenomenon}")
                 
-                # Log to Oracle
-                is_full = self.memory_matrix[current_phenomenon] >= self.clicks_for_adaptation
-                new_lot = 1.5 if is_full else 0.5
-                import time
-                oracle_engine.record_adaptation(symbol, current_phenomenon, self.memory_matrix[current_phenomenon], params.lot_multiplier, new_lot, 1.2)
+        # LLM Adaptation Hook
+        llm_decision = evaluate_adaptation(symbol, ind_data, params.lot_multiplier, params.sl_multiplier)
+        
+        # Merge LLM insight with baseline wheel mechanics
+        if llm_decision.should_adapt or self.memory_matrix[current_phenomenon] >= self.clicks_for_adaptation:
+            params.is_adapted = True
+            
+            # Use LLM values if provided logically, else fallback to standard scaling
+            if llm_decision.should_adapt:
+                params.lot_multiplier = llm_decision.new_lot_multiplier
+                params.sl_multiplier = llm_decision.new_sl_multiplier
+                log.info(f"LLM Adapted {symbol}: Lot {params.lot_multiplier}, SL {params.sl_multiplier}")
+                reasoning = llm_decision.reasoning
+            else:
+                params.lot_multiplier = min(3.0, params.lot_multiplier * 1.5)
+                params.sl_multiplier = min(2.0, params.sl_multiplier * 1.2)
+                reasoning = f"Hard-click Adaptation Reached."
 
-        # 3. Full Rotation State
-        params.is_adapted = self.memory_matrix[current_phenomenon] >= self.clicks_for_adaptation
+            params.filter_strictness = "DYNAMIC"
+            params.adaptation_spins = self.memory_matrix[current_phenomenon]
+            
+            oracle_engine.record_adaptation(
+                symbol=symbol,
+                phenomenon=f"{current_phenomenon} + LLM Insight",
+                spins=params.adaptation_spins,
+                old_lot=params.lot_multiplier / 1.5 if not llm_decision.should_adapt else params.lot_multiplier,
+                new_lot=params.lot_multiplier,
+                exec_time_ms=0.0
+            )
+
 
         # 4. State Application
         params.trend_state = "TRENDING" if adx > 25 else "RANGING"
