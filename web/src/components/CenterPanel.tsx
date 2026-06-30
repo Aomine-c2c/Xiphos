@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { Radio, Play, Activity, Target } from "lucide-react";
+import { Radio, Play, Activity, Target, Zap, Shield, GitCommit, MoveRight } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function CenterPanel() {
   const { sendCommand, rankedSignals, gates } = useTradingStore();
@@ -38,13 +39,13 @@ export default function CenterPanel() {
       <div className="glass-panel flex flex-col overflow-hidden flex-1 min-h-0">
         
         {/* Title Header */}
-        <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)] flex items-center justify-between shrink-0">
-          <span className="text-lg font-bold text-white uppercase tracking-widest flex items-center gap-3">
+        <div className="px-6 py-4 border-b border-[rgba(255,255,255,0.05)] bg-[rgba(11,15,23,0.4)] flex items-center justify-between shrink-0 relative z-10">
+          <span className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-3">
             <Radio className="h-5 w-5 text-xiphos-purple animate-pulse glow-purple" />
             <span className="glow-purple">XIPHOS HERO DECISION CORE</span>
           </span>
-          <span className="text-sm text-xiphos-muted font-semibold tracking-widest flex items-center gap-2">
-            LATENCY: <span className="text-xiphos-cyan glow-cyan">12ms</span>
+          <span className="text-xs text-xiphos-muted font-bold tracking-widest flex items-center gap-2">
+            LATENCY: <span className="text-xiphos-cyan glow-cyan flex items-center gap-1"><Zap className="w-3 h-3" /> 12ms</span>
           </span>
         </div>
 
@@ -53,54 +54,85 @@ export default function CenterPanel() {
           
           {/* Left Hero Core Block */}
           <div className="col-span-7 glass-card p-6 flex flex-col justify-between min-h-0 overflow-hidden relative group">
-            {/* Ambient background glow */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-xiphos-purple/10 rounded-full blur-[80px] -z-10 group-hover:bg-xiphos-purple/20 transition-all duration-700"></div>
+            {/* Animated Target Radar Background */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] pointer-events-none z-0 flex items-center justify-center opacity-40 mix-blend-screen">
+              <motion.div 
+                animate={{ rotate: 360 }} 
+                transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 rounded-full border border-dashed border-xiphos-purple/30"
+              />
+              <motion.div 
+                animate={{ rotate: -360, scale: [1, 1.05, 1] }} 
+                transition={{ rotate: { duration: 15, repeat: Infinity, ease: "linear" }, scale: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
+                className="absolute inset-8 rounded-full border border-xiphos-cyan/20"
+              />
+              <motion.div 
+                animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.1, 0.3, 0.1] }} 
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-16 rounded-full bg-xiphos-purple/10 blur-xl"
+              />
+            </div>
 
-            <div>
+            <div className="relative z-10">
               <div className="flex items-center gap-2 mb-2">
                 <Target className="w-4 h-4 text-xiphos-muted" />
-                <span className="text-sm text-xiphos-muted font-bold tracking-widest uppercase">
+                <span className="text-[10px] text-xiphos-muted font-black tracking-widest uppercase">
                   ACTIVE HERO TARGET
                 </span>
               </div>
               
-              <div className="flex items-baseline gap-4 mt-2">
-                <span className="text-5xl font-black text-white tracking-tight">{heroSignal.symbol}</span>
-                <span className={`text-xl font-bold px-3 py-1 rounded-md shadow-lg ${
+              <div className="flex items-center gap-4 mt-2">
+                <motion.span 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-[64px] font-black text-white tracking-tighter leading-none glow-white drop-shadow-2xl"
+                >
+                  {heroSignal.symbol}
+                </motion.span>
+                <motion.span 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className={`text-xl font-black px-4 py-1 rounded-sm shadow-[0_0_20px_rgba(var(--color-xiphos-${heroSignal.direction === "BUY" ? "emerald" : "crimson"}),0.3)] ${
                   heroSignal.direction === "BUY" ? "bg-xiphos-emerald/20 text-xiphos-emerald border border-xiphos-emerald/50 glow-emerald" : "bg-xiphos-crimson/20 text-xiphos-crimson border border-xiphos-crimson/50 glow-crimson"
                 }`}>
                   {heroSignal.direction}
-                </span>
+                </motion.span>
               </div>
             </div>
 
             {/* Huge Metrics Display Area */}
-            <div className="my-6 py-6 border-y border-[rgba(255,255,255,0.05)] flex items-center justify-between gap-6">
+            <div className="my-6 py-6 border-y border-[rgba(255,255,255,0.05)] flex items-center justify-between gap-6 relative z-10 backdrop-blur-sm">
               <div className="space-y-1">
-                <span className="text-sm text-xiphos-muted font-bold block uppercase tracking-widest">KRONOS CONFIDENCE</span>
-                <span className="text-6xl font-black text-xiphos-gold leading-none tracking-tighter glow-gold">92%</span>
+                <span className="text-[10px] text-xiphos-muted font-black block uppercase tracking-widest">KRONOS CONFIDENCE</span>
+                <span className="text-6xl font-black text-xiphos-gold leading-none tracking-tighter glow-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.4)]">92%</span>
               </div>
               <div className="space-y-1 text-right">
-                <span className="text-sm text-xiphos-muted font-bold block uppercase tracking-widest">PROJECTED RISK</span>
-                <span className="text-4xl font-black text-white leading-none">
+                <span className="text-[10px] text-xiphos-muted font-black block uppercase tracking-widest">PROJECTED RISK</span>
+                <span className="text-[40px] font-black text-white leading-none tracking-tighter drop-shadow-lg">
                   {heroSignal.projected_risk.toFixed(2)}%
                 </span>
               </div>
             </div>
 
             {/* Live Ticks Summary */}
-            <div className="text-sm text-xiphos-muted grid grid-cols-3 gap-4 font-mono">
-              <div className="bg-[rgba(11,15,23,0.5)] p-3 rounded-lg border border-[rgba(255,255,255,0.02)]">
-                <span className="block text-[10px] uppercase mb-1">PRICE</span>
-                <span className="text-white font-bold text-lg">{heroSignal.price.toFixed(5)}</span>
+            <div className="text-sm text-xiphos-muted grid grid-cols-3 gap-4 font-mono relative z-10">
+              <div className="glass-card p-3 border border-[rgba(255,255,255,0.05)] bg-black/40 group-hover:border-white/10 transition-colors">
+                <span className="block text-[9px] uppercase tracking-widest mb-1 text-xiphos-muted font-black">PRICE TREAM</span>
+                <span className="text-white font-black text-lg drop-shadow-md">{heroSignal.price.toFixed(5)}</span>
               </div>
-              <div className="bg-[rgba(11,15,23,0.5)] p-3 rounded-lg border border-[rgba(255,255,255,0.02)]">
-                <span className="block text-[10px] uppercase mb-1">SMA200</span>
-                <span className="text-white font-bold text-lg">{heroSignal.sma200.toFixed(5)}</span>
+              <div className="glass-card p-3 border border-[rgba(255,255,255,0.05)] bg-black/40 group-hover:border-white/10 transition-colors">
+                <span className="block text-[9px] uppercase tracking-widest mb-1 text-xiphos-muted font-black">SMA200 DYNAMIC</span>
+                <span className="text-white font-black text-lg drop-shadow-md">{heroSignal.sma200.toFixed(5)}</span>
               </div>
-              <div className="bg-[rgba(11,15,23,0.5)] p-3 rounded-lg border border-[rgba(255,255,255,0.02)]">
-                <span className="block text-[10px] uppercase mb-1">GAP</span>
-                <span className="text-xiphos-cyan font-bold text-lg glow-cyan">{heroSignal.distance} pts</span>
+              <div className="glass-card p-3 border border-xiphos-cyan/20 bg-xiphos-cyan/5 group-hover:bg-xiphos-cyan/10 transition-colors relative overflow-hidden">
+                <motion.div 
+                  animate={{ x: ["-100%", "100%"] }} 
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-xiphos-cyan/20 to-transparent skew-x-12"
+                />
+                <span className="block text-[9px] uppercase tracking-widest mb-1 text-xiphos-cyan font-black relative z-10">DEVIATION GAP</span>
+                <span className="text-xiphos-cyan font-black text-lg glow-cyan relative z-10">{heroSignal.distance} pts</span>
               </div>
             </div>
           </div>
@@ -110,35 +142,43 @@ export default function CenterPanel() {
             
             {/* Validation Matrix Box */}
             <div className="glass-card p-5 space-y-3 flex-1 min-h-0 overflow-hidden relative">
-              <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-3 mb-3">
-                <Activity className="w-4 h-4 text-xiphos-purple" />
-                <span className="text-sm text-white font-bold uppercase tracking-widest">
-                  NEURAL GATES
+              <div className="absolute top-0 right-0 w-32 h-32 bg-xiphos-emerald/5 rounded-full blur-[40px] pointer-events-none"></div>
+              
+              <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-3 mb-4">
+                <Shield className="w-4 h-4 text-xiphos-purple glow-purple" />
+                <span className="text-[10px] text-white font-black uppercase tracking-widest drop-shadow-md">
+                  MULTI-STAGE NEURAL VALIDATION GATES
                 </span>
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-10">
                 {[
-                  { id: 1, name: "RISK SLOTS", status: gates.gate_1_risk_slot || "PASS" },
-                  { id: 2, name: "CORRELATION", status: gates.gate_2_correlation || "PASS" },
-                  { id: 3, name: "FAN ALIGN", status: gates.gate_3_fan_alignment || "PASS" },
-                  { id: 4, name: "PRIORITY", status: gates.gate_4_priority_filter || "PASS" },
-                  { id: 5, name: "HARD SL", status: gates.gate_5_hard_sl || "PASS" }
-                ].map((g) => (
-                  <div
+                  { id: 1, name: "TREND ALIGNMENT", status: gates.gate_1_risk_slot || "PASS" },
+                  { id: 2, name: "VOLATILITY CHECK", status: gates.gate_2_correlation || "PASS" },
+                  { id: 3, name: "LIQUIDITY ZONES", status: gates.gate_3_fan_alignment || "PASS" },
+                  { id: 4, name: "CORRELATION MATRIX", status: gates.gate_4_priority_filter || "PASS" },
+                  { id: 5, name: "RISK EXPOSURE", status: gates.gate_5_hard_sl || "PASS" }
+                ].map((g, i) => (
+                  <motion.div
                     key={g.id}
-                    className="flex items-center justify-between text-xs border border-[rgba(255,255,255,0.05)] p-2.5 rounded-lg bg-[rgba(11,15,23,0.6)] leading-none transition-colors hover:bg-[rgba(11,15,23,0.8)]"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: i * 0.1 }}
+                    className="flex items-center justify-between border border-[rgba(255,255,255,0.05)] p-2.5 rounded-lg bg-[rgba(11,15,23,0.6)] backdrop-blur-sm transition-all hover:bg-[rgba(11,15,23,0.8)] hover:border-xiphos-purple/30 group"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="flex items-center justify-center w-5 h-5 rounded-md bg-xiphos-purple/20 text-xiphos-purple font-bold text-[10px]">G{g.id}</span>
-                      <span className="font-semibold text-xiphos-muted uppercase tracking-wider">{g.name}</span>
+                      <span className="flex items-center justify-center w-5 h-5 rounded-sm bg-xiphos-purple/20 border border-xiphos-purple/30 text-xiphos-purple font-black text-[9px] group-hover:bg-xiphos-purple group-hover:text-white transition-colors">G{g.id}</span>
+                      <span className="text-[10px] font-black text-xiphos-muted uppercase tracking-widest group-hover:text-white transition-colors">{g.name}</span>
                     </div>
-                    <span className={`font-bold tracking-widest flex items-center ${
-                      g.status === "PASS" ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"
-                    }`}>
-                      {g.status === "PASS" ? "VERIFIED" : "BLOCKED"}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-xiphos-emerald animate-pulse"></span>
+                      <span className={`text-[10px] font-black tracking-widest flex items-center ${
+                        g.status === "PASS" ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"
+                      }`}>
+                        {g.status === "PASS" ? "VERIFIED" : "BLOCKED"}
+                      </span>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -165,37 +205,64 @@ export default function CenterPanel() {
       </div>
 
       {/* 2. TRADE LIFECYCLE TRACKER */}
-      <div className="glass-panel p-5 shrink-0">
-        <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest block mb-4">
-          XIPHOS AUTOMATED PIPELINE
+      <div className="glass-panel p-5 shrink-0 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-xiphos-purple/5 via-transparent to-xiphos-cyan/5 opacity-50 mix-blend-overlay"></div>
+        
+        <span className="text-[10px] text-xiphos-muted font-black uppercase tracking-widest block mb-4 relative z-10 flex items-center gap-2">
+          <GitCommit className="w-4 h-4 text-xiphos-purple" />
+          XIPHOS AUTOMATED LIFECYCLE PIPELINE
         </span>
 
-        <div className="flex items-center justify-between text-sm font-bold tracking-wider">
-          {lifecycleSteps.map((step) => {
+        <div className="flex items-center justify-between text-sm font-bold tracking-wider relative z-10">
+          {lifecycleSteps.map((step, i) => {
             const isCompleted = step.status === "COMPLETED";
             const isActive = step.status === "ACTIVE";
 
-            let classes = "border-[rgba(255,255,255,0.1)] text-xiphos-muted bg-[rgba(11,15,23,0.5)]";
+            let classes = "border-[rgba(255,255,255,0.1)] text-xiphos-muted bg-black/40";
+            let lineClass = "bg-[rgba(255,255,255,0.1)]";
             if (isCompleted) {
-              classes = "border-xiphos-cyan/50 text-xiphos-cyan bg-xiphos-cyan/10 glow-cyan shadow-[0_0_10px_rgba(76,201,240,0.2)]";
+              classes = "border-xiphos-cyan/50 text-xiphos-cyan bg-xiphos-cyan/10 glow-cyan shadow-[0_0_15px_rgba(76,201,240,0.2)]";
+              lineClass = "bg-xiphos-cyan shadow-[0_0_10px_rgba(76,201,240,0.5)]";
             } else if (isActive) {
-              classes = "border-xiphos-purple/50 text-white bg-xiphos-purple/20 glow-purple shadow-[0_0_15px_rgba(139,92,246,0.3)] scale-105";
+              classes = "border-xiphos-purple text-white bg-xiphos-purple/20 glow-white shadow-[0_0_20px_rgba(139,92,246,0.4)] scale-105";
+              lineClass = "bg-gradient-to-r from-xiphos-cyan to-xiphos-purple";
             }
 
             return (
               <React.Fragment key={step.label}>
-                <div className="flex flex-col items-center transition-all duration-300">
-                  <span className={`px-4 py-2 rounded-lg border ${classes}`}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="flex flex-col items-center group/step relative"
+                >
+                  {isActive && (
+                    <motion.div 
+                      layoutId="activeGlow"
+                      className="absolute inset-0 bg-xiphos-purple/30 blur-xl rounded-full"
+                      transition={{ duration: 0.5 }}
+                    />
+                  )}
+                  <span className={`px-4 py-2 rounded-md border text-[10px] font-black uppercase tracking-widest backdrop-blur-md transition-all duration-300 relative z-10 ${classes}`}>
                     {step.label}
                   </span>
-                </div>
+                  <span className="text-[8px] text-xiphos-muted mt-2 tracking-widest uppercase font-bold absolute -bottom-5 opacity-0 group-hover/step:opacity-100 transition-opacity">
+                    {step.desc}
+                  </span>
+                </motion.div>
                 
                 {step.label !== "CLOSED" && (
-                  <span className={`text-lg font-bold ${
-                    isCompleted ? "text-xiphos-cyan glow-cyan" : "text-[rgba(255,255,255,0.1)]"
-                  }`}>
-                    ➔
-                  </span>
+                  <div className="flex-1 h-px mx-4 relative flex items-center justify-center">
+                    <div className={`absolute inset-0 w-full h-[1px] ${lineClass}`}></div>
+                    {isCompleted && (
+                      <motion.div 
+                        initial={{ x: "-100%" }}
+                        animate={{ x: "100%" }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear", delay: i * 0.5 }}
+                        className="h-[2px] w-8 bg-white absolute glow-white blur-[1px]"
+                      />
+                    )}
+                  </div>
                 )}
               </React.Fragment>
             );

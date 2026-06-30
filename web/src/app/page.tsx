@@ -21,6 +21,7 @@ import AdaptationEngineView from "../components/AdaptationEngineView";
 import MonitoringView from "../components/MonitoringView";
 import OracleView from "../components/OracleView";
 import { useTradingStore } from "../store/useTradingStore";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const { connectWebSocket } = useTradingStore();
@@ -43,50 +44,65 @@ export default function Home() {
         <Header />
 
         {/* CORE COCKPIT PANEL LAYOUT */}
-        {activeTab === "DASHBOARD" ? (
-          <main className="flex-1 min-h-0 p-6 grid grid-cols-12 gap-6 overflow-hidden">
-            {/* Column 1: Signal Decisions (3/12 width) */}
-            <div className="col-span-3 flex flex-col gap-6 overflow-hidden h-full">
-              <div className="flex-[0.40] shrink-0 overflow-hidden">
-                <DecisionCards />
+        <AnimatePresence mode="wait">
+          {activeTab === "DASHBOARD" ? (
+            <motion.main 
+              key="dashboard"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 min-h-0 p-6 grid grid-cols-12 gap-6 overflow-hidden"
+            >
+              {/* Column 1: Signal Decisions (3/12 width) */}
+              <div className="col-span-3 flex flex-col gap-6 overflow-hidden h-full">
+                <div className="flex-[0.40] shrink-0 overflow-hidden">
+                  <DecisionCards />
+                </div>
+                <div className="flex-[0.60] min-h-0 overflow-hidden">
+                  <DecisionFeed />
+                </div>
               </div>
-              <div className="flex-[0.60] min-h-0 overflow-hidden">
-                <DecisionFeed />
-              </div>
-            </div>
 
-            {/* Column 2: Center Signal Command View (6/12 width) */}
-            <div className="col-span-6 flex flex-col gap-6 overflow-hidden h-full">
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <CenterPanel />
+              {/* Column 2: Center Signal Command View (6/12 width) */}
+              <div className="col-span-6 flex flex-col gap-6 overflow-hidden h-full">
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <CenterPanel />
+                </div>
               </div>
-            </div>
 
-            {/* Column 3: Vincent AI Chat (3/12 width) */}
-            <div className="col-span-3 flex flex-col gap-6 overflow-hidden h-full">
-              <div className="flex-1 overflow-hidden">
-                <ChatPanel />
+              {/* Column 3: Vincent AI Chat (3/12 width) */}
+              <div className="col-span-3 flex flex-col gap-6 overflow-hidden h-full">
+                <div className="flex-1 overflow-hidden">
+                  <ChatPanel />
+                </div>
               </div>
-            </div>
-
-          </main>
-        ) : (
-          <main className="flex-1 min-h-0 p-6 overflow-y-auto custom-scrollbar w-full h-full">
-            {activeTab === "RISK_MANAGER" && <RiskManagerView />}
-            {activeTab === "TRADE_MANAGER" && <TradeManagerView />}
-            {activeTab === "SETTINGS" && <SettingsView />}
-            {activeTab === "ANALYTICS" && <AnalyticsView />}
-            {activeTab === "MARKETS" && <MarketsView />}
-            {activeTab === "POSITIONS" && <PositionsView />}
-            {activeTab === "ORDERS" && <OrdersView />}
-            {activeTab === "REPORTS" && <ReportsView />}
-            {activeTab === "PORTFOLIO" && <PortfolioView />}
-            {activeTab === "JOURNAL" && <JournalView />}
-            {activeTab === "ADAPTATION" && <AdaptationEngineView />}
-            {activeTab === "MONITORING" && <MonitoringView />}
-            {activeTab === "ORACLE" && <OracleView />}
-          </main>
-        )}
+            </motion.main>
+          ) : (
+            <motion.main 
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 min-h-0 p-6 overflow-y-auto custom-scrollbar w-full h-full"
+            >
+              {activeTab === "RISK_MANAGER" && <RiskManagerView />}
+              {activeTab === "TRADE_MANAGER" && <TradeManagerView />}
+              {activeTab === "SETTINGS" && <SettingsView />}
+              {activeTab === "ANALYTICS" && <AnalyticsView />}
+              {activeTab === "MARKETS" && <MarketsView />}
+              {activeTab === "POSITIONS" && <PositionsView />}
+              {activeTab === "ORDERS" && <OrdersView />}
+              {activeTab === "REPORTS" && <ReportsView />}
+              {activeTab === "PORTFOLIO" && <PortfolioView />}
+              {activeTab === "JOURNAL" && <JournalView />}
+              {activeTab === "ADAPTATION" && <AdaptationEngineView />}
+              {activeTab === "MONITORING" && <MonitoringView />}
+              {activeTab === "ORACLE" && <OracleView />}
+            </motion.main>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

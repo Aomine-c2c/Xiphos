@@ -112,14 +112,14 @@ export default function AssetDeepDive({ asset }: { asset: MarketWatchItem }) {
                      <span>Smart Money</span>
                      <span className="text-[8px] opacity-50">Sell Side</span>
                    </span>
-                   <span className="text-sm font-black text-white">{asset.smart_money_zones[1] || "-"}</span>
+                   <span className="text-sm font-black text-white">{asset.smart_money_zones?.[1] || "-"}</span>
                  </div>
                  <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] p-2 rounded-md">
                    <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest flex flex-col">
                      <span>Smart Money</span>
                      <span className="text-[8px] opacity-50">Buy Side</span>
                    </span>
-                   <span className="text-sm font-black text-white">{asset.smart_money_zones[0] || "-"}</span>
+                   <span className="text-sm font-black text-white">{asset.smart_money_zones?.[0] || "-"}</span>
                  </div>
                  <div className="flex justify-between items-center bg-xiphos-emerald/10 border border-xiphos-emerald/20 p-2 rounded-md">
                    <span className="text-[10px] text-xiphos-emerald font-bold uppercase tracking-widest">Support</span>

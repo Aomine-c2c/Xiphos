@@ -138,10 +138,10 @@ export default function PortfolioView() {
         
         {/* 2. TOP METRICS ROW */}
         <div className="grid grid-cols-7 gap-2 shrink-0">
-          <MetricCard label="Current Balance" value={`$${account.balance.toLocaleString(undefined, {minimumFractionDigits: 2})}`} />
-          <MetricCard label="Equity" value={`$${account.equity.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-cyan glow-cyan" />
-          <MetricCard label="Margin" value={`$${account.margin.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-purple glow-purple" />
-          <MetricCard label="Free Margin" value={`$${account.margin_free.toLocaleString(undefined, {minimumFractionDigits: 2})}`} colorClass="text-xiphos-emerald glow-emerald" />
+          <MetricCard label="Current Balance" value={`$${account?.balance?.toLocaleString(undefined, {minimumFractionDigits: 2}) || "0.00"}`} />
+          <MetricCard label="Equity" value={`$${account?.equity?.toLocaleString(undefined, {minimumFractionDigits: 2}) || "0.00"}`} colorClass="text-xiphos-cyan glow-cyan" />
+          <MetricCard label="Margin" value={`$${account?.margin?.toLocaleString(undefined, {minimumFractionDigits: 2}) || "0.00"}`} colorClass="text-xiphos-purple glow-purple" />
+          <MetricCard label="Free Margin" value={`$${account?.margin_free?.toLocaleString(undefined, {minimumFractionDigits: 2}) || "0.00"}`} colorClass="text-xiphos-emerald glow-emerald" />
           <MetricCard label="Max Drawdown" value={`-${performanceMetrics?.max_drawdown.toFixed(2)}%`} colorClass="text-xiphos-crimson glow-crimson" />
           <MetricCard label="ROI (YTD)" value={`+${roi.toFixed(2)}%`} colorClass="text-xiphos-emerald glow-emerald" />
           <GlassCard className="p-2 flex flex-col justify-center bg-xiphos-purple/10 border-xiphos-purple/30 group hover:bg-xiphos-purple/20 transition-colors">

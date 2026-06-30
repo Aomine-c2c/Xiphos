@@ -241,50 +241,55 @@ export default function MonitoringView() {
           {/* RIGHT: PERFORMANCE TIMELINE (30%) */}
           <div className="w-full xl:w-1/3 flex flex-col min-h-0 bg-black/20 p-1 gap-1">
             
-            <h3 className="text-xs font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-2 border-b border-white/5 pb-1">
-              <Activity className="w-3 h-3 text-xiphos-emerald" /> Hardware Telemetry
+            <h3 className="text-[10px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-2 mb-1">
+              <Activity className="w-4 h-4 text-xiphos-emerald glow-emerald" /> INSTITUTIONAL HARDWARE TELEMETRY
             </h3>
 
             {/* Health Gauges */}
-            <div className="grid grid-cols-2 gap-2 shrink-0">
-              <GlassCard className="p-3 flex flex-col gap-1">
-                <span className="text-[10px] text-xiphos-muted font-bold flex items-center gap-1"><Cpu className="w-3 h-3 text-xiphos-cyan"/> CPU CORE</span>
-                <span className="text-lg font-black text-white">{currentMetrics.cpu.toFixed(1)}%</span>
+            <div className="grid grid-cols-2 gap-2 shrink-0 relative z-10">
+              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-xiphos-cyan/10 rounded-full blur-xl group-hover:bg-xiphos-cyan/20 transition-all"></div>
+                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><Cpu className="w-3 h-3 text-xiphos-cyan glow-cyan"/> CPU CORE</span>
+                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.cpu.toFixed(1)}%</span>
               </GlassCard>
-              <GlassCard className="p-3 flex flex-col gap-1">
-                <span className="text-[10px] text-xiphos-muted font-bold flex items-center gap-1"><Database className="w-3 h-3 text-xiphos-purple"/> MEMORY</span>
-                <span className="text-lg font-black text-white">{currentMetrics.ram.toFixed(1)}%</span>
+              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-xiphos-purple/10 rounded-full blur-xl group-hover:bg-xiphos-purple/20 transition-all"></div>
+                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><Database className="w-3 h-3 text-xiphos-purple glow-purple"/> MEMORY</span>
+                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.ram.toFixed(1)}%</span>
               </GlassCard>
-              <GlassCard className="p-3 flex flex-col gap-1">
-                <span className="text-[10px] text-xiphos-muted font-bold flex items-center gap-1"><Gpu className="w-3 h-3 text-xiphos-gold"/> GPU ACCEL</span>
-                <span className="text-lg font-black text-white">{currentMetrics.gpu.toFixed(1)}%</span>
+              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-xiphos-gold/10 rounded-full blur-xl group-hover:bg-xiphos-gold/20 transition-all"></div>
+                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><Gpu className="w-3 h-3 text-xiphos-gold glow-gold"/> GPU ACCEL</span>
+                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.gpu.toFixed(1)}%</span>
               </GlassCard>
-              <GlassCard className="p-3 flex flex-col gap-1">
-                <span className="text-[10px] text-xiphos-muted font-bold flex items-center gap-1"><HardDrive className="w-3 h-3 text-white"/> DISK I/O</span>
-                <span className="text-lg font-black text-white">{currentMetrics.disk.toFixed(1)} MB/s</span>
+              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-full blur-xl group-hover:bg-white/10 transition-all"></div>
+                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><HardDrive className="w-3 h-3 text-white"/> DISK I/O</span>
+                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.disk.toFixed(1)} MB/s</span>
               </GlassCard>
             </div>
 
             {/* App Health */}
-            <div className="flex flex-col gap-3 shrink-0 mt-2">
-              <div className="flex justify-between items-center bg-black/40 border border-white/10 p-3 rounded">
-                <span className="text-xs font-bold text-xiphos-muted flex items-center gap-2"><Zap className="w-4 h-4 text-xiphos-gold"/> Broker Latency</span>
+            <div className="flex flex-col gap-2 shrink-0 mt-3 relative z-10">
+              <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] p-3 rounded-lg backdrop-blur-sm">
+                <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-muted flex items-center gap-2"><Zap className="w-4 h-4 text-xiphos-gold glow-gold"/> BROKER LATENCY</span>
                 <span className="text-sm font-black text-xiphos-emerald glow-emerald">{currentMetrics.latency.toFixed(1)} ms</span>
               </div>
-              <div className="flex justify-between items-center bg-black/40 border border-white/10 p-3 rounded">
-                <span className="text-xs font-bold text-xiphos-muted flex items-center gap-2"><Maximize className="w-4 h-4 text-xiphos-cyan"/> UI FPS</span>
-                <span className="text-sm font-black text-white">{currentMetrics.fps.toFixed(0)} FPS</span>
+              <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] p-3 rounded-lg backdrop-blur-sm">
+                <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-muted flex items-center gap-2"><Maximize className="w-4 h-4 text-xiphos-cyan glow-cyan"/> UI RENDER FPS</span>
+                <span className="text-sm font-black text-white drop-shadow-md">{currentMetrics.fps.toFixed(0)} FPS</span>
               </div>
-              <div className="flex justify-between items-center bg-black/40 border border-white/10 p-3 rounded">
-                <span className="text-xs font-bold text-xiphos-muted flex items-center gap-2"><Clock className="w-4 h-4 text-xiphos-purple"/> DB Health</span>
-                <StatusBadge label="SYNCED" variant="success" />
+              <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] p-3 rounded-lg backdrop-blur-sm">
+                <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-muted flex items-center gap-2"><Clock className="w-4 h-4 text-xiphos-purple glow-purple"/> DB SYNCHRONIZATION</span>
+                <StatusBadge label="VERIFIED" variant="success" />
               </div>
-              <div className="flex justify-between items-center bg-black/40 border border-xiphos-gold/30 p-3 rounded glow-gold-subtle">
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-xiphos-gold flex items-center gap-2"><Zap className="w-4 h-4"/> Mahoraga Trigger</span>
-                  <span className="text-[9px] text-xiphos-gold/50 uppercase mt-1">{mahoragaInfo.phenomenon.replaceAll('_', ' ')}</span>
+              <div className="flex justify-between items-center bg-xiphos-gold/5 border border-xiphos-gold/30 p-3 rounded-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-xiphos-gold/10 rounded-full blur-2xl"></div>
+                <div className="flex flex-col relative z-10">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-gold glow-gold flex items-center gap-2"><Zap className="w-4 h-4"/> ADAPTATION ENGINE</span>
+                  <span className="text-[8px] font-black text-xiphos-gold/60 uppercase tracking-widest mt-1">{mahoragaInfo.phenomenon.replaceAll('_', ' ')}</span>
                 </div>
-                <span className="text-xl font-black text-xiphos-gold">{mahoragaInfo.ema} EMA</span>
+                <span className="text-2xl font-black text-xiphos-gold glow-gold relative z-10">{mahoragaInfo.ema} <span className="text-xs">EMA</span></span>
               </div>
             </div>
 
