@@ -30,7 +30,7 @@ export default function AnalyticsView() {
   const [metrics, setMetrics] = useState({ sharpe: 2.84, profitFactor: 3.45, winRate: 83.3, expectancy: 1.19, scalperProfit: 17.65, runnerProfit: 9.8 });
 
   const [page, setPage] = useState(0);
-  const itemsPerPage = 5;
+  const itemsPerPage = 12;
   const totalPages = Math.max(1, Math.ceil(history.length / itemsPerPage));
   const paginatedHistory = history.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
 
@@ -106,7 +106,7 @@ export default function AnalyticsView() {
   ];
 
   return (
-    <GlassPanel glowColor="purple" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300">
+    <GlassPanel glowColor="purple" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2 p-0 transition-all duration-300" noOverflowHidden>
         
       {/* Header */}
       <PageHeader
@@ -116,34 +116,34 @@ export default function AnalyticsView() {
       />
 
       {/* Split: 3 + 9 */}
-      <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden p-6 gap-6 pt-0">
+      <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden px-4 pb-4 gap-2 pt-0">
 
           {/* LEFT: KPI cards */}
-          <div className="col-span-3 flex flex-col gap-4 overflow-hidden">
-            <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest block border-b border-[rgba(255,255,255,0.05)] pb-2">
+          <div className="col-span-3 flex flex-col gap-2 overflow-hidden">
+            <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block border-b border-[rgba(255,255,255,0.05)] pb-1">
               PERFORMANCE KPIs
             </span>
 
             {kpis.map(kpi => (
-              <GlassCard key={kpi.label} className="p-4 flex items-center justify-between">
+              <GlassCard key={kpi.label} className="p-3 shrink-0 flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-xiphos-muted font-bold uppercase tracking-widest mb-1">{kpi.label}</div>
-                  <div className={`text-4xl font-black leading-none ${kpi.colorClass}`}>{kpi.value}</div>
+                  <div className="text-[9px] text-xiphos-muted font-bold uppercase tracking-widest mb-1">{kpi.label}</div>
+                  <div className={`text-2xl font-black leading-none ${kpi.colorClass}`}>{kpi.value}</div>
                 </div>
               </GlassCard>
             ))}
 
             {/* Strategy profit split */}
-            <div className="border-t border-[rgba(255,255,255,0.05)] pt-4 mt-2">
-              <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest block mb-4">STRATEGY SPLIT</span>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm font-bold text-xiphos-muted">
+            <div className="border-t border-[rgba(255,255,255,0.05)] pt-2 mt-1 shrink-0">
+              <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block mb-2">STRATEGY SPLIT</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-[10px] font-bold text-xiphos-muted">
                   <span>SCALPER (A)</span>
                   <span className="text-xiphos-cyan glow-cyan font-black">{scalperPct}%</span>
                 </div>
-                <div className="flex justify-between text-sm font-bold text-xiphos-muted">
+                <div className="flex justify-between text-[10px] font-bold text-xiphos-muted">
                   <span>RUNNER (B)</span>
-                  <div className="text-xs text-xiphos-muted font-bold uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <div className="text-[9px] text-xiphos-muted font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
                     WIN RATE
                     <div className="h-1.5 w-16 bg-white/5 rounded-full overflow-hidden">
                       <div className="h-full bg-xiphos-cyan glow-cyan" style={{ width: `${metrics.winRate}%` }}></div>
@@ -154,8 +154,8 @@ export default function AnalyticsView() {
               </div>
             </div>
 
-            <div className="border-t border-[rgba(255,255,255,0.05)] pt-4 mt-2">
-              <div className="space-y-2 text-sm text-xiphos-muted font-bold tracking-widest">
+            <div className="border-t border-[rgba(255,255,255,0.05)] pt-2 mt-1 shrink-0">
+              <div className="space-y-1 text-[10px] text-xiphos-muted font-bold tracking-widest">
                 <div className="flex justify-between">
                   <span>EXPECTANCY</span>
                   <span className="text-white">${metrics.expectancy.toFixed(2)}/trade</span>
@@ -169,12 +169,12 @@ export default function AnalyticsView() {
           </div>
 
           {/* RIGHT: History Log (7/12) */}
-          <div className="col-span-9 flex flex-col min-h-0 shrink-0 gap-6">
+          <div className="col-span-9 flex flex-col min-h-0 shrink-0 gap-2">
             {/* Table Header */}
-            <GlassCard className="p-5 shrink-0 h-[220px] flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest">HISTORICAL EQUITY GROWTH CURVE</span>
-                <span className="text-xiphos-emerald glow-emerald font-black text-xl">$127.45 USD</span>
+            <GlassCard className="p-3 shrink-0 h-[140px] flex flex-col">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest">HISTORICAL EQUITY GROWTH CURVE</span>
+                <span className="text-xiphos-emerald glow-emerald font-black text-sm">$127.45 USD</span>
               </div>
               <div className="flex-1 min-h-0">
                 {drawEquityChart()}
@@ -183,48 +183,48 @@ export default function AnalyticsView() {
 
             {/* Trade history table */}
             <GlassCard className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center justify-between p-4 border-b border-[rgba(255,255,255,0.05)] shrink-0">
-                <span className="text-sm text-xiphos-muted font-bold uppercase tracking-widest">
+              <div className="flex items-center justify-between p-2 border-b border-[rgba(255,255,255,0.05)] shrink-0">
+                <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest">
                   TRADE HISTORY LOG
                 </span>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <button title="Previous Page" onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0} className="text-xiphos-muted hover:text-white disabled:opacity-30 disabled:hover:text-xiphos-muted transition-colors">
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-white font-bold text-sm tracking-widest">{page + 1} / {totalPages}</span>
+                  <span className="text-white font-bold text-[10px] tracking-widest">{page + 1} / {totalPages}</span>
                   <button title="Next Page" onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} className="text-xiphos-muted hover:text-white disabled:opacity-30 disabled:hover:text-xiphos-muted transition-colors">
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
-              <div className="overflow-y-auto flex-1 min-h-0 custom-scrollbar p-2">
-                <table className="w-full text-left text-sm border-collapse font-bold">
+              <div className="overflow-hidden flex-1 min-h-0 p-1 flex flex-col">
+                <table className="w-full text-left text-[9px] border-collapse font-bold">
                   <thead>
-                    <tr className="text-xiphos-muted uppercase tracking-widest">
-                      <th className="p-3 font-bold">TICKET</th>
-                      <th className="p-3 font-bold">SYMBOL</th>
-                      <th className="p-3 font-bold">DIR</th>
-                      <th className="p-3 font-bold text-right">LOTS</th>
-                      <th className="p-3 font-bold text-right">PROFIT</th>
-                      <th className="p-3 font-bold text-right">CLOSE TIME</th>
+                    <tr className="text-xiphos-muted uppercase tracking-widest text-[9px]">
+                      <th className="p-2 font-bold">TICKET</th>
+                      <th className="p-2 font-bold">SYMBOL</th>
+                      <th className="p-2 font-bold">DIR</th>
+                      <th className="p-2 font-bold text-right">LOTS</th>
+                      <th className="p-2 font-bold text-right">PROFIT</th>
+                      <th className="p-2 font-bold text-right">CLOSE TIME</th>
                     </tr>
                   </thead>
                   <tbody>
                     {paginatedHistory.map((t) => (
                         <tr key={t.ticket} className="border-b border-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors">
-                          <td className="p-3 text-xiphos-muted">#{t.ticket}</td>
-                          <td className="p-3 text-white">{t.symbol}</td>
-                          <td className="p-3">
+                          <td className="p-1.5 px-2 text-xiphos-muted">#{t.ticket}</td>
+                          <td className="p-1.5 px-2 text-white">{t.symbol}</td>
+                          <td className="p-1.5 px-2">
                             <StatusBadge
                               label={t.type}
                               variant={t.type === "BUY" ? "success" : "danger"}
                             />
                           </td>
-                          <td className="p-3 text-white text-right">{t.volume.toFixed(2)}</td>
-                          <td className={`p-3 text-right ${t.profit >= 0 ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
+                          <td className="p-1.5 px-2 text-white text-right">{t.volume.toFixed(2)}</td>
+                          <td className={`p-1.5 px-2 text-right ${t.profit >= 0 ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
                           {t.profit >= 0 ? "+" : ""}${t.profit.toFixed(2)}
                         </td>
-                        <td className="p-3 text-right text-xiphos-muted">{t.close_time}</td>
+                        <td className="p-1.5 px-2 text-right text-xiphos-muted">{t.close_time}</td>
                       </tr>
                     ))}
                   </tbody>

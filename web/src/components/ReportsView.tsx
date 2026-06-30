@@ -86,16 +86,16 @@ export default function ReportsView() {
   };
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300">
-      <div className="glass-panel flex flex-col overflow-hidden flex-1 min-h-0 relative">
+    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2 p-0 transition-all duration-300">
+      <div className="glass-panel flex flex-col overflow-hidden flex-1 min-h-0 relative rounded-none border-0">
 
         {/* Subtle Background Glow */}
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-xiphos-cyan opacity-5 blur-[120px] rounded-full pointer-events-none"></div>
 
         {/* Header */}
-        <div className="p-4 border-b border-white/5 flex items-center bg-black/20 shrink-0 z-10">
-          <span className="text-2xl font-black text-xiphos-cyan uppercase tracking-widest flex items-center gap-2 glow-cyan">
-            <FileText className="h-5 w-5" />
+        <div className="p-2 border-b border-white/5 flex items-center bg-black/20 shrink-0 z-10">
+          <span className="text-[10px] font-black text-xiphos-cyan uppercase tracking-widest flex items-center gap-1 glow-cyan">
+            <FileText className="h-4 w-4" />
             XIPHOS PERFORMANCE AUDIT & COMPLIANCE REPORTS
           </span>
         </div>
@@ -104,41 +104,41 @@ export default function ReportsView() {
         <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden z-10">
 
           {/* LEFT: KPIs */}
-          <div className="col-span-3 border-r border-white/5 p-5 flex flex-col gap-6 overflow-hidden bg-black/20">
-            <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-2">
+          <div className="col-span-3 border-r border-white/5 p-4 flex flex-col gap-2 overflow-hidden bg-black/20">
+            <span className="text-[10px] text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-1">
               LIFETIME METRICS
             </span>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               {kpis.map((kpi, i) => (
                 <motion.div 
                   key={kpi.label} 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: i * 0.1 }}
-                  className="glass-card p-4 hover:border-white/20 transition-all cursor-default group"
+                  className="glass-card p-3 hover:border-white/20 transition-all cursor-default group shrink-0"
                 >
-                  <div className="text-xs text-xiphos-muted font-black uppercase tracking-widest mb-1 group-hover:text-white transition-colors">{kpi.label}</div>
-                  <div className={`text-4xl font-black leading-none mb-2 ${kpi.colorClass}`}>{kpi.value}</div>
-                  <div className="text-[10px] text-xiphos-muted tracking-widest uppercase">{kpi.sub}</div>
+                  <div className="text-[9px] text-xiphos-muted font-black uppercase tracking-widest mb-1 group-hover:text-white transition-colors">{kpi.label}</div>
+                  <div className={`text-2xl font-black leading-none mb-1 ${kpi.colorClass}`}>{kpi.value}</div>
+                  <div className="text-[8px] text-xiphos-muted tracking-widest uppercase">{kpi.sub}</div>
                 </motion.div>
               ))}
             </div>
 
-            <div className="mt-auto">
-              <button className="w-full py-3 bg-xiphos-cyan/20 text-xiphos-cyan border border-xiphos-cyan/50 hover:bg-xiphos-cyan hover:text-black font-black uppercase tracking-widest rounded transition-all flex justify-center items-center gap-2">
-                <Download className="w-4 h-4" /> EXPORT ALL DATA
+            <div className="mt-auto pt-2 shrink-0">
+              <button className="w-full py-2 bg-xiphos-cyan/20 text-xiphos-cyan border border-xiphos-cyan/50 hover:bg-xiphos-cyan hover:text-black text-[10px] font-black uppercase tracking-widest rounded transition-all flex justify-center items-center gap-1">
+                <Download className="w-3 h-3" /> EXPORT ALL DATA
               </button>
             </div>
           </div>
 
           {/* RIGHT: Chart + Reports Table */}
-          <div className="col-span-9 p-5 flex flex-col gap-6 overflow-hidden">
+          <div className="col-span-9 p-4 flex flex-col gap-2 overflow-hidden">
 
             {/* Main Equity Chart */}
-            <div className="h-64 shrink-0 glass-card flex flex-col p-4 relative group hover:border-xiphos-cyan/30 transition-all">
-              <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider border-b border-white/5 pb-2 mb-2 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-xiphos-cyan" />
+            <div className="h-40 shrink-0 glass-card flex flex-col p-3 relative group hover:border-xiphos-cyan/30 transition-all">
+              <span className="text-[10px] text-xiphos-muted font-black uppercase tracking-wider border-b border-white/5 pb-1 mb-1 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3 text-xiphos-cyan" />
                 CONSOLIDATED EQUITY GROWTH (YTD)
               </span>
               <div className="flex-1 min-h-0 w-full pt-2">
@@ -147,25 +147,25 @@ export default function ReportsView() {
             </div>
 
             {/* Generated Reports Archive */}
-            <div className="flex-1 min-h-0 flex flex-col glass-card border border-white/5">
-              <div className="flex justify-between items-center p-3 border-b border-white/5 bg-black/20">
-                <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider">
+            <div className="flex-1 min-h-0 flex flex-col glass-card border border-white/5 overflow-hidden">
+              <div className="flex justify-between items-center p-2 border-b border-white/5 bg-black/20 shrink-0">
+                <span className="text-[10px] text-xiphos-muted font-black uppercase tracking-wider">
                   SECURE DOCUMENT ARCHIVE
                 </span>
-                <span className="text-xs text-xiphos-muted tracking-widest bg-black/40 px-2 py-0.5 rounded">
+                <span className="text-[8px] text-xiphos-muted tracking-widest bg-black/40 px-2 py-0.5 rounded">
                   4 DOCUMENTS
                 </span>
               </div>
-              <div className="flex-1 overflow-auto">
-                <table className="w-full text-left text-sm border-collapse whitespace-nowrap">
+              <div className="flex-1 overflow-auto custom-scrollbar">
+                <table className="w-full text-left text-[9px] border-collapse whitespace-nowrap">
                   <thead className="bg-black/40 sticky top-0 z-10 backdrop-blur-md">
-                    <tr className="text-xiphos-muted text-[11px] tracking-widest uppercase">
-                      <th className="p-3 pl-4 font-black">ID</th>
-                      <th className="p-3 font-black">TYPE</th>
-                      <th className="p-3 font-black">DOCUMENT NAME</th>
-                      <th className="p-3 font-black">DATE</th>
-                      <th className="p-3 font-black text-right">SIZE</th>
-                      <th className="p-3 pr-4 text-right font-black">ACTION</th>
+                    <tr className="text-xiphos-muted text-[9px] tracking-widest uppercase">
+                      <th className="p-2 pl-3 font-black">ID</th>
+                      <th className="p-2 font-black">TYPE</th>
+                      <th className="p-2 font-black">DOCUMENT NAME</th>
+                      <th className="p-2 font-black">DATE</th>
+                      <th className="p-2 font-black text-right">SIZE</th>
+                      <th className="p-2 pr-3 text-right font-black">ACTION</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -177,14 +177,14 @@ export default function ReportsView() {
                         transition={{ duration: 0.3, delay: 0.2 + (i * 0.05) }}
                         className="border-b border-white/5 hover:bg-white/5 transition-colors group cursor-pointer"
                       >
-                        <td className="p-3 pl-4 text-xiphos-muted font-bold">{r.id}</td>
-                        <td className="p-3 text-[11px] font-black tracking-widest text-xiphos-purple">{r.type}</td>
-                        <td className="p-3 font-mono text-white group-hover:text-xiphos-cyan transition-colors">{r.name}</td>
-                        <td className="p-3 font-mono text-xiphos-muted">{r.date}</td>
-                        <td className="p-3 text-right text-xiphos-muted">{r.size}</td>
-                        <td className="p-3 pr-4 text-right">
-                          <button title="Download report" aria-label="Download report" className="opacity-0 group-hover:opacity-100 p-1.5 text-xiphos-muted hover:text-white hover:bg-white/10 rounded transition-all">
-                            <Download className="w-4 h-4" />
+                        <td className="p-2 pl-3 text-xiphos-muted font-bold">{r.id}</td>
+                        <td className="p-2 text-[8px] font-black tracking-widest text-xiphos-purple">{r.type}</td>
+                        <td className="p-2 font-mono text-white group-hover:text-xiphos-cyan transition-colors">{r.name}</td>
+                        <td className="p-2 font-mono text-xiphos-muted">{r.date}</td>
+                        <td className="p-2 text-right text-xiphos-muted">{r.size}</td>
+                        <td className="p-2 pr-3 text-right">
+                          <button title="Download report" aria-label="Download report" className="opacity-0 group-hover:opacity-100 p-1 text-xiphos-muted hover:text-white hover:bg-white/10 rounded transition-all">
+                            <Download className="w-3 h-3" />
                           </button>
                         </td>
                       </motion.tr>
