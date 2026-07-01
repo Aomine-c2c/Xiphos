@@ -5,6 +5,7 @@ import time
 from sqlalchemy import create_engine
 from core.mahoraga import mahoraga_engine
 from core.config import settings as config_settings
+from tools.backtest_utils import update_existing_trades
 from indicators.moving_averages import calculate_atr, calculate_rsi, calculate_adx, calculate_bollinger_bands
 from strategies.trend_following import evaluate_signal
 
@@ -12,7 +13,7 @@ def load_settings():
     with open('config/settings.yaml', 'r') as f:
         return yaml.safe_load(f)
 
-def run_backtest(): # NOSONAR
+def run_backtest(): # NOSONAR # noqa: C901
     settings = load_settings()
     
     if not mt5.initialize():
@@ -93,47 +94,7 @@ def run_backtest(): # NOSONAR
         # 1. Update existing trades using M1 data up to this M30 candle
         # We process the 30 minutes of M1 data between the previous M30 cycle and this one.
         if i > 0:
-            trades_to_remove = []
-            for t in open_trades:
-                sym = t['symbol']
-                df30 = m30_data[sym]
-                if current_time not in df30.index:
-                    continue
-                
-                row = df30.loc[current_time]
-                
-                # Check SL using M30 High/Low
-                if t['type'] == 'BUY' and row['low'] <= t['sl']:
-                    t['exit_price'] = t['sl']
-                    t['exit_time'] = current_time
-                    t['profit'] = (t['exit_price'] - t['entry_price']) / t['point'] * t['volume'] * 100000
-                    t['status'] = 'CLOSED_SL'
-                    trades_to_remove.append(t)
-                    continue
-                elif t['type'] == 'SELL' and row['high'] >= t['sl']:
-                    t['exit_price'] = t['sl']
-                    t['exit_time'] = current_time
-                    t['profit'] = (t['entry_price'] - t['exit_price']) / t['point'] * t['volume'] * 100000
-                    t['status'] = 'CLOSED_SL'
-                    trades_to_remove.append(t)
-                    continue
-                    
-                # Update MFE/MAE
-                if t['type'] == 'BUY':
-                    curr_profit = (row['high'] - t['entry_price']) / t['point'] * t['volume'] * 100000
-                    t['mfe'] = max(t['mfe'], curr_profit)
-                    curr_loss = (row['low'] - t['entry_price']) / t['point'] * t['volume'] * 100000
-                    t['mae'] = min(t['mae'], curr_loss)
-                else:
-                    curr_profit = (t['entry_price'] - row['low']) / t['point'] * t['volume'] * 100000
-                    t['mfe'] = max(t['mfe'], curr_profit)
-                    curr_loss = (t['entry_price'] - row['high']) / t['point'] * t['volume'] * 100000
-                    t['mae'] = min(t['mae'], curr_loss)
-                
-            for tr in trades_to_remove:
-                if tr in open_trades:
-                    open_trades.remove(tr)
-                    trade_history.append(tr)
+            update_existing_trades(i, current_time, open_trades, m30_data, trade_history)
         
         # 2. Evaluate signals at current M30 candle
         # Group open trades by symbol and bucket

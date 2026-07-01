@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 "use client";
 
 import React, { useMemo } from "react";
@@ -216,7 +217,7 @@ export default function PortfolioView() {
             </div>
             <div className="flex-1 overflow-hidden min-h-0">
               <div className="grid grid-cols-5 gap-1.5">
-                {calendarDays.map((day, i) => {
+                {calendarDays.map((day) => {
                   const isPos = day.return > 0;
                   const intensity = Math.min(1, Math.abs(day.return) / 2);
                   const bg = isPos ? `rgba(34, 197, 94, ${0.1 + intensity * 0.5})` : `rgba(239, 68, 68, ${0.1 + intensity * 0.5})`;
@@ -246,7 +247,7 @@ export default function PortfolioView() {
             </div>
             <div className="flex-1 overflow-hidden min-h-0">
               <div className="flex flex-col gap-1 justify-end h-full text-[9px] font-black">
-                {monthlyReturns.map((m, i) => {
+                {monthlyReturns.map((m) => {
                   const isPos = m.return > 0;
                   const intensity = Math.min(1, Math.abs(m.return) / 5);
                   const bg = isPos ? `rgba(34, 197, 94, ${0.2 + intensity * 0.8})` : `rgba(239, 68, 68, ${0.2 + intensity * 0.8})`;

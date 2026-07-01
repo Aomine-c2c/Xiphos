@@ -5,29 +5,34 @@ from core.llm import generate_oracle_rationale
 
 class OracleEngine:
     def __init__(self):
-        pass
+        pass # Engine is fully static/db-driven for now
         
     def _insert_decision(self, decision_type: str, query_text: str, data_core_event: str, 
                          data_core_details: str, mahoraga_reasoning: str, mahoraga_adjustment: str,
                          risk_check: str, risk_status: str, risk_details: str, 
                          xiphos_action: str, xiphos_latency: str):
+        from core.database import OracleDecision
         try:
-            with db.get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO oracle_decisions 
-                    (decision_type, query_text, data_core_event, data_core_details, 
-                     mahoraga_reasoning, mahoraga_adjustment, risk_check, risk_status, 
-                     risk_details, xiphos_action, xiphos_latency)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (decision_type, query_text, data_core_event, data_core_details,
-                      mahoraga_reasoning, mahoraga_adjustment, risk_check, risk_status,
-                      risk_details, xiphos_action, xiphos_latency))
+            with db.get_session() as session:
+                decision = OracleDecision(
+                    decision_type=decision_type,
+                    query_text=query_text,
+                    data_core_event=data_core_event,
+                    data_core_details=data_core_details,
+                    mahoraga_reasoning=mahoraga_reasoning,
+                    mahoraga_adjustment=mahoraga_adjustment,
+                    risk_check=risk_check,
+                    risk_status=risk_status,
+                    risk_details=risk_details,
+                    xiphos_action=xiphos_action,
+                    xiphos_latency=xiphos_latency
+                )
+                session.add(decision)
         except Exception as e:
             log.error(f"Oracle failed to record decision: {e}")
 
     def record_trade(self, symbol: str, direction: str, price: float, lot_size: float, phenomenon: str, exec_time_ms: float, ind_data: dict = None):
-        query_text = f"Why did we take Trade on {symbol} ({direction})?"
+        query_text = f"Why did we take Trade on {symbol} ({direction})? Volume: {lot_size}. Regime: {phenomenon}."
         
         # Call LLM to generate organic reasoning based on indicators
         llm_decision = generate_oracle_rationale(symbol, direction, price, ind_data or {})

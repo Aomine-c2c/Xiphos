@@ -39,11 +39,11 @@ class MT5Connection:
         return False
 
     def check_health(self):
-        # Quick check if terminal is responding
+        # Quick check if terminal is responding and connected to broker
         info = mt5.terminal_info()
-        if info is None:
+        if info is None or not info.connected:
             self.connected = False
-            log.warning("Terminal connection lost. Attempting reconnect...")
+            log.warning("Terminal connection lost or disconnected from broker. Attempting reconnect...")
             return self.connect()
         return True
 

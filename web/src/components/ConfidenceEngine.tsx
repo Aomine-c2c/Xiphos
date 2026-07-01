@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 "use client";
 
 import React from "react";
@@ -57,7 +58,7 @@ export default function ConfidenceEngine() {
               <circle cx="50" cy="50" r="38" stroke="#D4AF37" strokeWidth="1" className="opacity-50" />
               
               {/* 8 Handles */}
-              {[...Array(8)].map((_, i) => (
+              {[...new Array(8)].map((_, i) => (
                 <g key={i} transform={`rotate(${i * 45} 50 50)`}>
                   <line x1="50" y1="12" x2="50" y2="22" stroke="#D4AF37" strokeWidth="3" strokeLinecap="round" />
                   <circle cx="50" cy="10" r="3" fill="#D4AF37" />

@@ -1,0 +1,46 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV WINEARCH=win64
+ENV WINEDEBUG=-all
+ENV DISPLAY=:99
+
+# Install required Linux dependencies
+RUN dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        wine64 \
+        wine \
+        wine32 \
+        xvfb \
+        wget \
+        cabextract \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up wine environment
+RUN winecfg && sleep 5
+
+# Download and install Windows Python 3.10
+RUN wget -nv -O python-installer.exe "https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe" && \
+    wine python-installer.exe /quiet InstallAllUsers=1 PrependPath=1 && \
+    rm python-installer.exe
+
+WORKDIR /app
+
+# Copy application files
+COPY . .
+
+# Install dependencies using Wine Python
+RUN wine python -m pip install --upgrade pip && \
+    wine python -m pip install .
+
+# Create entrypoint script
+RUN echo '#!/bin/bash\n\
+Xvfb :99 -screen 0 1024x768x16 &\n\
+sleep 2\n\
+wine python worker_engine.py\n\
+' > /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh
+
+CMD ["/app/entrypoint.sh"]

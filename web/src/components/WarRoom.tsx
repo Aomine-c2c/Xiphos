@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 "use client";
 
 import React, { useState } from "react";
@@ -220,7 +221,7 @@ export default function WarRoom() {
         </div>
 
         {/* Separator */}
-        <div className="h-4 w-[1px] bg-slate-800"></div>
+        <div className="h-4 w-px bg-slate-800"></div>
 
         {/* Migrated Risk Stats */}
         <div className="flex items-center gap-6">
@@ -244,7 +245,7 @@ export default function WarRoom() {
           </div>
           <div className="flex gap-2 items-center ml-6">
             <button 
-              onClick={() => { if(window.confirm('EMERGENCY: Close ALL Positions?')) useTradingStore.getState().sendCommand('panic_close'); }} 
+              onClick={() => { if(globalThis.confirm('EMERGENCY: Close ALL Positions?')) useTradingStore.getState().sendCommand('panic_close'); }} 
               className="px-3 py-1 bg-xiphos-red/20 hover:bg-xiphos-red/80 hover:text-white text-xiphos-red border border-xiphos-red/40 rounded-sm text-[16px] uppercase font-black transition-all shadow-[0_0_10px_rgba(255,77,77,0.2)] animate-pulse hover:animate-none cursor-pointer"
             >
               PANIC CLOSE

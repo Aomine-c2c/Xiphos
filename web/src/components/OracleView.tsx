@@ -118,7 +118,7 @@ export default function OracleView() {
                 {/* Vertical Timeline / Tree */}
                 <div className="relative pl-6 pb-2 flex-1 flex flex-col gap-2 justify-center">
                   {/* Timeline Line */}
-                  <div className="absolute left-9 top-2 bottom-2 w-px bg-gradient-to-b from-white/20 via-white/5 to-transparent"></div>
+                  <div className="absolute left-9 top-2 bottom-2 w-px bg-linear-to-b from-white/20 via-white/5 to-transparent"></div>
 
                   {/* 1. Neural Data Core */}
                   <div className="relative flex items-start gap-4 shrink-0">

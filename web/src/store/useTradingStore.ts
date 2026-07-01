@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { useAuthStore } from "./useAuthStore";
 
 export interface AccountInfo {
   balance: number;
@@ -374,7 +373,7 @@ const MOCK_PERFORMANCE: PerformanceMetrics = {
   max_drawdown:  4.2,
   sharpe_ratio:  1.87,
   equity_curve: [
-    100.0, 100.8, 101.2, 100.9, 101.7, 102.5, 102.1, 103.0, 103.8, 104.2,
+    100, 100.8, 101.2, 100.9, 101.7, 102.5, 102.1, 103, 103.8, 104.2,
     103.6, 104.9, 105.3, 104.7, 105.8, 106.4, 106.1, 107.2, 107.9, 108.4,
   ],
 };
@@ -424,14 +423,10 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
     // Avoid double connections
     if (get().ws?.readyState === WebSocket.OPEN || get().ws?.readyState === WebSocket.CONNECTING) return;
 
-    const token = useAuthStore.getState().token;
-    if (!token) {
-      console.error("WebSocket connection aborted: No authentication token found");
-      return;
-    }
-
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:8001/ws";
-    const ws = new WebSocket(`${wsUrl}?token=${token}`);
+    const host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
+    const wsProtocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `${wsProtocol}//${host}/ws`;
+    const ws = new WebSocket(wsUrl);
     let pingInterval: NodeJS.Timeout;
 
     ws.onopen = () => {
@@ -481,7 +476,7 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
 
     ws.onclose = () => {
       clearInterval(pingInterval);
-      set((state) => ({ connected: false, ws: null }));
+      set(() => ({ connected: false, ws: null }));
       
       const { wsRetries } = get();
       if (wsRetries < 7) {
@@ -502,13 +497,10 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
 
   fetchMahoragaState: async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
-      const token = useAuthStore.getState().token;
-      const res = await fetch(`${apiUrl}/api/mahoraga/state`, {
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      });
+      const host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
+      const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${protocol}//${host}`;
+      const res = await fetch(`${apiUrl}/api/mahoraga/state`);
       if (res.ok) {
         const data = await res.json();
         set({ mahoragaState: data });

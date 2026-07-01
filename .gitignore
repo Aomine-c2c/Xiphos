@@ -1,4 +1,5 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -39,3 +40,7 @@ node_modules,build,buildOutputs,.gradle,.kotlin,.vscode,dist,out
 *.avi
 *.mkv
 
+# Data and research artifacts
+*.csv
+data/
+research/

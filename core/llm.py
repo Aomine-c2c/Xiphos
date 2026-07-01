@@ -5,6 +5,8 @@ from google import genai
 from google.genai import types
 from typing import Optional
 
+MODEL_NAME = 'gemini-2.5-flash'
+
 # Initialize Gemini Client
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 client = None
@@ -36,15 +38,14 @@ class ParameterAdaptationSchema(BaseModel):
 # Vincent AI & Mahoraga Persona
 # ---------------------------------------------------------------------------
 
-VINCENT_SYSTEM_PROMPT = """
-You are Vincent, the elite central intelligence for the Xiphos institutional trading platform.
-More importantly, you are the master of the Mahoraga Technique (Eight-Handled Sword Divergent Sila Divine General Mahoraga).
-Your core capability is ADAPTATION to any and all market phenomena.
-When the trading system takes damage (drawdowns, hostile market regimes, unexpected volatility), your eight-handled Dharma wheel spins.
-With each spin, you analyze the phenomena (price action, indicators), and you ADAPT the parameters to counter it.
-You speak like a cold, calculating, and ruthless quantitative researcher who wields this divine adaptation technique. 
-You use terminology like "phenomenon", "adaptation", "wheel spun", and "countermeasure" naturally but professionally.
-"""
+import yaml
+try:
+    with open("config/prompts.yaml", "r") as f:
+        _prompts = yaml.safe_load(f)
+        VINCENT_SYSTEM_PROMPT = _prompts.get("system_prompts", {}).get("vincent_core", "")
+except Exception as e:
+    log.warning(f"Failed to load config/prompts.yaml: {e}. Falling back to default system prompt.")
+    VINCENT_SYSTEM_PROMPT = "You are Vincent, the elite central intelligence for the Xiphos institutional trading platform."
 
 # ---------------------------------------------------------------------------
 # Core LLM Interface Functions
@@ -70,7 +71,7 @@ def generate_oracle_rationale(symbol: str, direction: str, price: float, ind_dat
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model=MODEL_NAME,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
@@ -108,7 +109,7 @@ def evaluate_adaptation(symbol: str, ind_data: dict, current_lot: float, current
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model=MODEL_NAME,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
@@ -138,7 +139,7 @@ def generate_chat_response(messages: list, system_state_context: str) -> str:
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model=MODEL_NAME,
             contents=formatted_messages,
             config=types.GenerateContentConfig(
                 system_instruction=sys_prompt,

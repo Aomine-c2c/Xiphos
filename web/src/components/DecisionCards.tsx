@@ -111,7 +111,7 @@ export default function DecisionCards() {
         <div className="flex gap-4">
           <button
             onClick={handleEngage}
-            className="flex-[2] py-3.5 bg-xiphos-emerald/20 hover:bg-xiphos-emerald border border-xiphos-emerald text-white text-sm font-bold tracking-widest uppercase rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_rgba(34,197,94,0.5)] cursor-pointer group"
+            className="flex-2 py-3.5 bg-xiphos-emerald/20 hover:bg-xiphos-emerald border border-xiphos-emerald text-white text-sm font-bold tracking-widest uppercase rounded-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:shadow-[0_0_25px_rgba(34,197,94,0.5)] cursor-pointer group"
           >
             <Check className="h-5 w-5 group-hover:scale-110 transition-transform" /> ENGAGE TARGET
           </button>

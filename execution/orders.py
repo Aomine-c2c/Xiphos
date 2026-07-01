@@ -31,9 +31,16 @@ def _validate_trade_safety(symbol, sl_price):
         log.critical(f"BLOCKED: Attempted to place naked trade on {symbol}. Missing SL.")
         return False
     terminal = mt5.terminal_info()
-    if terminal and not terminal.trade_allowed:
+    if terminal is None:
+        log.critical("BLOCKED: MT5 connection lost. Terminal info is None.")
+        return False
+    if not terminal.trade_allowed:
         log.critical("BLOCKED: MT5 terminal has algo trading DISABLED.")
         return False
+    if not terminal.connected:
+        log.critical("BLOCKED: MT5 terminal is not connected to the broker.")
+        return False
+        
     if not mt5.symbol_select(symbol, True):
         log.warning(f"symbol_select failed for {symbol}.")
     return True
@@ -65,11 +72,14 @@ def _get_supported_filling_modes(filling_bitmask, symbol):
     return supported
 
 def _record_trade_in_db(result, symbol, type_str, volume, sl_price, magic, sig, latency_ms):
-    with db.get_connection() as conn:
-        conn.execute("""
-            INSERT INTO executions (ticket, action, details)
-            VALUES (?, ?, ?)
-        """, (result.order, "OPEN", f"{type_str} {symbol} at {result.price} (SL: {sl_price})"))
+    from core.database import Execution, Trade
+    with db.get_session() as session:
+        execution = Execution(
+            ticket=result.order,
+            action="OPEN",
+            details=f"{type_str} {symbol} at {result.price} (SL: {sl_price})"
+        )
+        session.add(execution)
         
         sma_200 = float(sig['ind_data']['sma_slow']) if sig and 'ind_data' in sig else 0.0
         fast_ema = float(sig['ind_data']['ema_fast']) if sig and 'ind_data' in sig else 0.0
@@ -77,15 +87,25 @@ def _record_trade_in_db(result, symbol, type_str, volume, sl_price, magic, sig, 
         dist_sma = float(sig.get('distance', 0.0)) if sig else 0.0
         proj_risk = float(sig.get('projected_risk', 0.0)) if sig else 0.0
 
-        conn.execute("""
-            INSERT INTO trades (
-                ticket, symbol, type, magic, volume, entry_price, sl_price, status,
-                mfe, mae, sma_200, fast_ema, medium_ema, distance_to_sma, projected_risk, latency_ms
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            result.order, symbol, type_str, magic, float(volume), result.price, float(sl_price), "OPEN",
-            0.0, 0.0, sma_200, fast_ema, medium_ema, dist_sma, proj_risk, latency_ms
-        ))
+        trade = Trade(
+            ticket=result.order,
+            symbol=symbol,
+            type=type_str,
+            magic=magic,
+            volume=float(volume),
+            entry_price=result.price,
+            sl_price=float(sl_price),
+            status="OPEN",
+            mfe=0.0,
+            mae=0.0,
+            sma_200=sma_200,
+            fast_ema=fast_ema,
+            medium_ema=medium_ema,
+            distance_to_sma=dist_sma,
+            projected_risk=proj_risk,
+            latency_ms=latency_ms
+        )
+        session.add(trade)
 
 def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume, sl_price, magic, sig=None):
     for filling_mode, filling_name in supported_modes:
@@ -179,10 +199,13 @@ def modify_sl(ticket: int, symbol: str, new_sl: float):
     
     result = _retry_wrapper(mt5.order_send, request)
     if result:
-        with db.get_connection() as conn:
-            conn.execute("""
-                INSERT INTO executions (ticket, action, details)
-                VALUES (?, ?, ?)
-            """, (ticket, "MODIFY_SL", f"SL moved to {new_sl}"))
+        from core.database import Execution
+        with db.get_session() as session:
+            execution = Execution(
+                ticket=ticket,
+                action="MODIFY_SL",
+                details=f"SL moved to {new_sl}"
+            )
+            session.add(execution)
         return True
     return False

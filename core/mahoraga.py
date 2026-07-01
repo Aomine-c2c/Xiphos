@@ -79,7 +79,7 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
             
         return f"{vol_tag}_{trend_tag}_{mom_tag}"
 
-    def evaluate(self, symbol: str, ind_data: dict, recent_win_rate: float, params: AdaptiveParameters):
+    def evaluate(self, symbol: str, ind_data: dict, recent_win_rate: float, params: AdaptiveParameters): # noqa: C901
         if not ind_data or "atr_14" not in ind_data or "atr_mean_100" not in ind_data:
             return
 
@@ -126,11 +126,9 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
                 params.lot_multiplier = llm_decision.new_lot_multiplier
                 params.sl_multiplier = llm_decision.new_sl_multiplier
                 log.info(f"LLM Adapted {symbol}: Lot {params.lot_multiplier}, SL {params.sl_multiplier}")
-                reasoning = llm_decision.reasoning
             else:
                 params.lot_multiplier = min(3.0, params.lot_multiplier * 1.5)
                 params.sl_multiplier = min(2.0, params.sl_multiplier * 1.2)
-                reasoning = f"Hard-click Adaptation Reached."
 
             params.filter_strictness = "DYNAMIC"
             params.adaptation_spins = self.memory_matrix[current_phenomenon]
@@ -196,10 +194,25 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
             params.confidence_score = min(max(confidence, 0.0), 100.0)
             params.adapter_source = "LEARNING"
 
+import time
+
 class MahoragaAdaptationEngine:
     def __init__(self):
         self.state: Dict[str, AdaptiveParameters] = {}
+        self.last_evaluated: Dict[str, float] = {}
         self.strategies: list[AdaptationStrategy] = [AdvancedMahoragaAdapter()]
+        self._last_cleanup = 0.0
+
+    def _cleanup_stale_state(self):
+        now = time.time()
+        if now - self._last_cleanup < 3600:  # Run cleanup at most once an hour
+            return
+        self._last_cleanup = now
+        stale_symbols = [sym for sym, last_time in self.last_evaluated.items() if now - last_time > 172800] # 48 hours
+        for sym in stale_symbols:
+            del self.state[sym]
+            del self.last_evaluated[sym]
+            log.info(f"[Mahoraga] Evicted stale state for {sym} to prevent memory leak.")
 
     def get_parameters(self, symbol: str) -> AdaptiveParameters:
         if symbol not in self.state:
@@ -207,6 +220,8 @@ class MahoragaAdaptationEngine:
         return self.state[symbol]
 
     def evaluate(self, symbol: str, ind_data: dict, recent_win_rate: float):
+        self._cleanup_stale_state()
+        self.last_evaluated[symbol] = time.time()
         params = self.get_parameters(symbol)
         for strategy in self.strategies:
             strategy.evaluate(symbol, ind_data, recent_win_rate, params)

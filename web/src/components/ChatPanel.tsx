@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle, BrainCircuit, Database, Cpu, Network } from "lucide-react";
+import { CheckCircle, BrainCircuit, Database, Cpu, Network } from "lucide-react";
 import { useTradingStore } from "../store/useTradingStore";
 import { motion, AnimatePresence } from "framer-motion";
 

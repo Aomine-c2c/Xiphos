@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { Activity, Terminal } from "lucide-react";
+import { Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DecisionFeed() {

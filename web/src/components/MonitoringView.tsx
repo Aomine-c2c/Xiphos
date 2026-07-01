@@ -228,7 +228,7 @@ export default function MonitoringView() {
                     <span className="w-16 shrink-0 text-white/50 font-bold tracking-widest">
                       [{log.category}]
                     </span>
-                    <span className={`text-white/80 ${log.level === "ERROR" ? "!text-xiphos-crimson font-bold" : ""} ${log.level === "WARNING" ? "!text-xiphos-gold" : ""}`}>
+                    <span className={`text-white/80 ${log.level === "ERROR" ? "text-xiphos-crimson! font-bold" : ""} ${log.level === "WARNING" ? "text-xiphos-gold!" : ""}`}>
                       {log.message}
                     </span>
                   </motion.div>

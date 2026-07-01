@@ -2,7 +2,7 @@
 setlocal
 
 echo ==========================================
-echo     Xiphos Windows Setup Script
+echo  Xiphos: The Mahoraga Technique Setup
 echo ==========================================
 
 :: 1. Check for Python

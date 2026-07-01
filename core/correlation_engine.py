@@ -1,5 +1,6 @@
-import pandas as pd
 import time
+import numpy as np
+import polars as pl
 from typing import Dict, List
 from loguru import logger
 from bridge.proxy import mt5
@@ -24,7 +25,7 @@ class CorrelationEngine:
             if matrix:
                 self.cache = matrix
                 self.last_update = now
-                logger.info("Correlation Matrix updated successfully.")
+                logger.info("Correlation Matrix updated successfully via Numpy/Polars.")
                 return self.cache
         except Exception as e:
             logger.error(f"Failed to compute correlation matrix: {e}")
@@ -37,22 +38,24 @@ class CorrelationEngine:
         for sym in self.symbols:
             rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H1, 0, 500)
             if rates is not None and len(rates) > 0:
-                prices[sym] = [r['close'] for r in rates]
+                # Use Polars to extract close prices instantly
+                df_rates = pl.DataFrame(rates)
+                prices[sym] = df_rates['close'].to_list()
             else:
                 prices[sym] = [0.0] * 500
                 logger.warning(f"No historical data fetched for {sym} to compute correlation.")
         return prices
 
-    def _build_result_matrix(self, corr_df: pd.DataFrame) -> Dict[str, Dict[str, str]]:
+    def _build_result_matrix(self, corr_array: np.ndarray) -> Dict[str, Dict[str, str]]:
         result_matrix = {}
-        for r_sym in self.symbols:
+        for i, r_sym in enumerate(self.symbols):
             result_matrix[r_sym] = {}
-            for c_sym in self.symbols:
-                if r_sym not in corr_df.index or c_sym not in corr_df.columns or r_sym == c_sym:
+            for j, c_sym in enumerate(self.symbols):
+                if i == j:
                     result_matrix[r_sym][c_sym] = "-"
                 else:
-                    val = corr_df.loc[r_sym, c_sym]
-                    if pd.isna(val):
+                    val = corr_array[i, j]
+                    if np.isnan(val):
                         result_matrix[r_sym][c_sym] = "-"
                     else:
                         pct = int(round(val * 100))
@@ -71,13 +74,19 @@ class CorrelationEngine:
         if min_len == 0:
             return {}
             
-        for k in prices.keys():
-            prices[k] = prices[k][-min_len:]
+        # Create a 2D numpy array and slice to min_len
+        arr_list = []
+        for sym in self.symbols:
+            arr_list.append(prices[sym][-min_len:])
             
-        df = pd.DataFrame(prices)
-        corr_df = df.corr(method='pearson')
+        # arr shape will be (9, min_len)
+        price_matrix = np.array(arr_list)
         
-        return self._build_result_matrix(corr_df)
+        # Calculate Pearson correlation coefficient
+        # np.corrcoef expects rows to be variables and columns to be observations by default (rowvar=True)
+        corr_array = np.corrcoef(price_matrix)
+        
+        return self._build_result_matrix(corr_array)
 
 # Global singleton instance
 correlation_engine = CorrelationEngine()

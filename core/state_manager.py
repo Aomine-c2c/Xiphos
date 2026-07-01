@@ -9,18 +9,17 @@ class StateManager:
         pass
 
     def get_open_trades(self):
+        from core.database import Trade
         open_trades = {}
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT ticket, symbol, type, entry_price, sl_price, magic FROM trades WHERE status = 'OPEN'")
-            rows = cursor.fetchall()
-            for row in rows:
-                open_trades[str(row['ticket'])] = {
-                    "symbol": row['symbol'],
-                    "type": row['type'],
-                    "entry_price": row['entry_price'],
-                    "sl_price": row['sl_price'],
-                    "magic": row['magic']
+        with db.get_session() as session:
+            trades = session.query(Trade).filter(Trade.status == 'OPEN').all()
+            for row in trades:
+                open_trades[str(row.ticket)] = {
+                    "symbol": row.symbol,
+                    "type": row.type,
+                    "entry_price": row.entry_price,
+                    "sl_price": row.sl_price,
+                    "magic": row.magic
                 }
         return open_trades
 
@@ -37,54 +36,60 @@ class StateManager:
             logger.warning(f"No history found for closed trade {ticket}. Defaulting profit to 0.")
         return profit, close_time
 
-    def _mark_closed_trades(self, cursor, open_trades, mt5_tickets):
+    def _mark_closed_trades(self, session, open_trades, mt5_tickets):
+        from core.database import Trade
         for ticket in open_trades.keys():
             if ticket not in mt5_tickets:
                 profit, close_time = self._get_trade_closure_details(ticket)
-                cursor.execute("""
-                    UPDATE trades 
-                    SET status = 'CLOSED', profit = ?, close_time = ? 
-                    WHERE ticket = ?
-                """, (profit, close_time, int(ticket)))
-                logger.info(f"Trade {ticket} closed. Profit: {profit:.2f}. Updated in DB.")
+                trade = session.query(Trade).filter(Trade.ticket == int(ticket)).first()
+                if trade:
+                    trade.status = 'CLOSED'
+                    trade.profit = profit
+                    trade.close_time = close_time
+                    logger.info(f"Trade {ticket} closed. Profit: {profit:.2f}. Updated in DB.")
 
-    def _add_missing_mt5_trades(self, cursor, active_mt5_positions, open_trades):
+    def _add_missing_mt5_trades(self, session, active_mt5_positions, open_trades):
+        from core.database import Trade
         for pos in (active_mt5_positions or []):
             ticket = str(pos.ticket)
             if pos.magic in [135001, 135002] and ticket not in open_trades:
-                cursor.execute("""
-                    INSERT INTO trades (ticket, symbol, type, magic, volume, entry_price, sl_price, status)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'OPEN')
-                """, (
-                    pos.ticket, pos.symbol, "BUY" if pos.type == 0 else "SELL",
-                    pos.magic, pos.volume, pos.price_open, pos.sl
-                ))
+                new_trade = Trade(
+                    ticket=pos.ticket,
+                    symbol=pos.symbol,
+                    type="BUY" if pos.type == 0 else "SELL",
+                    magic=pos.magic,
+                    volume=pos.volume,
+                    entry_price=pos.price_open,
+                    sl_price=pos.sl,
+                    status='OPEN'
+                )
+                session.add(new_trade)
                 logger.info(f"Found orphaned MT5 trade {ticket}. Added to DB.")
 
     def reconcile(self, active_mt5_positions):
         mt5_tickets = {str(p.ticket) for p in active_mt5_positions} if active_mt5_positions else set()
         open_trades = self.get_open_trades()
         
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            self._mark_closed_trades(cursor, open_trades, mt5_tickets)
-            self._add_missing_mt5_trades(cursor, active_mt5_positions, open_trades)
+        with db.get_session() as session:
+            self._mark_closed_trades(session, open_trades, mt5_tickets)
+            self._add_missing_mt5_trades(session, active_mt5_positions, open_trades)
 
     def add_trade(self, ticket, symbol, type_, entry, sl, magic, volume=0.0):
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO trades (ticket, symbol, type, magic, volume, entry_price, sl_price, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'OPEN')
-            """, (ticket, symbol, type_, magic, volume, entry, sl))
+        from core.database import Trade
+        with db.get_session() as session:
+            new_trade = Trade(
+                ticket=ticket, symbol=symbol, type=type_, magic=magic,
+                volume=volume, entry_price=entry, sl_price=sl, status='OPEN'
+            )
+            session.add(new_trade)
             logger.info(f"Trade {ticket} saved to DB.")
         
     def update_sl(self, ticket, new_sl):
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                UPDATE trades SET sl_price = ? WHERE ticket = ? AND status = 'OPEN'
-            """, (new_sl, int(ticket)))
+        from core.database import Trade
+        with db.get_session() as session:
+            trade = session.query(Trade).filter(Trade.ticket == int(ticket), Trade.status == 'OPEN').first()
+            if trade:
+                trade.sl_price = new_sl
 
     def _calculate_sharpe(self, profits, total):
         if total <= 1:
@@ -151,32 +156,29 @@ class StateManager:
         }
 
     def get_performance_metrics(self):
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT profit FROM trades WHERE status = 'CLOSED' ORDER BY close_time ASC")
-            rows = cursor.fetchall()
+        from core.database import Trade
+        with db.get_session() as session:
+            trades = session.query(Trade).filter(Trade.status == 'CLOSED').order_by(Trade.close_time.asc()).all()
+            # Convert SQLAlchemy objects to dict-like for existing metrics calculation
+            rows = [{'profit': t.profit} for t in trades]
             return self._calculate_metrics_from_rows(rows)
 
     def get_strategy_performance_metrics(self):
+        from core.database import Trade
         metrics = {}
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
+        with db.get_session() as session:
             for magic, name in [(135001, "Scalper"), (135002, "Runner")]:
-                cursor.execute("""
-                    SELECT profit 
-                    FROM trades 
-                    WHERE status = 'CLOSED' AND magic = ? 
-                    ORDER BY close_time ASC
-                """, (magic,))
-                rows = cursor.fetchall()
-                total = len(rows)
+                trades = session.query(Trade).filter(
+                    Trade.status == 'CLOSED', Trade.magic == magic
+                ).order_by(Trade.close_time.asc()).all()
+                total = len(trades)
                 wins = 0
                 gross_profit = 0.0
                 gross_loss = 0.0
                 total_profit = 0.0
                 
-                for row in rows:
-                    p = row['profit'] or 0.0
+                for t in trades:
+                    p = t.profit or 0.0
                     total_profit += p
                     if p > 0:
                         wins += 1
@@ -201,13 +203,14 @@ class StateManager:
         return metrics
 
     def get_trade_history(self, limit=50):
-        with db.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT ticket, symbol, type, entry_price, close_time, profit 
-                FROM trades 
-                WHERE status = 'CLOSED' 
-                ORDER BY close_time DESC 
-                LIMIT ?
-            """, (limit,))
-            return [dict(row) for row in cursor.fetchall()]
+        from core.database import Trade
+        with db.get_session() as session:
+            trades = session.query(Trade).filter(Trade.status == 'CLOSED').order_by(Trade.close_time.desc()).limit(limit).all()
+            return [{
+                "ticket": t.ticket,
+                "symbol": t.symbol,
+                "type": t.type,
+                "entry_price": t.entry_price,
+                "close_time": t.close_time.isoformat() if t.close_time else None,
+                "profit": t.profit
+            } for t in trades]

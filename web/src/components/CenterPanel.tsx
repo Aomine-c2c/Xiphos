@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { Radio, Play, Activity, Target, Zap, Shield, GitCommit, MoveRight } from "lucide-react";
+import { Play, GitCommit, Radio, Target, Zap, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function CenterPanel() {
@@ -129,7 +129,7 @@ export default function CenterPanel() {
                 <motion.div 
                   animate={{ x: ["-100%", "100%"] }} 
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="absolute top-0 bottom-0 w-1/2 bg-gradient-to-r from-transparent via-xiphos-cyan/20 to-transparent skew-x-12"
+                  className="absolute top-0 bottom-0 w-1/2 bg-linear-to-r from-transparent via-xiphos-cyan/20 to-transparent skew-x-12"
                 />
                 <span className="block text-[9px] uppercase tracking-widest mb-1 text-xiphos-cyan font-black relative z-10">DEVIATION GAP</span>
                 <span className="text-xiphos-cyan font-black text-lg glow-cyan relative z-10">{heroSignal.distance} pts</span>
@@ -142,7 +142,7 @@ export default function CenterPanel() {
             
             {/* Validation Matrix Box */}
             <div className="glass-card p-5 space-y-3 flex-1 min-h-0 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-xiphos-emerald/5 rounded-full blur-[40px] pointer-events-none"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-xiphos-emerald/5 rounded-full blur-2xl pointer-events-none"></div>
               
               <div className="flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-3 mb-4">
                 <Shield className="w-4 h-4 text-xiphos-purple glow-purple" />
@@ -206,7 +206,7 @@ export default function CenterPanel() {
 
       {/* 2. TRADE LIFECYCLE TRACKER */}
       <div className="glass-panel p-5 shrink-0 relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-r from-xiphos-purple/5 via-transparent to-xiphos-cyan/5 opacity-50 mix-blend-overlay"></div>
+        <div className="absolute inset-0 bg-linear-to-r from-xiphos-purple/5 via-transparent to-xiphos-cyan/5 opacity-50 mix-blend-overlay"></div>
         
         <span className="text-[10px] text-xiphos-muted font-black uppercase tracking-widest block mb-4 relative z-10 flex items-center gap-2">
           <GitCommit className="w-4 h-4 text-xiphos-purple" />
@@ -225,7 +225,7 @@ export default function CenterPanel() {
               lineClass = "bg-xiphos-cyan shadow-[0_0_10px_rgba(76,201,240,0.5)]";
             } else if (isActive) {
               classes = "border-xiphos-purple text-white bg-xiphos-purple/20 glow-white shadow-[0_0_20px_rgba(139,92,246,0.4)] scale-105";
-              lineClass = "bg-gradient-to-r from-xiphos-cyan to-xiphos-purple";
+              lineClass = "bg-linear-to-r from-xiphos-cyan to-xiphos-purple";
             }
 
             return (
@@ -253,7 +253,7 @@ export default function CenterPanel() {
                 
                 {step.label !== "CLOSED" && (
                   <div className="flex-1 h-px mx-4 relative flex items-center justify-center">
-                    <div className={`absolute inset-0 w-full h-[1px] ${lineClass}`}></div>
+                    <div className={`absolute inset-0 w-full h-px ${lineClass}`}></div>
                     {isCompleted && (
                       <motion.div 
                         initial={{ x: "-100%" }}

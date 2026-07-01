@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-dom-props */
 "use client";
 
 import React, { useEffect, useMemo } from "react";
@@ -320,7 +321,7 @@ export default function AdaptationEngineView() {
               { time: "-2h", event: "Trend Failure", adapt: "Switched to Mean Reversion" },
               { time: "NOW", event: "Liquidity Sweep", adapt: "Fading breakouts", current: true },
               { time: "+1h", event: "FOMC Minutes", adapt: "Preparing to close all positions", future: true },
-            ].map((node, i) => (
+            ].map((node) => (
               <div key={node.time} className="relative flex flex-col items-center group">
                 {/* Node */}
                 <div className={`w-4 h-4 rounded-full border-2 z-10 ${node.current ? 'bg-xiphos-purple border-xiphos-purple glow-purple animate-pulse' : ''} ${node.future ? 'bg-[#0b0f17] border-gray-600 border-dashed' : ''} ${!node.current && !node.future ? 'bg-[#0b0f17] border-xiphos-cyan' : ''}`}></div>

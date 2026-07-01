@@ -1,6 +1,6 @@
 from core.logger import log
 
-def evaluate_signal(ind_data: dict):
+def evaluate_signal(ind_data: dict): # noqa: C901
     """
     Asymmetrical Breakout Strategy — "Lose Pennies, Win Big"
 

@@ -18,7 +18,7 @@ def calculate_atr(df, period=14):
     df['TR'] = df[['H-L', 'H-C', 'L-C']].max(axis=1)
     return df['TR'].rolling(window=period).mean()
 
-def run_deep_backtest():
+def run_deep_backtest(): # NOSONAR # noqa: C901
     if not mt5.initialize():
         print("MT5 Init Failed")
         return
@@ -46,7 +46,7 @@ def run_deep_backtest():
     for sym in symbols:
         mt5.symbol_select(sym, True)
         rates_m30 = None
-        for attempt in range(3):
+        for _ in range(3):
             rates_m30 = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_M30, 0, m30_count)
             if rates_m30 is not None and len(rates_m30) > 0:
                 break
@@ -109,14 +109,12 @@ def run_deep_backtest():
                     t['profit'] = (t['exit_price'] - t['entry_price']) / t['point'] * t['volume'] * 100000
                     t['status'] = 'CLOSED_SL'
                     trades_to_remove.append(t)
-                    continue
                 elif t['type'] == 'SELL' and row['high'] >= t['sl']:
                     t['exit_price'] = t['sl']
                     t['exit_time'] = current_time
                     t['profit'] = (t['entry_price'] - t['exit_price']) / t['point'] * t['volume'] * 100000
                     t['status'] = 'CLOSED_SL'
                     trades_to_remove.append(t)
-                    continue
                 
             for tr in trades_to_remove:
                 open_trades.remove(tr)
@@ -219,9 +217,7 @@ def run_deep_backtest():
                         new_sl = t['entry_price']
                         
             # Apply trail
-            if t['type'] == 'BUY' and new_sl > t['sl']:
-                t['sl'] = new_sl
-            elif t['type'] == 'SELL' and new_sl < t['sl']:
+            if (t['type'] == 'BUY' and new_sl > t['sl']) or (t['type'] == 'SELL' and new_sl < t['sl']):
                 t['sl'] = new_sl
 
     for t in open_trades:
@@ -234,7 +230,7 @@ def run_deep_backtest():
         t['status'] = 'CLOSED_END'
         trade_history.append(t)
         
-    print(f"\n--- Deep Backtest Complete ---")
+    print("\n--- Deep Backtest Complete ---")
     print(f"Total Trades: {len(trade_history)}")
     
     if len(trade_history) > 0:

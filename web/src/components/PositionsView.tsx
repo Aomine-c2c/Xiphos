@@ -1,8 +1,9 @@
+/* eslint-disable react/forbid-dom-props */
 "use client";
 
 import React, { useState } from "react";
 import { useTradingStore } from "../store/useTradingStore";
-import { Briefcase, ShieldAlert, ChevronLeft, ChevronRight, X, Scissors, MoveVertical, Target, Navigation, Plus, Minus, BrainCircuit } from "lucide-react";
+import { Briefcase, ShieldAlert, ChevronLeft, ChevronRight, X, Scissors, BrainCircuit } from "lucide-react";
 import { GlassPanel } from "./ui/GlassPanel";
 import { GlassCard } from "./ui/GlassCard";
 import { PageHeader } from "./ui/PageHeader";

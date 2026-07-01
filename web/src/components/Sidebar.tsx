@@ -20,7 +20,7 @@ export default function Sidebar() {
 
   const getHeatmapColor = (val: string) => {
     if (val === "-") return { bg: "bg-xiphos-bg/40", text: "text-[#425062]" };
-    const num = parseInt(val);
+    const num = Number.parseInt(val);
     const absNum = Math.abs(num);
     
     if (absNum >= 80) return { bg: "bg-xiphos-red/15", text: "text-xiphos-red" };
