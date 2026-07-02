@@ -23,7 +23,7 @@ if %ERRORLEVEL% neq 0 (
 
 :: 3. Clone Repository
 echo [*] Checking for Xiphos repository...
-if not exist "main.py" (
+if not exist "pyproject.toml" (
     if not exist "Xiphos" (
         echo [*] Cloning repository...
         git clone https://github.com/Aomine-c2c/Xiphos.git

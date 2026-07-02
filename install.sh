@@ -48,11 +48,11 @@ fi
 
 # 2. Clone Repository
 echo "[*] Checking for Xiphos repository..."
-if [ ! -d "Xiphos" ] && [ ! -f "main.py" ]; then
+if [ ! -d "Xiphos" ] && [ ! -f "pyproject.toml" ]; then
     echo "[*] Cloning repository..."
     git clone https://github.com/Aomine-c2c/Xiphos.git
     cd Xiphos
-elif [ -d "Xiphos" ]; then
+elif [ -d "Xiphos" ] && [ ! -f "pyproject.toml" ]; then
     cd Xiphos
 fi
 
