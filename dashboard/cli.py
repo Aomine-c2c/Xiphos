@@ -1,4 +1,3 @@
-from rich.live import Live
 from rich.table import Table
 from rich.console import Console
 import MetaTrader5 as mt5
