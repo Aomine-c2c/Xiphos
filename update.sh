@@ -15,7 +15,10 @@ if [ "$LOCAL" = "$REMOTE" ]; then
 fi
 
 echo "[*] Pulling latest changes from git..."
-git pull
+if ! git pull; then
+    echo "[!] Failed to pull latest changes. Please resolve conflicts manually or run 'git stash'."
+    exit 1
+fi
 
 echo "[*] Updating Python dependencies..."
 if [ -f "venv/bin/activate" ]; then

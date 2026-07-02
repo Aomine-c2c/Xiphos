@@ -15,7 +15,10 @@ if "%LOCAL%"=="%REMOTE%" (
 )
 
 echo [*] Pulling latest changes from git...
-git pull
+git pull || (
+    echo [!] Failed to pull latest changes. Please resolve conflicts manually or run 'git stash'.
+    exit /b 1
+)
 
 echo [*] Updating Python dependencies...
 call .venv\Scripts\activate.bat
