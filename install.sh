@@ -132,6 +132,9 @@ fi
 echo "Starting Xiphos Web UI, API, and Engine..."
 
 source venv/bin/activate
+
+trap 'kill \$ENGINE_PID \$API_PID \$NEXT_PID 2>/dev/null; exit' INT TERM EXIT
+
 python worker_engine.py &
 ENGINE_PID=\$!
 
