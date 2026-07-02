@@ -14,6 +14,11 @@ def test_load_valid_settings(tmp_path):
       timeframe: "M30"
       max_risk_trades: 4
       lot_size: 0.01
+    session_filter:
+      enabled: false
+      start_hour: 0
+      end_hour: 24
+      exempt_groups: []
     magic_numbers:
       scalper: 135001
       runner: 135002
