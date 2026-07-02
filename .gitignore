@@ -10,7 +10,14 @@ env/
 logs/
 *.sqlite
 .pytest_cache/
-node_modules,build,buildOutputs,.gradle,.kotlin,.vscode,dist,out
+node_modules
+build
+buildOutputs
+.gradle
+.kotlin
+.vscode
+dist
+out
 *.gguf
 *.bin
 *.pt
