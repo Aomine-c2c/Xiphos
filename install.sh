@@ -120,35 +120,37 @@ npm run build
 cd ..
 
 echo "[*] Setting up 'Xiphos' launch command..."
-cat > xiphos_launcher.sh << EOL
+cat > xiphos_launcher.sh << 'EOL'
 #!/bin/bash
-cd "$(pwd)"
+# Dynamically find where this script is located, even if symlinked
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+cd "$SCRIPT_DIR"
 
-if [ "\$1" == "update" ]; then
+if [ "$1" == "update" ]; then
     bash ./update.sh
-    exit \$?
+    exit $?
 fi
 
 echo "Starting Xiphos Web UI, API, and Engine..."
 
 source venv/bin/activate
 
-trap 'kill \$ENGINE_PID \$API_PID \$NEXT_PID 2>/dev/null; exit' INT TERM EXIT
+trap 'kill $ENGINE_PID $API_PID $NEXT_PID 2>/dev/null; exit' INT TERM EXIT
 
 python worker_engine.py &
-ENGINE_PID=\$!
+ENGINE_PID=$!
 
 python api_server.py &
-API_PID=\$!
+API_PID=$!
 
 cd web && npm run start &
-NEXT_PID=\$!
+NEXT_PID=$!
 
 # Wait for any process to exit
 wait -n
 
 # Cleanup on exit
-kill \$ENGINE_PID \$API_PID \$NEXT_PID 2>/dev/null
+kill $ENGINE_PID $API_PID $NEXT_PID 2>/dev/null
 EOL
 
 chmod +x xiphos_launcher.sh
