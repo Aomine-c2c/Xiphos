@@ -47,6 +47,17 @@ def enqueue_output(name, out):
                 log_queue.append(f"[{color}]{name}[/{color}] | {decoded}")
     out.close()
 
+import urllib.request
+import json
+
+def fetch_api_state():
+    try:
+        req = urllib.request.Request("http://127.0.0.1:8001/api/state", method="GET")
+        with urllib.request.urlopen(req, timeout=0.5) as response:
+            return json.loads(response.read().decode())
+    except Exception:
+        return None
+
 def generate_ui():
     layout = Layout()
     layout.split_column(
@@ -60,6 +71,9 @@ def generate_ui():
     table.add_column("Status")
     table.add_column("Details")
     
+    api_state = fetch_api_state()
+    mt5_connected = api_state.get("mt5_connected", False) if api_state else False
+    
     for name, proc in processes.items():
         if proc.poll() is None:
             status = "[bold green]Online[/bold green]"
@@ -68,7 +82,10 @@ def generate_ui():
             elif name == "API Server":
                 details = "http://localhost:8001"
             elif name == "Worker":
-                details = "Autonomous Trading Active"
+                if mt5_connected:
+                    details = "[bold green]MT5 Connected & Trading[/bold green]"
+                else:
+                    details = "[bold yellow]Awaiting MT5 Connection...[/bold yellow]"
             elif name == "Web UI":
                 details = "http://localhost:3000"
         else:
