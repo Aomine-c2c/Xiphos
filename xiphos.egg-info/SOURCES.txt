@@ -1,0 +1,8 @@
+pyproject.toml
+tests/test_config.py
+tests/test_database.py
+xiphos.egg-info/PKG-INFO
+xiphos.egg-info/SOURCES.txt
+xiphos.egg-info/dependency_links.txt
+xiphos.egg-info/requires.txt
+xiphos.egg-info/top_level.txt
