@@ -33,3 +33,6 @@ dependencies = [
 dev = [
     "pytest>=7.4.2",
 ]
+
+[tool.setuptools]
+packages = []
