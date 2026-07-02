@@ -399,6 +399,10 @@ if __name__ == "__main__":
     threading.Thread(target=state_publisher_loop, daemon=True).start()
     threading.Thread(target=command_listener_loop, daemon=True).start()
     
+    # Auto-start bot execution loop
+    logger.info("Auto-starting trading execution loop...")
+    start_bot_execution()
+    
     try:
         while True:
             time.sleep(1)
