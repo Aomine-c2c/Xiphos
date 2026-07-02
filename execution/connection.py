@@ -30,12 +30,12 @@ class MT5Connection:
                 return True
             else:
                 err = mt5.last_error()
-                log.error(
-                    f"MT5 Initialization failed. Error code: {err}. Attempt {attempt + 1}/{max_retries}"
-                )
+                if max_retries > 1:
+                    log.error(f"MT5 Initialization failed. Error code: {err}. Attempt {attempt + 1}/{max_retries}")
                 time.sleep(delay)
 
-        log.critical("Failed to connect to MT5 after maximum retries.")
+        if max_retries > 1:
+            log.critical("Failed to connect to MT5 after maximum retries.")
         return False
 
     def check_health(self):

@@ -187,6 +187,10 @@ def compile_system_state():
 def state_publisher_loop():
     while True:
         try:
+            if not getattr(mt5_conn, 'connected', False):
+                # Try to reconnect silently once per loop if disconnected
+                mt5_conn.connect(max_retries=1, delay=0)
+                
             state = compile_system_state()
             redis_client.set_state(state)
         except Exception as e:
@@ -390,8 +394,8 @@ if __name__ == "__main__":
     if mt5_conn.connect():
         logger.info("MT5 interface initialized in Worker Engine.")
     else:
-        logger.error("MT5 connection failed in Worker Engine. Exiting.")
-        exit(1)
+        logger.warning("MT5 is not running! Please open your MetaTrader 5 terminal. Xiphos will automatically connect when it opens.")
+        
         
     trade_worker.start()
     
