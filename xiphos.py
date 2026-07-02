@@ -101,6 +101,15 @@ def spawn_process(name, cmd, cwd, env=None):
     t.daemon = True
     t.start()
 
+def pre_flight_cleanup():
+    if os.name == 'nt':
+        with log_lock:
+            log_queue.append("[bold magenta]SYSTEM[/bold magenta] | Performing pre-flight cleanup of orphaned processes...")
+        # Clean up any orphaned redis or node processes to prevent port conflicts
+        subprocess.run(["taskkill", "/F", "/IM", "redis-server.exe"], capture_output=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["taskkill", "/F", "/IM", "node.exe"], capture_output=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        time.sleep(1)
+
 def main():
     root_dir = os.path.dirname(os.path.abspath(__file__))
     
@@ -117,6 +126,8 @@ def main():
     
     with log_lock:
         log_queue.append("[bold magenta]SYSTEM[/bold magenta] | Booting orchestrator...")
+        
+    pre_flight_cleanup()
     
     if os.name == 'nt':
         spawn_process("Redis", [redis_exe], cwd=root_dir)
