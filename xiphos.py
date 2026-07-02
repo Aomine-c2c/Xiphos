@@ -29,7 +29,7 @@ def kill_all():
     
     if os.name == 'nt':
         # Aggressively kill Next.js dev server which often orphans node.exe
-        subprocess.run(["taskkill", "/F", "/IM", "node.exe"], capture_output=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["taskkill", "/F", "/IM", "node.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 atexit.register(kill_all)
 
@@ -106,8 +106,8 @@ def pre_flight_cleanup():
         with log_lock:
             log_queue.append("[bold magenta]SYSTEM[/bold magenta] | Performing pre-flight cleanup of orphaned processes...")
         # Clean up any orphaned redis or node processes to prevent port conflicts
-        subprocess.run(["taskkill", "/F", "/IM", "redis-server.exe"], capture_output=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(["taskkill", "/F", "/IM", "node.exe"], capture_output=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["taskkill", "/F", "/IM", "redis-server.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["taskkill", "/F", "/IM", "node.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(1)
 
 def main():
