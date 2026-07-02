@@ -123,6 +123,9 @@ def _compile_orders_data():
         })
     return ord_list
 
+_symbol_point_cache = {}
+_market_watch_ind_cache = {}
+
 def _compile_market_watch_data():
     from indicators.moving_averages import get_m30_indicators
     mw_list = []
@@ -130,14 +133,29 @@ def _compile_market_watch_data():
     for bucket in settings.correlation_groups.values():
         all_symbols.extend(bucket)
         
+    current_time = time.time()
+
     for sym in all_symbols[:15]:
         tick = mt5.symbol_info_tick(sym)
         if not tick:
             continue
-        ind_data = get_m30_indicators(sym)
+
+        # TTL Cache for indicator data (15 seconds)
+        ind_cache = _market_watch_ind_cache.get(sym)
+        if ind_cache and (current_time - ind_cache['time'] < 15):
+            ind_data = ind_cache['data']
+        else:
+            ind_data = get_m30_indicators(sym)
+            _market_watch_ind_cache[sym] = {'time': current_time, 'data': ind_data}
+
         e13 = e50 = s200 = 0.0
-        s_info = mt5.symbol_info(sym)
-        point = s_info.point if s_info else 0.00001
+
+        # Cache static symbol point value
+        if sym not in _symbol_point_cache:
+            s_info = mt5.symbol_info(sym)
+            _symbol_point_cache[sym] = s_info.point if s_info else 0.00001
+        point = _symbol_point_cache[sym]
+
         if ind_data and point > 0:
             e13 = (tick.bid - ind_data['ema_fast']) / point
             e50 = (tick.bid - ind_data['ema_medium']) / point
