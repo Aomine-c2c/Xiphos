@@ -3,6 +3,17 @@ echo ==========================================
 echo           UPDATING XIPHOS
 echo ==========================================
 
+echo [*] Checking for updates...
+git fetch
+
+for /f "delims=" %%i in ('git rev-parse HEAD') do set LOCAL=%%i
+for /f "delims=" %%i in ('git rev-parse origin/main') do set REMOTE=%%i
+
+if "%LOCAL%"=="%REMOTE%" (
+    echo [*] Xiphos is already up to date!
+    exit /b 0
+)
+
 echo [*] Pulling latest changes from git...
 git pull
 

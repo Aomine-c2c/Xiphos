@@ -3,6 +3,17 @@ echo "=========================================="
 echo "          UPDATING XIPHOS                 "
 echo "=========================================="
 
+echo "[*] Checking for updates..."
+git fetch
+
+LOCAL=$(git rev-parse HEAD)
+REMOTE=$(git rev-parse @{u} 2>/dev/null || git rev-parse origin/main)
+
+if [ "$LOCAL" = "$REMOTE" ]; then
+    echo "[*] Xiphos is already up to date!"
+    exit 0
+fi
+
 echo "[*] Pulling latest changes from git..."
 git pull
 
