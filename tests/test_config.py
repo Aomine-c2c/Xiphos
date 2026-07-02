@@ -21,6 +21,11 @@ def test_load_valid_settings(tmp_path):
       fast_ema: 13
       medium_ema: 50
       slow_sma: 200
+    session_filter:
+      enabled: true
+      start_hour: 8
+      end_hour: 16
+      exempt_groups: []
     correlation_groups:
       group_1: ["EURUSD", "GBPUSD"]
       group_2: ["XAUUSD", "XAGUSD"]
@@ -56,6 +61,11 @@ def test_load_invalid_settings(tmp_path):
       fast_ema: 13
       medium_ema: 50
       slow_sma: 200
+    session_filter:
+      enabled: true
+      start_hour: 8
+      end_hour: 16
+      exempt_groups: []
     correlation_groups: {}
     logging:
       level: "INFO"

@@ -1,5 +1,5 @@
 import polars as pl
-import MetaTrader5 as mt5
+from bridge.proxy import mt5
 from core.logger import log
 
 _indicator_cache = {}
