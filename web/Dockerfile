@@ -1,20 +1,18 @@
 FROM node:20-alpine
+
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Copy application files
+# Copy the rest of the application code
 COPY . .
 
-# Build the Next.js application
-# We set this environment variable to ensure production build optimizations
-ENV NODE_ENV=production
+# Build Next.js
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# Expose port 3000
+# Start Next.js
 EXPOSE 3000
-
-# Start the Next.js server
 CMD ["npm", "run", "start"]

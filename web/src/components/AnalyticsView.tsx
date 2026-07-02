@@ -37,8 +37,12 @@ export default function AnalyticsView() {
 
   useEffect(() => {
     (async () => {
+      const host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
+      const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${protocol}//${host}`;
+
       try {
-        const r1 = await fetch("http://127.0.0.1:8001/api/history?limit=10");
+        const r1 = await fetch(`${apiUrl}/api/history?limit=10`);
         if (r1.ok) {
           const d = await r1.json();
           if (d && d.length > 0) {
@@ -50,7 +54,7 @@ export default function AnalyticsView() {
             })));
           }
         }
-        const r2 = await fetch("http://127.0.0.1:8001/api/performance");
+        const r2 = await fetch(`${apiUrl}/api/performance`);
         if (r2.ok) {
           const d = await r2.json();
           if (d?.global) {

@@ -41,7 +41,10 @@ export default function OracleView() {
   React.useEffect(() => {
     const fetchDecisions = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:8001/api/oracle/decisions");
+        const host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
+        const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${protocol}//${host}`;
+        const res = await fetch(`${apiUrl}/api/oracle/decisions`);
         if (res.ok) {
           const data = await res.json();
           setDecisions(data);
