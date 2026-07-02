@@ -54,6 +54,14 @@ async def save_web_settings(req_settings: dict):
     logger.info("Configuration updated dynamically via Web settings API.")
     return {"status": "success"}
 
+@router.get("/api/state")
+def get_system_state():
+    from core.redis_client import redis_client
+    state = redis_client.get_state()
+    if not state:
+        return {"mt5_connected": False}
+    return state
+
 @router.get("/api/history")
 def get_web_history(limit: int = 50):
     return state_manager.get_trade_history(limit=limit)
