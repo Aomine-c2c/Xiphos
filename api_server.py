@@ -7,7 +7,7 @@ os.environ["XIPHOS_TUI"] = "1"
 import json
 import asyncio
 from datetime import datetime
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
