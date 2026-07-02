@@ -74,13 +74,9 @@ fi
 echo "[*] Upgrading pip..."
 pip install --upgrade pip
 
-# 4. Filter requirements based on OS
+# 4. Install Python dependencies
 echo "[*] Installing Python dependencies..."
-if [ "$IS_WINDOWS" = false ]; then
-    echo "[*] Non-Windows OS detected. Removing MetaTrader5 from requirements..."
-    sed -i.bak '/MetaTrader5/d' requirements.txt
-fi
-pip install -r requirements.txt
+pip install -e .
 
 # 5. Create Configuration
 echo "[*] Creating configuration..."
