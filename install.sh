@@ -124,6 +124,11 @@ cat > xiphos_launcher.sh << EOL
 #!/bin/bash
 cd "$(pwd)"
 
+if [ "\$1" == "update" ]; then
+    bash ./update.sh
+    exit \$?
+fi
+
 echo "Starting Xiphos Web UI, API, and Engine..."
 
 source venv/bin/activate

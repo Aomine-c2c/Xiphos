@@ -78,6 +78,10 @@ cd ..
 echo [*] Setting up 'Xiphos' launch command...
 echo @echo off > xiphos.bat
 echo cd /d "%CD%" >> xiphos.bat
+echo if "%%~1"=="update" ( >> xiphos.bat
+echo     call update.bat >> xiphos.bat
+echo     exit /b >> xiphos.bat
+echo ) >> xiphos.bat
 echo powershell -ExecutionPolicy Bypass -File .\launch.ps1 >> xiphos.bat
 
 if not exist "%USERPROFILE%\.local\bin" mkdir "%USERPROFILE%\.local\bin"
