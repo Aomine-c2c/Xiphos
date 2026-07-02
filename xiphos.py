@@ -105,9 +105,18 @@ def pre_flight_cleanup():
     if os.name == 'nt':
         with log_lock:
             log_queue.append("[bold magenta]SYSTEM[/bold magenta] | Performing pre-flight cleanup of orphaned processes...")
+        
         # Clean up any orphaned redis or node processes to prevent port conflicts
         subprocess.run(["taskkill", "/F", "/IM", "redis-server.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(["taskkill", "/F", "/IM", "node.exe"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Safely kill orphaned python processes (worker_engine or api_server) without killing this script
+        ps_script = (
+            "Get-WmiObject Win32_Process | "
+            "Where-Object { $_.Name -eq 'python.exe' -and ($_.CommandLine -match 'api_server.py' -or $_.CommandLine -match 'worker_engine.py') } | "
+            "Stop-Process -Force"
+        )
+        subprocess.run(["powershell", "-Command", ps_script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(1)
 
 def main():
