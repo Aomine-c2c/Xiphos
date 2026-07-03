@@ -47,22 +47,24 @@ def enqueue_output(name, out):
                 log_queue.append(f"[{color}]{name}[/{color}] | {decoded}")
     out.close()
 
-import urllib.request
+import redis
 import json
 
 def fetch_api_state():
     try:
-        req = urllib.request.Request("http://127.0.0.1:8001/api/state", method="GET")
-        with urllib.request.urlopen(req, timeout=0.5) as response:
-            return json.loads(response.read().decode())
+        r = redis.Redis(host='127.0.0.1', port=6379, decode_responses=True)
+        state_json = r.get("xiphos:state")
+        if state_json:
+            return json.loads(state_json)
+        return None
     except Exception:
         return None
 
 def generate_ui():
     layout = Layout()
     layout.split_column(
-        Layout(name="status", ratio=1),
-        Layout(name="logs", ratio=3)
+        Layout(name="status", size=10),
+        Layout(name="logs")
     )
     
     # Status Table
