@@ -18,19 +18,18 @@ const HoldButton = ({ label, onTrigger, colorClass, icon: Icon }: { label: strin
     let interval: NodeJS.Timeout;
     if (isHolding) {
       interval = setInterval(() => {
-        setProgress(p => {
-          if (p >= 100) {
-            clearInterval(interval);
-            onTrigger();
-            setIsHolding(false);
-            return 100;
-          }
-          return p + 4;
-        });
+        setProgress(p => Math.min(p + 4, 100));
       }, 20);
     }
     return () => clearInterval(interval);
-  }, [isHolding, onTrigger]);
+  }, [isHolding]);
+
+  useEffect(() => {
+    if (progress >= 100 && isHolding) {
+      setIsHolding(false);
+      onTrigger();
+    }
+  }, [progress, isHolding, onTrigger]);
 
   const handleStart = () => {
     setProgress(0);

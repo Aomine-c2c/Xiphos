@@ -244,5 +244,30 @@ def evaluate_adaptation(symbol: str, ind_data: dict, current_lot: float, current
 
         log.error(f"Mahoraga adaptation generation failed: {e}")
 
+
         return ParameterAdaptationSchema(should_adapt=False, new_lot_multiplier=current_lot, new_sl_multiplier=current_sl, reasoning=str(e))
 
+def generate_chat_response(messages: list, system_state_context: str) -> str:
+    if not client:
+        return "System Error: LLM Core Offline (GEMINI_API_KEY missing)."
+    
+    sys_prompt = f"{VINCENT_SYSTEM_PROMPT}\n\nLIVE SYSTEM STATE:\n{system_state_context}"
+    
+    formatted_messages = []
+    for msg in messages:
+        role = "user" if msg.get("role") == "user" else "model"
+        formatted_messages.append({"role": role, "parts": [{"text": msg.get("content", "")}]})
+    
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=formatted_messages,
+            config=types.GenerateContentConfig(
+                system_instruction=sys_prompt,
+                temperature=0.5
+            )
+        )
+        return response.text
+    except Exception as e:
+        log.error(f"Vincent AI chat failed: {e}")
+        return f"Neural link disrupted: {e}"

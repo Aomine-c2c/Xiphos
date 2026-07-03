@@ -371,7 +371,8 @@ def compile_system_state():
 
 
 def state_publisher_loop():
-
+    import MetaTrader5 as mt5
+    mt5.initialize()
     while True:
 
         try:
@@ -771,7 +772,8 @@ def handle_command(payload):
 
 
 def command_listener_loop():
-
+    import MetaTrader5 as mt5
+    mt5.initialize()
     pubsub = redis_client.subscribe_commands()
 
     for message in pubsub.listen():

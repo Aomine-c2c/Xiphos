@@ -59,8 +59,12 @@ def test_load_valid_settings(tmp_path):
       retention: "10 days"
 
     database:
-
       path: "storage/xiphos.sqlite"
+    session_filter:
+      timezones:
+        broker: "EET"
+        local: "UTC"
+      sessions: []
 
     """
 

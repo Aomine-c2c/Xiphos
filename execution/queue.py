@@ -55,7 +55,8 @@ class TradeExecutionWorker:
 
 
     def _worker_loop(self):
-
+        import MetaTrader5 as mt5
+        mt5.initialize()
         while self.running:
 
             try:
