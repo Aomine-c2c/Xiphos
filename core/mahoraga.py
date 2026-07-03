@@ -142,21 +142,10 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
                 exec_time_ms=0.0
             )
 
-
-        # 4. State Application
-        params.trend_state = "TRENDING" if adx > 25 else "RANGING"
-        if rsi > 70: params.momentum_state = "OVERBOUGHT"
-        elif rsi < 30: params.momentum_state = "OVERSOLD"
-        else: params.momentum_state = "NEUTRAL"
-        
-        band_width = (bb_upper - bb_lower) / close_price if close_price > 0 else 0
-        if band_width > 0 and band_width < 0.002:
-            params.trend_state = "SQUEEZE"
+        self._apply_state(params, adx, rsi, bb_upper, bb_lower, close_price)
 
         if params.is_adapted:
             # === FULLY ADAPTED STATE (The Counter-Attack) ===
-            params.filter_strictness = "NORMAL" # Adapted to see through noise
-            
             # Dynamic continuous trigger expansion (baseline 13)
             # Volatility ratio stretches the EMA to filter noise exactly.
             target_ema = int(13 * volatility_ratio)

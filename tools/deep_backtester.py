@@ -9,6 +9,19 @@ import os
 import yaml
 from sqlalchemy import create_engine
 from core.config import settings as config_settings
+import re
+
+def categorize_symbol(symbol: str) -> str:
+    symbol = symbol.upper()
+    if re.search(r'(USD|EUR|GBP|JPY|AUD|CAD|CHF|NZD)', symbol):
+        return "Forex"
+    elif re.search(r'(BTC|ETH|XRP|LTC|SOL)', symbol):
+        return "Crypto"
+    elif re.search(r'(US30|SPX|NAS|GER|UK100)', symbol):
+        return "Indices"
+    elif re.search(r'(XAU|XAG|WTI|BRENT)', symbol):
+        return "Commodities"
+    return "Unknown"
 
 def calculate_atr(df, period=14):
     df = df.copy()
@@ -75,7 +88,7 @@ def run_deep_backtest(): # NOSONAR # noqa: C901
         df_m30['point'] = point
         
         # Python's MT5 library doesn't expose the .path attribute for SymbolInfo, so we rely on the name
-        category = "Unknown"
+        category = categorize_symbol(sym)
         df_m30['category'] = category
         
         df_m30.set_index('time', inplace=True)
@@ -83,7 +96,7 @@ def run_deep_backtest(): # NOSONAR # noqa: C901
         
         all_m30_timestamps.update(df_m30.index.tolist())
         
-    sorted_times = sorted(list(all_m30_timestamps))
+    sorted_times = sorted(all_m30_timestamps)
     print(f"Total M30 cycles to evaluate: {len(sorted_times)}")
     
     open_trades = []
