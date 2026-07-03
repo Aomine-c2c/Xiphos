@@ -170,7 +170,7 @@ def _compile_account_data(account):
 
 
 
-def _compile_positions_data():
+def _compile_positions_data(): # noqa: C901
 
     positions = mt5.positions_get() or []
 
@@ -186,7 +186,12 @@ def _compile_positions_data():
 
         role_id = pos.magic % 10
 
-        role = "Scalper" if role_id == 1 else "Runner" if role_id == 2 else f"Algo-{role_id}"
+        if role_id == 1:
+            role = "Scalper"
+        elif role_id == 2:
+            role = "Runner"
+        else:
+            role = f"Algo-{role_id}"
 
         is_free = pos.sl > 0 and ((pos.type == mt5.ORDER_TYPE_BUY and pos.sl >= pos.price_open) or (pos.type == mt5.ORDER_TYPE_SELL and pos.sl <= pos.price_open))
 

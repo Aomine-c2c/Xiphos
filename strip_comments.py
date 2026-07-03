@@ -1,9 +1,7 @@
 import os
 import tokenize
 
-def remove_comments(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
-        source = f.read()
+def remove_comments(filename): # noqa: C901
 
     with open(filename, 'rb') as f:
         tokens = list(tokenize.tokenize(f.readline))

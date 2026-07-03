@@ -48,8 +48,6 @@ describe("Sidebar (Global Correlation Matrix)", () => {
 
   it("displays '-' for missing correlation values", () => {
     render(<Sidebar />);
-    // There are many missing values, so "·" will be rendered (see Sidebar.tsx: {val !== "-" ? val : "·"})
-    // Oh wait, the code says: {val !== "-" ? val : "·"}
     expect(screen.getAllByText("·").length).toBeGreaterThan(0);
   });
 

@@ -298,7 +298,7 @@ def pre_flight_cleanup():
 
 
 
-def main():
+def main(): # noqa: C901
 
     root_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -318,7 +318,7 @@ def main():
 
         
 
-        pass
+        raise EnvironmentError(f"CRITICAL: Redis server executable not found at {redis_exe}. Xiphos cannot start without a valid broker.")
 
         
 

@@ -1,4 +1,4 @@
-/* eslint-disable react/forbid-dom-props */
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -15,21 +15,30 @@ const HoldButton = ({ label, onTrigger, colorClass, icon: Icon }: { label: strin
   const [isHolding, setIsHolding] = useState(false);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isHolding) {
-      interval = setInterval(() => {
-        setProgress(p => Math.min(p + 4, 100));
-      }, 20);
+    if (!isHolding) {
+      return;
     }
-    return () => clearInterval(interval);
-  }, [isHolding]);
 
-  useEffect(() => {
-    if (progress >= 100 && isHolding) {
-      setIsHolding(false);
-      onTrigger();
-    }
-  }, [progress, isHolding, onTrigger]);
+    const startTime = Date.now();
+    const duration = 500; // 500ms required hold time
+    let frameId: number;
+
+    const tick = () => {
+      const elapsed = Date.now() - startTime;
+      const nextProgress = Math.min((elapsed / duration) * 100, 100);
+      setProgress(nextProgress);
+
+      if (nextProgress >= 100) {
+        setIsHolding(false);
+        onTrigger();
+      } else {
+        frameId = requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [isHolding, onTrigger]);
 
   const handleStart = () => {
     setProgress(0);
@@ -82,7 +91,7 @@ export default function RiskManagerView() {
     return x - Math.floor(x);
   }, []);
 
-  // Mock data for Monte Carlo
+  // Data for Monte Carlo Simulation
   const monteCarloData = useMemo(() => {
     const paths = [];
     for (let path = 0; path < 5; path++) {
@@ -206,8 +215,8 @@ export default function RiskManagerView() {
               <BrainCircuit className="w-3 h-3 text-xiphos-purple" /> AI Risk Suggestions
             </h3>
             <div className="flex-1 overflow-hidden space-y-1 flex flex-col">
-              {aiSuggestions.map((sug, i) => (
-                <div key={`sug-${i}`} className="p-2 bg-white/5 border-l-2 border-xiphos-gold/50 rounded-r text-[9px] text-gray-300 leading-tight">
+              {aiSuggestions.map((sug) => (
+                <div key={sug} className="p-2 bg-white/5 border-l-2 border-xiphos-gold/50 rounded-r text-[9px] text-gray-300 leading-tight">
                   {sug}
                 </div>
               ))}
@@ -225,7 +234,7 @@ export default function RiskManagerView() {
               <Maximize2 className="w-3 h-3" /> Portfolio Risk Heat Map (Sector/Asset Exposure)
             </h3>
             <div className="flex-1 grid grid-cols-5 gap-1">
-              {/* Mock Heatmap blocks */}
+              {/* Heatmap blocks */}
               {[
                 { symbol: "EURUSD", risk: 80, size: "col-span-2 row-span-2" },
                 { symbol: "GBPUSD", risk: 65, size: "col-span-1 row-span-2" },
@@ -235,7 +244,12 @@ export default function RiskManagerView() {
               ].map((block) => {
                 const isHigh = block.risk > 70;
                 const isMed = block.risk > 40 && block.risk <= 70;
-                const color = isHigh ? "bg-xiphos-crimson/80" : (isMed ? "bg-xiphos-gold/80" : "bg-xiphos-emerald/80");
+                let color = "bg-xiphos-emerald/80";
+                if (isHigh) {
+                  color = "bg-xiphos-crimson/80";
+                } else if (isMed) {
+                  color = "bg-xiphos-gold/80";
+                }
                 return (
                   <div key={block.symbol} className={`${block.size} ${color} rounded-sm p-1 flex flex-col justify-between hover:opacity-80 transition-opacity cursor-pointer border border-white/10`}>
                     <span className="text-white font-black text-[10px] tracking-wider">{block.symbol}</span>

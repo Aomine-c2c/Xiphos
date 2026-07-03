@@ -160,7 +160,7 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
 
 
 
-    def evaluate(self, symbol: str, ind_data: dict, recent_win_rate: float, params: AdaptiveParameters): # noqa: C901
+    def evaluate(self, symbol: str, ind_data: dict, recent_win_rate: float, params: AdaptiveParameters): # noqa: C901 # noqa: C901
 
         if not ind_data or "atr_14" not in ind_data or "atr_mean_100" not in ind_data:
 

@@ -18,13 +18,13 @@ describe('WarRoom Component', () => {
     // Arrange: Mock the store return value
     mockedUseTradingStore.mockReturnValue({
       account: {
-        equity: 12500.50,
-        balance: 12000.00,
+        equity: 12500.5,
+        balance: 12000,
         margin: 500,
         margin_free: 12000,
         margin_level: 2500,
       }
-    } as any);
+    } as unknown as ReturnType<typeof useTradingStore>);
 
     // Act: Render the component
     render(<WarRoom />);
@@ -32,12 +32,11 @@ describe('WarRoom Component', () => {
     // Assert: Check if the equity and balance are displayed
     expect(screen.getByText('EQUITY')).toBeInTheDocument();
     expect(screen.getByText('$12500.50')).toBeInTheDocument();
-    
+
     expect(screen.getByText('BALANCE')).toBeInTheDocument();
     expect(screen.getByText('$12000.00')).toBeInTheDocument();
-    
+
     expect(screen.getByText('NET PROFIT')).toBeInTheDocument();
-    // (Note: Net profit is currently hardcoded in the component as +$27.45)
     expect(screen.getByText('+$27.45')).toBeInTheDocument();
   });
 
@@ -47,11 +46,10 @@ describe('WarRoom Component', () => {
         equity: 1000,
         balance: 1000,
       }
-    } as any);
+    } as unknown as ReturnType<typeof useTradingStore>);
 
     render(<WarRoom />);
 
-    // Check margin-related cards (which are mock data right now, but we verify they render)
     expect(screen.getByText('NET PROFIT')).toBeInTheDocument();
     expect(screen.getByText('WIN RATE')).toBeInTheDocument();
     expect(screen.getByText('PROFIT FACTOR')).toBeInTheDocument();

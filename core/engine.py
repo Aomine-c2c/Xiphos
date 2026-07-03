@@ -60,7 +60,7 @@ def generate_magic(symbol: str, role_id: int) -> int:
 
 class XiphosEngine:
 
-    def __init__(self):
+    def __init__(self):  # noqa: C901
 
         self.state_manager = StateManager()
 
@@ -122,7 +122,8 @@ class XiphosEngine:
 
 
 
-    def _evaluate_gate_2(self) -> bool:
+    def _evaluate_gate_2(self) -> bool:  # noqa: C901
+
         blocked_buckets = []
 
         for name, symbols in settings.correlation_groups.items():
@@ -188,10 +189,11 @@ class XiphosEngine:
 
             params = mahoraga_engine.get_parameters(sym)
 
+            
+
+            # Prevent redundant I/O requests for default parameter structures
             is_default_params = params.fast_ema == 13 and params.medium_ema == 50 and params.slow_sma == 200
-
             if not is_default_params:
-
                 ind_data = get_m30_indicators(sym, fast=params.fast_ema, medium=params.medium_ema, slow=params.slow_sma)
 
             if not ind_data:

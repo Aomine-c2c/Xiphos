@@ -12,8 +12,8 @@ jest.mock('recharts', () => {
   const OriginalRecharts = jest.requireActual('recharts');
   return {
     ...OriginalRecharts,
-    ResponsiveContainer: ({ children }: any) => (
-      <div style={{ width: 800, height: 400 }}>{children}</div>
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+      <div className="w-[800px] h-[400px]">{children}</div>
     ),
   };
 });
@@ -31,7 +31,7 @@ describe('RiskManagerView Component', () => {
         equity: 52000,
         margin: 1000,
       }
-    } as any);
+    });
 
     // Act
     render(<RiskManagerView />);
@@ -48,7 +48,7 @@ describe('RiskManagerView Component', () => {
     jest.useFakeTimers();
     mockedUseTradingStore.mockReturnValue({
       account: { balance: 50000 }
-    } as any);
+    });
 
     render(<RiskManagerView />);
 
@@ -61,7 +61,7 @@ describe('RiskManagerView Component', () => {
     if (haltButton) {
       fireEvent.mouseDown(haltButton);
       // Fast-forward time so the interval completes (20ms * 25 ticks = 500ms)
-      const { act } = require('@testing-library/react');
+      const { act } = await import('@testing-library/react');
       act(() => {
         jest.advanceTimersByTime(600);
       });
