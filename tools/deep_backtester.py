@@ -74,7 +74,8 @@ def run_deep_backtest(): # NOSONAR # noqa: C901
         point = sym_info.point if sym_info else 0.00001
         df_m30['point'] = point
         
-        category = sym_info.path.split('\\')[0] if sym_info else "Unknown"
+        # Python's MT5 library doesn't expose the .path attribute for SymbolInfo, so we rely on the name
+        category = "Unknown"
         df_m30['category'] = category
         
         df_m30.set_index('time', inplace=True)

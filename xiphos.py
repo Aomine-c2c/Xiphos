@@ -132,8 +132,8 @@ def pre_flight_cleanup():
         # Safely kill orphaned python processes (worker_engine or api_server) without killing this script
         ps_script = (
             "Get-WmiObject Win32_Process | "
-            "Where-Object { $_.Name -eq 'python.exe' -and ($_.CommandLine -match 'api_server.py' -or $_.CommandLine -match 'worker_engine.py') } | "
-            "Stop-Process -Force"
+            "Where-Object { $_.Name -eq 'python.exe' -and ($_.CommandLine -match 'api_server' -or $_.CommandLine -match 'worker_engine.py') } | "
+            "ForEach-Object { $_.Terminate() }"
         )
         subprocess.run(["powershell", "-Command", ps_script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         time.sleep(1)
