@@ -13,12 +13,9 @@ class JobScheduler:
         
 
     def add_m30_job(self, func):
-
-        
-
-        self.scheduler.add_job(func, 'cron', minute='0,30')
-
-        log.info("Scheduled M30 evaluation job.")
+        # TEST MODE: Run every minute instead of '0,30'
+        self.scheduler.add_job(func, 'cron', minute='*')
+        log.info("Scheduled M30 evaluation job (TEST MODE: 1-min interval).")
 
         
 

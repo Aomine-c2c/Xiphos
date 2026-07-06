@@ -120,33 +120,12 @@ def evaluate_signal(ind_data: dict): # noqa: C901
 
 
 
-    
-
-    if macro_up and prev_c < prev_fast and c > e_fast:
-
-        if rsi > 70:
-
-            log.debug(f"BUY rejected: RSI overbought ({rsi:.1f})")
-
-            return None
-
-        log.debug(f"BUY signal: Fast EMA cross above in macro uptrend (50 EMA > 200 SMA) [Strictness: {strictness}]")
-
+    # === TEST MODE: BLIND TRADES ===
+    if c > e_fast:
+        log.debug("TEST MODE: Forced BUY signal (Price > Fast EMA)")
         return "BUY"
-
-    elif macro_down and prev_c > prev_fast and c < e_fast:
-
-        if rsi < 30:
-
-            log.debug(f"SELL rejected: RSI oversold ({rsi:.1f})")
-
-            return None
-
-        log.debug(f"SELL signal: Fast EMA cross below in macro downtrend (50 EMA < 200 SMA) [Strictness: {strictness}]")
-
+    elif c < e_fast:
+        log.debug("TEST MODE: Forced SELL signal (Price < Fast EMA)")
         return "SELL"
-
-
-
+    
     return None
-
