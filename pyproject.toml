@@ -3,6 +3,7 @@ name = "xiphos"
 version = "2.2.0"
 description = "Institutional-Grade Algorithmic Trading Framework"
 readme = "README.md"
+license = { text = "Proprietary" }
 requires-python = ">=3.10"
 dependencies = [
     "MetaTrader5>=5.0.45; sys_platform == 'win32'",
@@ -34,5 +35,6 @@ dev = [
     "pytest>=7.4.2",
 ]
 
-[tool.setuptools]
-packages = []
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api*", "core*", "strategies*", "risk*", "execution*", "indicators*", "dashboard*", "bridge*", "config*", "storage*", "tools*", "monitoring*", "tests*"]

@@ -96,6 +96,8 @@ def enqueue_output(name, out):
 
                 if name == "Redis": color = "red"
 
+                elif name == "Bridge": color = "magenta"
+
                 elif name == API_SERVER_NAME: color = "green"
 
                 elif name == "Worker": color = "yellow"
@@ -151,6 +153,10 @@ def _get_process_details(name, proc, mt5_connected):
     if name == "Redis":
 
         return status, "Port 6379"
+
+    elif name == "Bridge":
+
+        return status, "http://localhost:8000"
 
     elif name == API_SERVER_NAME:
 
@@ -286,7 +292,7 @@ def pre_flight_cleanup():
 
             "Get-WmiObject Win32_Process | "
 
-            "Where-Object { $_.Name -eq 'python.exe' -and ($_.CommandLine -match 'api_server' -or $_.CommandLine -match 'worker_engine.py') } | "
+            "Where-Object { $_.Name -eq 'python.exe' -and ($_.CommandLine -match 'api_server' -or $_.CommandLine -match 'worker_engine.py' -or $_.CommandLine -match 'bridge.server') } | "
 
             "ForEach-Object { $_.Terminate() }"
 
@@ -369,6 +375,16 @@ def main(): # noqa: C901
     time.sleep(1.5)
 
     check_fatal("Redis", proc_redis)
+
+    
+
+    if os.name == 'nt':
+
+        proc_bridge = spawn_process("Bridge", [python_exe, "-m", "uvicorn", "bridge.server:app", "--port", "8000"], cwd=root_dir, env=env)
+
+        time.sleep(2.0)
+
+        check_fatal("Bridge", proc_bridge)
 
     
 
