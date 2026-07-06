@@ -2,6 +2,7 @@ Metadata-Version: 2.4
 Name: xiphos
 Version: 2.2.0
 Summary: Institutional-Grade Algorithmic Trading Framework
+License: Proprietary
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 Requires-Dist: MetaTrader5>=5.0.45; sys_platform == "win32"
@@ -28,3 +29,7 @@ Requires-Dist: redis>=5.0.1
 Requires-Dist: prometheus-fastapi-instrumentator>=7.0.0
 Provides-Extra: dev
 Requires-Dist: pytest>=7.4.2; extra == "dev"
+
+# Xiphos
+
+Institutional-grade algorithmic trading framework.

@@ -1,1 +1,13 @@
-
+api
+bridge
+config
+core
+dashboard
+execution
+indicators
+monitoring
+risk
+storage
+strategies
+tests
+tools

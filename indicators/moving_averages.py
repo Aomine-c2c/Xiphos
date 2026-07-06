@@ -122,7 +122,10 @@ def get_m30_indicators(symbol: str, count: int = 250, fast: int = 13, medium: in
 
 
 
-    obv = pl.when(pl.col("close") > pl.col("close").shift(1)).then(pl.col("tick_volume"))            .when(pl.col("close") < pl.col("close").shift(1)).then(-pl.col("tick_volume"))            .otherwise(0).cum_sum()
+    tick_vol = pl.col("tick_volume").cast(pl.Int64)
+    obv = pl.when(pl.col("close") > pl.col("close").shift(1)).then(tick_vol) \
+            .when(pl.col("close") < pl.col("close").shift(1)).then(-tick_vol) \
+            .otherwise(0).cum_sum()
 
 
 

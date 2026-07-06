@@ -38,3 +38,6 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["api*", "core*", "strategies*", "risk*", "execution*", "indicators*", "dashboard*", "bridge*", "config*", "storage*", "tools*", "monitoring*", "tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -322,7 +322,7 @@ def modify_sl(ticket: int, symbol: str, new_sl: float):
 
     if result:
 
-        from core.database import Execution
+        from core.database import db, Execution
 
         with db.get_session() as session:
 

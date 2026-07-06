@@ -158,6 +158,18 @@ class AdvancedMahoragaAdapter(AdaptationStrategy):
 
         return f"{vol_tag}_{trend_tag}_{mom_tag}"
 
+    def _apply_state(self, params, adx, rsi, bb_upper, bb_lower, close_price):
+        if adx > 25:
+            params.trend_state = "TRENDING"
+        else:
+            params.trend_state = "RANGING"
+            
+        if rsi > 70:
+            params.momentum_state = "OVERBOUGHT"
+        elif rsi < 30:
+            params.momentum_state = "OVERSOLD"
+        else:
+            params.momentum_state = "NEUTRAL"
 
 
     def evaluate(self, symbol: str, ind_data: dict, recent_win_rate: float, params: AdaptiveParameters): # noqa: C901 # noqa: C901
