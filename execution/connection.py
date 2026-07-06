@@ -1,18 +1,21 @@
+import os
+
 import time
 
 import MetaTrader5 as mt5
 
-from core.logger import log
+
+
+from core.logger import log as logger
 
 
 
 
-
-import os
 
 
 
 class MT5Connection:
+
 
     def __init__(self):
 
@@ -20,7 +23,35 @@ class MT5Connection:
 
 
 
-    def connect(self, max_retries=5, delay=5):
+    def _apply_login(self, login, password, server) -> bool:
+
+        if not (login and password and server):
+
+            return True
+
+
+
+        authorized = mt5.login(int(login), password=password, server=server)
+
+        if not authorized:
+
+            logger.error(f"MT5 Login failed. Error code: {mt5.last_error()}")
+
+            return False
+
+
+
+        return True
+
+
+
+    def ensure_initialized(self) -> bool:
+
+        if getattr(self, "connected", False):
+
+            return True
+
+
 
         login = os.getenv("MT5_LOGIN")
 
@@ -30,79 +61,103 @@ class MT5Connection:
 
 
 
-        for attempt in range(max_retries):
+        try:
 
-            
+            if mt5.initialize() and self._apply_login(login, password, server):
 
-            if mt5.initialize():
-
-                
-
-                if login and password and server:
-
-                    authorized = mt5.login(int(login), password=password, server=server)
-
-                    if not authorized:
-
-                        log.error(f"MT5 Login failed. Error code: {mt5.last_error()}")
-
-                        time.sleep(delay)
-
-                        continue
-
-                
-
-                log.info("Successfully connected to MetaTrader 5 terminal.")
+                logger.info("Successfully connected to MetaTrader 5 terminal.")
 
                 self.connected = True
 
                 return True
 
-            else:
 
-                err = mt5.last_error()
 
-                if max_retries > 1:
+            err = mt5.last_error()
 
-                    log.error(f"MT5 Initialization failed. Error code: {err}. Attempt {attempt + 1}/{max_retries}")
+            logger.error(f"MT5 Initialization failed. Error code: {err}.")
 
-                time.sleep(delay)
+            return False
 
 
 
-        if max_retries > 1:
+        except Exception as e:
 
-            log.critical("Failed to connect to MT5 after maximum retries.")
+            logger.error(f"MT5 initialization exception: {e}")
+
+            return False
+
+
+
+    def connect(self, max_retries=5, delay=5) -> bool:
+
+        if self.ensure_initialized():
+
+            return True
+
+
+
+        for attempt in range(max_retries):
+
+            logger.warning(f"MT5 reconnect attempt {attempt + 1}/{max_retries}.")
+
+            time.sleep(delay)
+
+
+
+            if self.ensure_initialized():
+
+                return True
+
+
+
+        logger.critical("Failed to connect to MT5 after maximum retries.")
 
         return False
 
 
 
-    def check_health(self):
+    def check_health(self) -> bool:
 
-        
+        try:
 
-        info = mt5.terminal_info()
+            info = mt5.terminal_info()
 
-        if info is None or not info.connected:
+        except Exception:
+
+            info = None
+
+
+
+        if info is None or not getattr(info, "connected", False):
 
             self.connected = False
 
-            log.warning("Terminal connection lost or disconnected from broker. Attempting reconnect...")
+            logger.warning("Terminal connection lost or disconnected from broker. Attempting reconnect...")
 
             return self.connect()
+
+
 
         return True
 
 
 
-    def disconnect(self):
+    def disconnect(self) -> None:
 
-        mt5.shutdown()
+        try:
+
+            mt5.shutdown()
+
+        except Exception:
+
+            pass
+
+
 
         self.connected = False
 
-        log.info("Disconnected from MT5 terminal.")
+        logger.info("Disconnected from MT5 terminal.")
 
 
 

@@ -1,138 +1,80 @@
-from bridge.proxy import mt5
+from execution.retry import retry_mt5_call
 
-import time
+import MetaTrader5 as mt5
 
 from core.logger import log as logger
 
 
 
-MAX_RETRIES = 3
+def execute_market_order(symbol, order_type, volume, sl_price, magic):
 
-BASE_DELAY = 2.0
+    type_mt5 = mt5.ORDER_TYPE_BUY if order_type == "BUY" else mt5.ORDER_TYPE_SELL
+
+    price = mt5.symbol_info_tick(symbol).ask if order_type == "BUY" else mt5.symbol_info_tick(symbol).bid
+
+    
+
+    request = {
+
+        "action": mt5.TRADE_ACTION_DEAL,
+
+        "symbol": str(symbol),
+
+        "volume": float(volume),
+
+        "type": int(type_mt5),
+
+        "price": float(price),
+
+        "sl": float(sl_price),
+
+        "deviation": 20,
+
+        "magic": int(magic),
+
+        "comment": "M30 Framework Bot",
+
+    }
+
+    
+
+    return retry_mt5_call(mt5.order_send, request=request)
 
 
 
-class MT5Executor:
+def modify_sl(ticket, symbol, new_sl):
 
-    def __init__(self):
+    positions = mt5.positions_get(ticket=ticket)
 
-        if not mt5.initialize():
-
-            logger.critical(f"MT5 initialization failed, error code = {mt5.last_error()}")
-
-            raise Exception("MT5 Init Failed")
-
-        logger.info("MT5 connection established.")
-
-        
-
-    def _retry_wrapper(self, func, *args, **kwargs):
-
-        for attempt in range(MAX_RETRIES):
-
-            if func == mt5.order_send:
-
-                result = mt5.order_send(args[0])
-
-            else:
-
-                result = func(*args, **kwargs)
-
-            if result is not None and getattr(result, "retcode", mt5.TRADE_RETCODE_DONE) == mt5.TRADE_RETCODE_DONE:
-
-                return result
-
-            elif result is not None:
-
-                logger.warning(f"MT5 order failed with retcode {result.retcode} ({getattr(result, 'comment', 'No comment')}). Attempt {attempt+1}/{MAX_RETRIES}")
-
-            else:
-
-                err = mt5.last_error()
-
-                logger.warning(f"MT5 function returned None. Error: {err}. Attempt {attempt+1}/{MAX_RETRIES}")
-
-                
-
-            time.sleep(BASE_DELAY * (2 ** attempt))
-
-            
-
-        logger.critical(f"Operation {func.__name__} failed after {MAX_RETRIES} attempts.")
+    if not positions:
 
         return None
 
-
-
-    def execute_market_order(self, symbol, order_type, volume, sl_price, magic):
-
-        type_mt5 = mt5.ORDER_TYPE_BUY if order_type == "BUY" else mt5.ORDER_TYPE_SELL
-
-        price = mt5.symbol_info_tick(symbol).ask if order_type == "BUY" else mt5.symbol_info_tick(symbol).bid
+    position = positions[0]
 
         
 
-        request = {
+    request = {
 
-            "action": mt5.TRADE_ACTION_DEAL,
+        "action": mt5.TRADE_ACTION_SLTP,
 
-            "symbol": str(symbol),
+        "symbol": str(symbol),
 
-            "volume": float(volume),
+        "sl": float(new_sl),
 
-            "type": int(type_mt5),
+        "tp": float(position.tp) if position.tp else 0.0,
 
-            "price": float(price),
+        "position": int(ticket)
 
-            "sl": float(sl_price),
-
-            "deviation": 20,
-
-            "magic": int(magic),
-
-            "comment": "M30 Framework Bot",
-
-        }
+    }
 
         
 
-        return self._retry_wrapper(mt5.order_send, request)
+    return retry_mt5_call(mt5.order_send, request=request)
 
 
 
-    def modify_sl(self, ticket, symbol, new_sl):
+def get_open_positions():
 
-        positions = mt5.positions_get(ticket=ticket)
-
-        if not positions:
-
-            return None
-
-        position = positions[0]
-
-            
-
-        request = {
-
-            "action": mt5.TRADE_ACTION_SLTP,
-
-            "symbol": str(symbol),
-
-            "sl": float(new_sl),
-
-            "tp": float(position.tp) if position.tp else 0.0,
-
-            "position": int(ticket)
-
-        }
-
-        
-
-        return self._retry_wrapper(mt5.order_send, request)
-
-
-
-    def get_open_positions(self):
-
-        return mt5.positions_get()
+    return mt5.positions_get()
 

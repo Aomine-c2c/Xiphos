@@ -2,93 +2,111 @@ import time
 
 from bridge.proxy import mt5
 
-from core.logger import log
+from execution.connection import mt5_conn
 
-from storage.database import db
+from execution.retry import retry_mt5_call
+
+from core.logger import log as logger
+
+
+
+
 
 
 
 MAX_RETRIES = 3
 
-BASE_DELAY = 1.0
+
+
+BASE_DELAY = 2.0
 
 
 
-def _retry_wrapper(func, *args, **kwargs):
 
-    for attempt in range(MAX_RETRIES):
-
-        if func.__name__ == 'order_send' or func.__name__ == 'order_check':
-
-            result = func(args[0])
-
-        else:
-
-            result = func(*args, **kwargs)
-
-            
-
-        if result is not None and getattr(result, "retcode", mt5.TRADE_RETCODE_DONE) == mt5.TRADE_RETCODE_DONE:
-
-            return result
-
-        elif result is not None:
-
-            log.warning(f"MT5 order failed with retcode {result.retcode} ({result.comment}). Attempt {attempt+1}/{MAX_RETRIES}")
-
-        else:
-
-            err = mt5.last_error()
-
-            log.warning(f"MT5 function returned None. Error: {err}. Attempt {attempt+1}/{MAX_RETRIES}")
-
-            
-
-        time.sleep(BASE_DELAY * (2 ** attempt))
-
-        
-
-    log.critical(f"MT5 Operation failed permanently after {MAX_RETRIES} attempts.")
-
-    return None
 
 
 
 def _validate_trade_safety(symbol, sl_price):
 
-    if sl_price is None or sl_price <= 0:
+    try:
 
-        log.critical(f"BLOCKED: Attempted to place naked trade on {symbol}. Missing SL.")
+        info = mt5.symbol_info(symbol)
 
-        return False
-
-    terminal = mt5.terminal_info()
-
-    if terminal is None:
-
-        log.critical("BLOCKED: MT5 connection lost. Terminal info is None.")
+    except Exception:
 
         return False
 
-    if not terminal.trade_allowed:
 
-        log.critical("BLOCKED: MT5 terminal has algo trading DISABLED.")
 
-        return False
+    if not info:
 
-    if not terminal.connected:
-
-        log.critical("BLOCKED: MT5 terminal is not connected to the broker.")
+        log.warning(f"Symbol info unavailable for {symbol}")
 
         return False
 
-        
 
-    if not mt5.symbol_select(symbol, True):
 
-        log.warning(f"symbol_select failed for {symbol}.")
+    tick = mt5.symbol_info_tick(symbol)
+
+    if not tick:
+
+        return False
+
+
+
+    point = info.point or 0.00001
+
+    stop_level = info.trade_stops_level * point if info.trade_stops_level else 0.0
+
+    dist = abs(tick.ask - sl_price) if sl_price < tick.ask else abs(tick.bid - sl_price)
+
+
+
+    if stop_level and dist < stop_level:
+
+        log.warning(f"SL for {symbol} violates stop level ({stop_level}).")
+
+        return False
+
+
 
     return True
+
+
+
+
+
+
+
+def _get_supported_filling_modes(filling_bitmask: int, symbol: str):
+
+    by_bit = {
+
+        1: [mt5.ORDER_FILLING_FOK],
+
+        2: [mt5.ORDER_FILLING_IOC],
+
+        3: [mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_IOC],
+
+    }
+
+
+
+    support = by_bit.get(filling_bitmask, [mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_IOC])
+
+
+
+    if mt5.ORDER_FILLING_RETURN in dir(mt5):
+
+        support += [mt5.ORDER_FILLING_RETURN]
+
+
+
+    return [(mode, f"bitmask {filling_bitmask}") for mode in support]
+
+
+
+
 
 
 
@@ -96,57 +114,45 @@ def _get_trade_price_and_stoplevel(symbol, type_str, sl_price):
 
     tick = mt5.symbol_info_tick(symbol)
 
-    if not tick:
+    info = mt5.symbol_info(symbol)
 
-        return None, None
+    if not tick or not info:
+
+        log.warning(f"Market data unavailable for {symbol}")
+
+        return None, 0
+
+
 
     price = tick.ask if type_str == "BUY" else tick.bid
 
-    sym_info = mt5.symbol_info(symbol)
-
-    if not sym_info:
-
-        return None, None
-
-    stoplevel = sym_info.trade_stops_level * sym_info.point
-
-    if abs(price - sl_price) <= stoplevel:
-
-        log.warning(f"BLOCKED: SL {sl_price} for {symbol} is too close. Min {stoplevel}.")
-
-        return None, None
-
-    return price, sym_info.filling_mode
+    return price, info.trade_filling_mode
 
 
 
-def _get_supported_filling_modes(filling_bitmask, symbol):
 
-    all_modes = [
-
-        (mt5.ORDER_FILLING_FOK, "FOK", 1),
-
-        (mt5.ORDER_FILLING_IOC, "IOC", 2),
-
-        (mt5.ORDER_FILLING_RETURN, "RETURN", 4),
-
-    ]
-
-    supported = [(mode, name) for mode, name, bit in all_modes if filling_bitmask & bit]
-
-    if not supported:
-
-        log.warning(f"No supported filling modes found for {symbol}. Trying all.")
-
-        supported = [(mode, name) for mode, name, _ in all_modes]
-
-    return supported
 
 
 
 def _record_trade_in_db(result, symbol, type_str, volume, sl_price, magic, sig, latency_ms):
 
-    from core.database import Execution, Trade
+    from core.database import db
+
+    from core.database import Trade, Execution
+
+
+
+    sma_200 = float(sig['ind_data']['sma_slow']) if sig and 'ind_data' in sig else 0.0
+
+    fast_ema = float(sig['ind_data']['ema_fast']) if sig and 'ind_data' in sig else 0.0
+
+    medium_ema = float(sig['ind_data']['ema_medium']) if sig and 'ind_data' in sig else 0.0
+
+    dist_sma = float(sig.get('distance', 0.0)) if sig else 0.0
+
+    proj_risk = float(sig.get('projected_risk', 0.0)) if sig else 0.0
+
+
 
     with db.get_session() as session:
 
@@ -163,18 +169,6 @@ def _record_trade_in_db(result, symbol, type_str, volume, sl_price, magic, sig, 
         session.add(execution)
 
         
-
-        sma_200 = float(sig['ind_data']['sma_slow']) if sig and 'ind_data' in sig else 0.0
-
-        fast_ema = float(sig['ind_data']['ema_fast']) if sig and 'ind_data' in sig else 0.0
-
-        medium_ema = float(sig['ind_data']['ema_medium']) if sig and 'ind_data' in sig else 0.0
-
-        dist_sma = float(sig.get('distance', 0.0)) if sig else 0.0
-
-        proj_risk = float(sig.get('projected_risk', 0.0)) if sig else 0.0
-
-
 
         trade = Trade(
 
@@ -216,6 +210,10 @@ def _record_trade_in_db(result, symbol, type_str, volume, sl_price, magic, sig, 
 
 
 
+
+
+
+
 def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume, sl_price, magic, sig=None):
 
     for filling_mode, filling_name in supported_modes:
@@ -232,7 +230,7 @@ def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume
 
         start_time = time.perf_counter()
 
-        result = _retry_wrapper(mt5.order_send, request)
+        result = retry_mt5_call(mt5.order_send, request=request)
 
         latency_ms = (time.perf_counter() - start_time) * 1000
 
@@ -246,7 +244,11 @@ def _execute_order_with_modes(request, supported_modes, symbol, type_str, volume
 
             return result
 
+
+
     return None
+
+
 
 
 
@@ -258,11 +260,15 @@ def open_trade(symbol: str, type_str: str, volume: float, sl_price: float, magic
 
         return None
 
+
+
     price, filling_bitmask = _get_trade_price_and_stoplevel(symbol, type_str, sl_price)
 
     if price is None:
 
         return None
+
+
 
     supported = _get_supported_filling_modes(filling_bitmask, symbol)
 
@@ -282,7 +288,11 @@ def open_trade(symbol: str, type_str: str, volume: float, sl_price: float, magic
 
     }
 
+
+
     return _execute_order_with_modes(request, supported, symbol, type_str, volume, sl_price, magic, sig)
+
+
 
 
 
@@ -316,9 +326,7 @@ def modify_sl(ticket: int, symbol: str, new_sl: float):
 
     }
 
-    
-
-    result = _retry_wrapper(mt5.order_send, request)
+        result = retry_mt5_call(mt5.order_send, request=request)
 
     if result:
 
@@ -340,5 +348,8 @@ def modify_sl(ticket: int, symbol: str, new_sl: float):
 
         return True
 
+
+
     return False
+
 

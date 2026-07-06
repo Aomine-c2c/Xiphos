@@ -55,8 +55,8 @@ class TradeExecutionWorker:
 
 
     def _worker_loop(self):
-        if not mt5_conn.ensure_initialized():
-            raise RuntimeError("MT5 failed to initialize in trade worker")
+        import MetaTrader5 as mt5
+        mt5.initialize()
         while self.running:
 
             try:

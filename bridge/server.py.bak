@@ -1,9 +1,6 @@
 import MetaTrader5 as mt5
 
 from fastapi import FastAPI, Request
-
-from execution.connection import mt5_conn
-
 from pydantic import BaseModel
 
 import argparse
@@ -30,7 +27,7 @@ def error(msg):
 
 def initialize():
 
-    if not mt5_conn.ensure_initialized():
+    if not mt5.initialize():
 
         return error(f"MT5 Init Failed: {mt5.last_error()}")
 
