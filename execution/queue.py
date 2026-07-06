@@ -6,6 +6,8 @@ from loguru import logger
 
 import time
 
+from execution.connection import mt5_conn
+
 
 
 class TradeExecutionWorker:
@@ -55,9 +57,11 @@ class TradeExecutionWorker:
 
 
     def _worker_loop(self):
-        if not mt5_conn.ensure_initialized():
-            raise RuntimeError("MT5 failed to initialize in trade worker")
         while self.running:
+            if not mt5_conn.ensure_initialized():
+                logger.warning("Trade worker waiting for MT5 terminal connection...")
+                time.sleep(2.0)
+                continue
 
             try:
 

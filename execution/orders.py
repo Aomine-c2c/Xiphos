@@ -32,7 +32,9 @@ def _validate_trade_safety(symbol, sl_price):
 
         info = mt5.symbol_info(symbol)
 
-    except Exception:
+    except Exception as e:
+
+        logger.error(f"MT5 IPC Error fetching symbol_info for {symbol}: {e}")
 
         return False
 
@@ -40,15 +42,7 @@ def _validate_trade_safety(symbol, sl_price):
 
     if not info:
 
-        log.warning(f"Symbol info unavailable for {symbol}")
-
-        return False
-
-
-
-    tick = mt5.symbol_info_tick(symbol)
-
-    if not tick:
+        logger.warning(f"Symbol info unavailable for {symbol}")
 
         return False
 
@@ -58,13 +52,13 @@ def _validate_trade_safety(symbol, sl_price):
 
     stop_level = info.trade_stops_level * point if info.trade_stops_level else 0.0
 
-    dist = abs(tick.ask - sl_price) if sl_price < tick.ask else abs(tick.bid - sl_price)
+    dist = abs(info.ask - sl_price) if sl_price < info.ask else abs(info.bid - sl_price)
 
 
 
     if stop_level and dist < stop_level:
 
-        log.warning(f"SL for {symbol} violates stop level ({stop_level}).")
+        logger.warning(f"SL for {symbol} violates stop level ({stop_level}).")
 
         return False
 
@@ -112,19 +106,17 @@ def _get_supported_filling_modes(filling_bitmask: int, symbol: str):
 
 def _get_trade_price_and_stoplevel(symbol, type_str, sl_price):
 
-    tick = mt5.symbol_info_tick(symbol)
-
     info = mt5.symbol_info(symbol)
 
-    if not tick or not info:
+    if not info:
 
-        log.warning(f"Market data unavailable for {symbol}")
+        logger.warning(f"Market data unavailable for {symbol}")
 
         return None, 0
 
 
 
-    price = tick.ask if type_str == "BUY" else tick.bid
+    price = info.ask if type_str == "BUY" else info.bid
 
     return price, info.trade_filling_mode
 
@@ -326,7 +318,7 @@ def modify_sl(ticket: int, symbol: str, new_sl: float):
 
     }
 
-        result = retry_mt5_call(mt5.order_send, request=request)
+    result = retry_mt5_call(mt5.order_send, request=request)
 
     if result:
 
