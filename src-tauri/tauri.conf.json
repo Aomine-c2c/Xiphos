@@ -1,0 +1,69 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Xiphos",
+  "version": "1.0.0",
+  "identifier": "com.xiphos.trading",
+  "build": {
+    "frontendDist": "../web/out",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "cd ../web && npm run dev",
+    "beforeBuildCommand": "cd ../web && npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Xiphos Trading System",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1200,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true
+      }
+    ],
+    "trayIcon": {
+      "iconPath": "icons/tray.png",
+      "iconAsTemplate": false
+    },
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "nsis",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../tools/redis": "resources/redis",
+      "../python-embed": "resources/python-embed"
+    },
+    "nsis": {
+      "displayLanguageSelector": false,
+      "installMode": "currentUser",
+      "shortcutsEnabled": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "",
+      "endpoints": [
+        "https://github.com/your-org/xiphos/releases/latest/download/latest.json"
+      ]
+    },
+    "notification": {},
+    "shell": {
+      "open": false
+    }
+  }
+}

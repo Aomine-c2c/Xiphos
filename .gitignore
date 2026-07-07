@@ -62,3 +62,10 @@ research/
 /build*.log
 /test*.log
 /build_*.txt
+
+# Tauri / Windows app
+python-embed/
+src-tauri/target/
+web/out/
+*.key
+pubkey.pem
