@@ -8,6 +8,6 @@
     "notification:default",
     "updater:default",
     "shell:default",
-    "process:exit"
+    "process:default"
   ]
 }

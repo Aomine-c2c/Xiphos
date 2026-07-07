@@ -45,13 +45,6 @@
     "resources": {
       "../tools/redis": "resources/redis",
       "../python-embed": "resources/python-embed"
-    },
-    "nsis": {
-      "displayLanguageSelector": false,
-      "installMode": "currentUser",
-      "shortcutsEnabled": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
     }
   },
   "plugins": {
@@ -60,10 +53,6 @@
       "endpoints": [
         "https://github.com/your-org/xiphos/releases/latest/download/latest.json"
       ]
-    },
-    "notification": {},
-    "shell": {
-      "open": false
     }
   }
 }
