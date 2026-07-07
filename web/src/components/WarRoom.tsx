@@ -5,14 +5,15 @@ import React, { useState } from "react";
 import { useTradingStore } from "../store/useTradingStore";
 
 export default function WarRoom() {
-  const { account } = useTradingStore();
+  const { account, performanceMetrics, positions } = useTradingStore();
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
-  // Mock Risk Stats moved from Sidebar
-  const slotsUsed = 2;
-  const slotsFree = 2;
-  const capitalAtRisk = "$2.46 (2.46%)";
-  const portfolioHealth = "EXCELLENT";
+  // Derived state
+  const slotsUsed = positions.length;
+  const maxSlots = 5;
+  const marginStr = account.margin > 0 ? `$${account.margin.toFixed(2)}` : "$0.00";
+  const capitalAtRisk = `${marginStr} (${account.balance > 0 ? ((account.margin / account.balance) * 100).toFixed(2) : '0.00'}%)`;
+  const portfolioHealth = account.margin_level > 500 || account.margin_level === 0 ? "EXCELLENT" : (account.margin_level > 200 ? "WARNING" : "CRITICAL");
 
   return (
     <div className="bg-xiphos-panel/60 backdrop-blur-xl border border-xiphos-blue/20 shadow-[0_0_15px_rgba(0,168,255,0.05)] rounded-sm p-4 font-mono select-none flex flex-col justify-between h-full transition-all duration-300 hover:border-xiphos-blue/40">
@@ -85,30 +86,41 @@ export default function WarRoom() {
             NET PROFIT
           </span>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-3xl font-black text-xiphos-green leading-none">
-              +$27.45
+            <span className={`text-3xl font-black leading-none ${performanceMetrics.total_profit >= 0 ? 'text-xiphos-green' : 'text-xiphos-red'}`}>
+              {performanceMetrics.total_profit >= 0 ? '+' : ''}${performanceMetrics.total_profit.toFixed(2)}
             </span>
-            <span className="text-[16px] text-xiphos-green font-black leading-none bg-xiphos-green/10 px-1 py-0.5 rounded-sm border border-xiphos-green/20">
-              +27.45%
+            <span className={`text-[16px] font-black leading-none px-1 py-0.5 rounded-sm border ${performanceMetrics.total_profit >= 0 ? 'text-xiphos-green bg-xiphos-green/10 border-xiphos-green/20' : 'text-xiphos-red bg-xiphos-red/10 border-xiphos-red/20'}`}>
+              {account.balance > 0 ? (performanceMetrics.total_profit >= 0 ? '+' : '') + ((performanceMetrics.total_profit / (account.balance - performanceMetrics.total_profit)) * 100).toFixed(2) : '0.00'}%
             </span>
           </div>
           {/* Dynamic SVG Columns with Hover */}
           <div className="relative w-full h-[35px] mt-2 flex items-end justify-between px-1">
-            {[10, 15, 8, 20, 12, 24, 32].map((height, i) => (
-              <div 
-                key={i}
-                className="w-2.5 bg-xiphos-green rounded-t-[1px] relative cursor-pointer transition-all duration-300 hover:brightness-125"
-                style={{ height: `${height}px`, opacity: hoveredBar === i ? 1 : 0.6 }}
-                onMouseEnter={() => setHoveredBar(i)}
-                onMouseLeave={() => setHoveredBar(null)}
-              >
-                {hoveredBar === i && (
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-xiphos-bg border border-slate-700 text-white text-[14px] font-bold px-1.5 py-0.5 rounded-sm z-50">
-                    +${(height * 0.5).toFixed(1)}
+            {(() => {
+              const curve = performanceMetrics.equity_curve && performanceMetrics.equity_curve.length > 0 
+                ? performanceMetrics.equity_curve.slice(-7) 
+                : [10, 15, 8, 20, 12, 24, 32];
+              const maxVal = Math.max(...curve, 1);
+              const minVal = Math.min(...curve, 0);
+              const range = maxVal - minVal || 1;
+              return curve.map((val, i) => {
+                const height = Math.max(4, ((val - minVal) / range) * 35);
+                return (
+                  <div 
+                    key={i}
+                    className="w-2.5 bg-xiphos-green rounded-t-[1px] relative cursor-pointer transition-all duration-300 hover:brightness-125"
+                    style={{ height: `${height}px`, opacity: hoveredBar === i ? 1 : 0.6 }}
+                    onMouseEnter={() => setHoveredBar(i)}
+                    onMouseLeave={() => setHoveredBar(null)}
+                  >
+                    {hoveredBar === i && (
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-xiphos-bg border border-slate-700 text-white text-[14px] font-bold px-1.5 py-0.5 rounded-sm z-50">
+                        {val > 100 ? `$${val.toFixed(0)}` : `+${val.toFixed(1)}`}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              });
+            })()}
           </div>
         </div>
 
@@ -132,7 +144,7 @@ export default function WarRoom() {
                 className="stroke-xiphos-green fill-none"
                 strokeWidth="4"
                 strokeDasharray={163.3}
-                strokeDashoffset={163.3 - (0.74 * 163.3)}
+                strokeDashoffset={163.3 - ((performanceMetrics.win_rate / 100) * 163.3)}
                 strokeLinecap="round"
               />
               {/* Inner accent ring */}
@@ -143,12 +155,12 @@ export default function WarRoom() {
                 className="stroke-xiphos-blue fill-none opacity-50"
                 strokeWidth="2"
                 strokeDasharray={125.6}
-                strokeDashoffset={125.6 - (0.74 * 125.6)}
+                strokeDashoffset={125.6 - ((performanceMetrics.win_rate / 100) * 125.6)}
                 strokeLinecap="round"
               />
             </svg>
             <span className="text-3xl font-black text-white z-10 leading-none">
-              74%
+              {performanceMetrics.win_rate.toFixed(0)}%
             </span>
           </div>
         </div>
@@ -159,16 +171,16 @@ export default function WarRoom() {
             PROFIT FACTOR
           </span>
           <span className="text-3xl font-black text-white mt-1 leading-none">
-            2.35
+            {performanceMetrics.profit_factor.toFixed(2)}
           </span>
           <div className="mt-3">
             <div className="flex justify-between text-[14px] text-[#6f7e90] font-black mb-1">
-              <span>GROSS LOSS: $18.20</span>
-              <span>GROSS WIN: $42.77</span>
+              <span>TRADES: {performanceMetrics.total_trades}</span>
+              <span>RATIO: {performanceMetrics.sharpe_ratio.toFixed(2)}</span>
             </div>
             <div className="w-full h-1.5 bg-slate-900 rounded-sm overflow-hidden flex border border-slate-800">
-              <div className="h-full bg-xiphos-red" style={{ width: "30%" }} />
-              <div className="h-full bg-xiphos-blue" style={{ width: "70%" }} />
+              <div className="h-full bg-xiphos-red" style={{ width: `${100 - performanceMetrics.win_rate}%` }} />
+              <div className="h-full bg-xiphos-blue" style={{ width: `${performanceMetrics.win_rate}%` }} />
             </div>
           </div>
         </div>
@@ -179,7 +191,7 @@ export default function WarRoom() {
             MAX DRAWDOWN
           </span>
           <span className="text-3xl font-black text-xiphos-red mt-1 leading-none">
-            3.12%
+            {performanceMetrics.max_drawdown.toFixed(2)}%
           </span>
           <div className="mt-3">
             <div className="flex justify-between text-[14px] text-[#6f7e90] font-black mb-1">
@@ -187,7 +199,7 @@ export default function WarRoom() {
               <span>LIMIT 5.0%</span>
             </div>
             <div className="w-full h-1.5 bg-slate-900 rounded-sm overflow-hidden border border-slate-800">
-              <div className="h-full bg-xiphos-red relative" style={{ width: "62.4%" }}>
+              <div className="h-full bg-xiphos-red relative" style={{ width: `${Math.min((performanceMetrics.max_drawdown / 5.0) * 100, 100)}%` }}>
                 {/* Warning Hash marks overlay */}
                 <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 2px, #000 2px, #000 4px)' }}></div>
               </div>
@@ -204,19 +216,21 @@ export default function WarRoom() {
         <div className="flex items-center gap-6">
           <div className="flex gap-2 items-center">
             <span className="uppercase text-[#6f7e90]">TRADES:</span>
-            <span className="text-white">23</span>
+            <span className="text-white">{performanceMetrics.total_trades}</span>
           </div>
           <div className="flex gap-2 items-center">
             <span className="uppercase text-[#6f7e90]">W/L:</span>
-            <span className="text-white">17 / 6</span>
+            <span className="text-white">{Math.round(performanceMetrics.total_trades * (performanceMetrics.win_rate / 100))} / {Math.round(performanceMetrics.total_trades * (1 - (performanceMetrics.win_rate / 100)))}</span>
           </div>
           <div className="flex gap-2 items-center">
-            <span className="uppercase text-[#6f7e90]">AVG WIN:</span>
-            <span className="text-xiphos-green">${(3.12).toFixed(2)}</span>
+            <span className="uppercase text-[#6f7e90]">EQUITY:</span>
+            <span className="text-xiphos-green">${account.equity.toFixed(2)}</span>
           </div>
           <div className="flex gap-2 items-center">
-            <span className="uppercase text-[#6f7e90]">AVG LOSS:</span>
-            <span className="text-xiphos-red">${(1.33).toFixed(2)}</span>
+            <span className="uppercase text-[#6f7e90]">PNL:</span>
+            <span className={performanceMetrics.total_profit >= 0 ? "text-xiphos-green" : "text-xiphos-red"}>
+              {performanceMetrics.total_profit >= 0 ? '+' : ''}${performanceMetrics.total_profit.toFixed(2)}
+            </span>
           </div>
         </div>
 
@@ -228,7 +242,7 @@ export default function WarRoom() {
           <div className="flex gap-2 items-center">
             <span className="uppercase text-[#6f7e90]">SLOTS USED:</span>
             <span className="text-xiphos-orange bg-xiphos-orange/10 px-1.5 py-0.5 rounded-[1px] border border-xiphos-orange/20">
-              {slotsUsed} / {slotsUsed + slotsFree}
+              {slotsUsed} / {maxSlots}
             </span>
           </div>
           <div className="flex gap-2 items-center">
