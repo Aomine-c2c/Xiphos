@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type TabType = "DASHBOARD" | "RISK_MANAGER" | "TRADE_MANAGER" | "SETTINGS" | "ANALYTICS" | "MARKETS" | "POSITIONS" | "ORDERS" | "REPORTS" | "PORTFOLIO" | "JOURNAL" | "ADAPTATION" | "MONITORING" | "ORACLE";
+export type TabType = "DASHBOARD" | "MARKETS" | "PORTFOLIO" | "RISK_MANAGER" | "TRADE_MANAGER" | "ANALYTICS" | "REPORTS" | "ADAPTATION" | "MONITORING" | "SETTINGS";
 
 interface LeftNavProps {
   activeTab: TabType;
@@ -28,7 +28,7 @@ interface LeftNavProps {
 
 export default function LeftNav({ activeTab, setActiveTab }: LeftNavProps) {
   const getTabClass = (tab: TabType) => {
-    const base = "flex items-center justify-center py-3 my-2 w-12 h-12 mx-auto rounded-xl transition-all duration-300 cursor-pointer text-sm font-semibold tracking-wide select-none group relative overflow-hidden";
+    const base = "flex items-center justify-center py-3 my-2 w-12 h-12 mx-auto rounded-xl transition-all duration-300 cursor-pointer text-sm font-semibold tracking-wide select-none group relative overflow-hidden focus:outline-none";
     if (activeTab === tab) {
       return `${base} bg-[rgba(139,92,246,0.1)] text-white border border-[rgba(139,92,246,0.3)] shadow-[0_0_15px_rgba(139,92,246,0.1)]`;
     }
@@ -38,17 +38,13 @@ export default function LeftNav({ activeTab, setActiveTab }: LeftNavProps) {
   const navItems = [
     { id: "DASHBOARD", icon: LayoutDashboard, label: "COMMAND CENTER" },
     { id: "MARKETS", icon: TrendingUp, label: "MARKETS" },
-    { id: "POSITIONS", icon: Briefcase, label: "POSITIONS" },
-    { id: "ORDERS", icon: FileText, label: "ORDERS" },
+    { id: "PORTFOLIO", icon: PieChart, label: "PORTFOLIO & TRADES" },
     { id: "RISK_MANAGER", icon: Shield, label: "RISK MANAGER" },
     { id: "TRADE_MANAGER", icon: Sliders, label: "TRADE MANAGER" },
     { id: "ANALYTICS", icon: BarChart3, label: "ANALYTICS" },
-    { id: "REPORTS", icon: FileSpreadsheet, label: "REPORTS" },
-    { id: "PORTFOLIO", icon: PieChart, label: "PORTFOLIO" },
-    { id: "JOURNAL", icon: BookOpen, label: "JOURNAL" },
+    { id: "REPORTS", icon: FileSpreadsheet, label: "REPORTS & JOURNAL" },
     { id: "ADAPTATION", icon: Network, label: "ADAPTATION ENGINE" },
     { id: "MONITORING", icon: Terminal, label: "SYSTEM MONITORING" },
-    { id: "ORACLE", icon: Eye, label: "ORACLE ENGINE" },
     { id: "SETTINGS", icon: Settings, label: "SETTINGS" },
   ];
 
@@ -73,7 +69,7 @@ export default function LeftNav({ activeTab, setActiveTab }: LeftNavProps) {
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto px-2 py-2 w-full custom-scrollbar">
+      <div className="flex-1 px-2 pt-2 pb-4 w-full overflow-hidden flex flex-col justify-start">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;

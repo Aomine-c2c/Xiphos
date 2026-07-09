@@ -1,5 +1,7 @@
 import { create } from "zustand";
-import { MOCK_ACCOUNT, MOCK_POSITIONS, MOCK_ORDERS, MOCK_MARKET_WATCH, MOCK_GATES, MOCK_SIGNALS, MOCK_LOGS, MOCK_PERFORMANCE, MOCK_CORRELATION, MOCK_JOURNAL } from './mockData';
+import { listen, Event } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
+import { MOCK_ACCOUNT, MOCK_POSITIONS, MOCK_ORDERS, MOCK_MARKET_WATCH, MOCK_GATES, MOCK_SIGNALS, MOCK_LOGS, MOCK_PERFORMANCE, MOCK_CORRELATION, MOCK_JOURNAL, MOCK_MAHORAGA_STATE } from './mockData';
 
 export interface AccountInfo {
   balance: number;
@@ -146,6 +148,9 @@ export interface MahoragaState {
   sl_multiplier: number;
   phenomenon: string;
   is_adapted: boolean;
+  trading_halted: boolean;
+  active_strategy: string;
+  tp_multiplier: number;
 }
 
 
@@ -215,7 +220,7 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   logs: isMockMode ? MOCK_LOGS : [],
   correlationMatrix: isMockMode ? MOCK_CORRELATION : {},
   performanceMetrics: isMockMode ? MOCK_PERFORMANCE : { total_trades: 0, win_rate: 0, total_profit: 0, profit_factor: 0, max_drawdown: 0, sharpe_ratio: 0, equity_curve: [] },
-  mahoragaState:      null,
+  mahoragaState: isMockMode ? MOCK_MAHORAGA_STATE : null,
 
   chatMessages: [
     { sender: "vincent", text: "Welcome to the XIPHOS Command Core. I am Vincent, wielding the Mahoraga Technique. Ask me about active setups, risk exposures, or skipped signals.", timestamp: "14:28" }
@@ -225,83 +230,55 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
   ws: null,
 
   // No-op in mock mode
-  // Connect to websocket with exponential backoff and heartbeat
+  // Connect to SSE stream via Tauri Events
   connectWebSocket: () => {
     if (isMockMode) return;
 
-    // Avoid double connections
-    if (get().ws?.readyState === WebSocket.OPEN || get().ws?.readyState === WebSocket.CONNECTING) return;
+    if (get().connected) return; // Prevent double subscription
+    
+    set({ connected: true });
+    console.info("XIPHOS Subscribed to Rust SSE Events");
 
-    const host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
-    const wsProtocol = typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || `${wsProtocol}//${host}/ws`;
-    const ws = new WebSocket(wsUrl);
-    let pingInterval: NodeJS.Timeout;
-
-    ws.onopen = () => {
-      set({ connected: true, wsRetries: 0, ws });
-      console.info("XIPHOS WebSocket Connected to", wsUrl);
-
-      // Start ping/pong heartbeat every 30 seconds
-      pingInterval = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: "ping" }));
-        }
-      }, 30000);
-    };
-
-    ws.onmessage = (event) => {
+    // Listen for state updates
+    listen("state_update", (event: Event<any>) => {
       try {
-        const payload = JSON.parse(event.data);
-        if (payload.type === "state_update") {
-          const data = payload.data;
-          set({
-            botRunning: data.bot_running,
-            mt5Connected: data.mt5_connected,
-            apiLatency: data.api_latency,
-            account: data.account,
-            positions: data.positions,
-            orders: data.orders,
-            marketWatch: data.market_watch,
-            gates: data.gates,
-            rankedSignals: data.ranked_signals,
-            lastCycleTime: data.last_cycle_time,
-            systemStats: data.system_stats,
-            correlationMatrix: data.correlation_matrix,
-            performanceMetrics: data.performance_metrics,
-            mahoragaState: data.mahoraga_state || null,
-          });
-        } else if (payload.type === "log_history") {
-          set({ logs: payload.data });
-        } else if (payload.type === "log_event") {
-          set((state) => ({ logs: [...state.logs, payload.data].slice(-1000) }));
-        } else if (payload.type === "chat_response") {
-          set((state) => ({ chatMessages: [...state.chatMessages, { sender: "vincent", text: payload.data.bot_response, timestamp: payload.data.timestamp }] }));
-        }
+        const data = event.payload;
+        set({
+          botRunning: data.bot_running,
+          mt5Connected: data.mt5_connected,
+          apiLatency: data.api_latency,
+          account: data.account,
+          positions: data.positions,
+          orders: data.orders,
+          marketWatch: data.market_watch,
+          gates: data.gates,
+          rankedSignals: data.ranked_signals,
+          lastCycleTime: data.last_cycle_time,
+          systemStats: data.system_stats,
+          correlationMatrix: data.correlation_matrix,
+          performanceMetrics: data.performance_metrics,
+          mahoragaState: data.mahoraga_state || null,
+        });
       } catch (e) {
-        console.error("WS Parse Error", e);
+        console.error("Event Parse Error", e);
       }
-    };
+    });
 
-    ws.onclose = () => {
-      clearInterval(pingInterval);
-      set(() => ({ connected: false, ws: null }));
-      
-      const { wsRetries } = get();
-      if (wsRetries < 7) {
-        const nextRetry = wsRetries + 1;
-        // Exponential backoff: 2s, 4s, 8s, 16s, 32s, 64s
-        const backoffMs = Math.min(1000 * Math.pow(2, nextRetry), 60000);
-        console.warn(`WebSocket closed. Reconnecting in ${backoffMs}ms... (Attempt ${nextRetry})`);
-        
-        setTimeout(() => {
-          set({ wsRetries: nextRetry });
-          get().connectWebSocket();
-        }, backoffMs);
-      } else {
-        console.error("WebSocket connection failed permanently after 7 retries.");
-      }
-    };
+    // Listen for log history (on connect)
+    listen("log_history", (event: Event<any>) => {
+      set({ logs: event.payload });
+    });
+
+    // Listen for new logs
+    listen("log_event", (event: Event<any>) => {
+      set((state) => ({ logs: [...state.logs, event.payload].slice(-1000) }));
+    });
+
+    // Listen for chat responses
+    listen("chat_response", (event: Event<any>) => {
+      const payload = event.payload;
+      set((state) => ({ chatMessages: [...state.chatMessages, { sender: "vincent", text: payload.bot_response, timestamp: payload.timestamp }] }));
+    });
   },
 
   fetchMahoragaState: async () => {
@@ -325,16 +302,15 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
     // Deprecated: Moving to live backend state stream
   },
 
-  sendCommand: (type, data = {}) => {
-    const ws = get().ws;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type, data }));
-    } else {
-      console.warn(`[WS Offline] Cannot send command: ${type}`, data);
+  sendCommand: async (type, data = {}) => {
+    try {
+      await invoke("send_command", { cmdType: type, data });
+    } catch (e) {
+      console.warn(`Failed to send command via Tauri: ${type}`, e);
     }
   },
 
-  sendChatMessage: (text) => {
+  sendChatMessage: async (text) => {
     if (!text.trim()) return;
     const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     
@@ -343,13 +319,11 @@ export const useTradingStore = create<TradingStore>((set, get) => ({
       chatMessages: [...state.chatMessages, { sender: "user", text, timestamp: ts }],
     }));
 
-    const ws = get().ws;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "chat_message", data: { text } }));
-    } else {
-      // Fallback if WS is down
+    try {
+      await invoke("send_command", { cmdType: "chat_message", data: { text } });
+    } catch (e) {
       setTimeout(() => {
-        const reply = "Vincent AI (Offline): I cannot reach the backend api_server.py. Please ensure it is running.";
+        const reply = "Vincent AI (Offline): I cannot reach the backend API via Tauri. Please ensure it is running.";
         set((state) => ({
           chatMessages: [...state.chatMessages, { sender: "vincent", text: reply, timestamp: ts }],
         }));

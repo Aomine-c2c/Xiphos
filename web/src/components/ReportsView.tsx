@@ -8,8 +8,10 @@ import { motion } from "framer-motion";
 export default function ReportsView() {
   const { performanceMetrics } = useTradingStore();
 
-  const balanceHistory = performanceMetrics?.equity_curve || [100];
-  const equityHistory = performanceMetrics?.equity_curve || [100];
+  // Ensure we always have at least 2 points to draw a line without dividing by zero
+  const rawCurve = performanceMetrics?.equity_curve?.length ? performanceMetrics.equity_curve : [100, 100];
+  const balanceHistory = rawCurve.length === 1 ? [rawCurve[0], rawCurve[0]] : rawCurve;
+  const equityHistory = rawCurve.length === 1 ? [rawCurve[0], rawCurve[0]] : rawCurve;
 
   const reportsList = [
     { id: "R-9402", type: "AUDIT LOG", name: "DAILY_PERFORMANCE_2026_06_16.csv", date: "2026-06-16", size: "12 KB" },

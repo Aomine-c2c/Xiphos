@@ -21,6 +21,21 @@ fn get_app_version(app: AppHandle) -> String {
 }
 
 #[tauri::command]
+async fn send_command(cmd_type: String, data: serde_json::Value) -> Result<(), String> {
+    let client = reqwest::Client::new();
+    let payload = serde_json::json!({
+        "type": cmd_type,
+        "data": data
+    });
+    client.post("http://127.0.0.1:8001/api/command")
+        .json(&payload)
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
 fn restart_services(registry: tauri::State<Arc<Mutex<ProcessRegistry>>>, app: AppHandle) {
     let mut reg = registry.lock().unwrap();
     reg.stop_all();
@@ -83,6 +98,35 @@ pub fn run() {
                 let _ = update_handle.emit("check-for-updates", ());
             });
 
+            // ── Background SSE Streamer ───────────────────────────────
+            let sse_app_handle = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                use reqwest_eventsource::{Event, EventSource};
+                use futures_util::StreamExt;
+                let mut client = EventSource::get("http://127.0.0.1:8001/api/stream");
+                
+                while let Some(event) = client.next().await {
+                    match event {
+                        Ok(Event::Open) => println!("[Xiphos] SSE Connection Open"),
+                        Ok(Event::Message(message)) => {
+                            if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(&message.data) {
+                                if let Some(event_type) = parsed.get("type").and_then(|t| t.as_str()) {
+                                    if let Some(event_data) = parsed.get("data") {
+                                        let _ = sse_app_handle.emit(event_type, event_data.clone());
+                                    }
+                                }
+                            }
+                        }
+                        Err(err) => {
+                            eprintln!("[Xiphos] SSE Error: {}", err);
+                            client.close();
+                            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                            client = EventSource::get("http://127.0.0.1:8001/api/stream");
+                        }
+                    }
+                }
+            });
+
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -96,6 +140,7 @@ pub fn run() {
             send_notification,
             get_app_version,
             restart_services,
+            send_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Xiphos");

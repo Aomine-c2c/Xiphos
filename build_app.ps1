@@ -1,11 +1,11 @@
 # build_app.ps1
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Master build script — produces the final Xiphos Windows installer.
 #
 # Usage:
 #   .\build_app.ps1           # full build
 #   .\build_app.ps1 -SkipPython   # skip Python embed (if already bundled)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 param(
     [switch]$SkipPython
@@ -16,7 +16,7 @@ $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Write-Step($num, $total, $msg) {
     Write-Host ""
-    Write-Host " ── Step $num/$total: $msg" -ForegroundColor Cyan
+    Write-Host " -- Step $($num)/$($total): $msg" -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -26,15 +26,15 @@ Write-Host "  Xiphos Windows App Builder" -ForegroundColor Magenta
 Write-Host " ============================================================" -ForegroundColor Magenta
 Write-Host ""
 
-# ── 1. Python embed ──────────────────────────────────────────────────────────
+# -- 1. Python embed ----------------------------------------------------------
 if (-not $SkipPython) {
     Write-Step 1 4 "Bundling Python runtime..."
-    & "$Root\scripts\bundle_python.ps1"
+    & "$Root\backend\scripts\bundle_python.ps1"
 } else {
     Write-Host "[1/4] Skipping Python embed (--SkipPython)" -ForegroundColor Yellow
 }
 
-# ── 2. Next.js static build ──────────────────────────────────────────────────
+# -- 2. Next.js static build --------------------------------------------------
 Write-Step 2 4 "Building Next.js frontend (static export)..."
 Push-Location "$Root\web"
 try {
@@ -48,17 +48,21 @@ try {
     Pop-Location
 }
 
-# ── 3. Tauri / Rust build ────────────────────────────────────────────────────
+# -- 3. Tauri / Rust build ----------------------------------------------------
 Write-Step 3 4 "Compiling Tauri application (this may take several minutes)..."
-Push-Location "$Root\src-tauri"
+Push-Location "$Root"
 try {
-    cargo tauri build 2>&1 | Write-Host
-    if ($LASTEXITCODE -ne 0) { throw "Tauri build failed (exit $LASTEXITCODE)" }
+    $tempPref = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    cmd /c "npx @tauri-apps/cli build"
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $tempPref
+    if ($exitCode -ne 0) { throw "Tauri build failed (exit $exitCode)" }
 } finally {
     Pop-Location
 }
 
-# ── 4. Report output ─────────────────────────────────────────────────────────
+# -- 4. Report output ---------------------------------------------------------
 Write-Step 4 4 "Build complete!"
 
 $InstallerDir = "$Root\src-tauri\target\release\bundle\nsis"

@@ -80,17 +80,17 @@ export default function ChatPanel() {
                 {reasoningLogs.map((item, idx) => (
                   <motion.div 
                     initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: idx * 0.1 }}
-                    key={`${item.time}-${idx}`} className="p-4 border rounded-xl flex items-start gap-3 backdrop-blur-md transition-all hover:bg-white/5 bg-xiphos-purple/5 border-xiphos-purple/20"
+                    key={`${item.time}-${idx}`} className="py-2.5 px-3 border rounded-xl flex items-start gap-2 backdrop-blur-md transition-all hover:bg-white/5 bg-xiphos-purple/5 border-xiphos-purple/20"
                   >
                     <div className="mt-0.5 text-xiphos-purple glow-purple">
-                      <Network className="h-4 w-4" />
+                      <Network className="h-3.5 w-3.5" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-xiphos-purple">{item.type}</span>
-                        <span className="text-[10px] text-xiphos-muted font-mono">{item.time}</span>
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-xiphos-purple">{item.type}</span>
+                        <span className="text-[9px] text-xiphos-muted font-mono">{item.time}</span>
                       </div>
-                      <p className="text-sm leading-relaxed text-slate-300 font-sans">{item.text}</p>
+                      <p className="text-xs leading-relaxed text-slate-300 font-sans">{item.text}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -98,16 +98,28 @@ export default function ChatPanel() {
             )}
 
             {activeTab === "MEMORY" && (
-              <motion.div key="memory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-2">
+              <motion.div key="memory" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-2 font-mono">
                 {memoryBlocks.map((mem, idx) => (
-                  <div key={idx} className="glass-card p-3 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-xiphos-muted font-black tracking-widest block uppercase mb-1">{mem.key}</span>
-                      <span className="text-sm font-black text-white tracking-wider">{mem.value}</span>
+                  <div key={idx} className="glass-card p-3 flex flex-col gap-2 relative overflow-hidden transition-all hover:bg-white/5 group">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-xiphos-purple bg-xiphos-purple/10 px-1.5 py-0.5 rounded font-black">0x7F03A{idx}</span>
+                        <span className="text-[10px] text-white font-black tracking-wider uppercase">{mem.key}</span>
+                      </div>
+                      <span className="text-[8px] text-xiphos-muted">{mem.updated}</span>
                     </div>
-                    <div className="text-right">
-                      <span className="text-[9px] text-xiphos-muted block">{mem.updated}</span>
-                      <span className="text-[10px] text-xiphos-cyan glow-cyan font-black">{mem.acc} ACCURACY</span>
+                    
+                    <div className="flex justify-between items-center bg-black/30 p-2 rounded border border-white/5">
+                      <span className="text-[11px] font-black text-xiphos-cyan glow-cyan">{mem.value}</span>
+                      <div className="flex flex-col items-end gap-1 w-24">
+                        <div className="flex justify-between w-full text-[8px] text-xiphos-muted font-black">
+                          <span>ACCURACY</span>
+                          <span className="text-xiphos-cyan">{mem.acc}</span>
+                        </div>
+                        <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-full bg-xiphos-cyan glow-cyan" style={{ width: mem.acc }} />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -119,7 +131,7 @@ export default function ChatPanel() {
 
       {/* BOTTOM HALF: Structured Recommendation Cards */}
       <div className="flex-[0.45] flex flex-col min-h-0 bg-[rgba(11,15,23,0.4)]">
-        <span className="text-xs text-xiphos-muted font-bold uppercase tracking-widest block px-5 py-3 border-b border-[rgba(255,255,255,0.02)] shrink-0">
+        <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block px-5 py-3 border-b border-[rgba(255,255,255,0.02)] shrink-0">
           AI ACTION DIRECTIVES
         </span>
         
@@ -127,42 +139,45 @@ export default function ChatPanel() {
           {recommendations.map((rec, i) => (
             <motion.div 
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.2 }}
-              key={rec.id} className="glass-card rounded-xl flex flex-col transition-all hover:border-xiphos-purple/40 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] overflow-hidden group relative"
+              key={rec.id} className="glass-card rounded-lg flex flex-col transition-all border-xiphos-purple/20 hover:border-xiphos-purple/60 overflow-hidden group relative"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-xiphos-purple/10 rounded-full blur-[30px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <div className="px-4 py-3 border-b border-[rgba(255,255,255,0.05)] flex justify-between items-center bg-[rgba(11,15,23,0.6)] relative z-10">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-white uppercase tracking-wider">{rec.symbol}</span>
-                  <span className="px-2 py-1 text-[10px] font-bold border border-xiphos-emerald/30 text-xiphos-emerald bg-xiphos-emerald/10 rounded-md uppercase">
+              {/* Tactical Warning Diagonal Line */}
+              <div className="absolute top-0 left-0 w-12 h-[3px] bg-linear-to-r from-xiphos-purple via-xiphos-cyan to-transparent" />
+              
+              <div className="px-4 py-2 border-b border-[rgba(255,255,255,0.05)] flex justify-between items-center bg-black/40 relative z-10">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-white tracking-widest font-mono">{rec.symbol}</span>
+                  <span className={`px-1.5 py-0.5 text-[8px] font-black border rounded-sm uppercase ${
+                    rec.type.includes('BUY') ? 'border-xiphos-emerald/30 text-xiphos-emerald bg-xiphos-emerald/5' : 'border-xiphos-crimson/30 text-xiphos-crimson bg-xiphos-crimson/5'
+                  }`}>
                     {rec.type}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs font-bold text-xiphos-muted uppercase tracking-wider">
-                  CONFIDENCE: <span className="text-xiphos-purple glow-purple font-black">{rec.confidence}%</span>
-                </div>
+                <span className="text-[9px] font-black text-xiphos-muted uppercase tracking-wider">
+                  CONF: <span className="text-xiphos-purple glow-purple">{rec.confidence}%</span>
+                </span>
               </div>
               
-              <div className="p-4 flex flex-col gap-4 relative z-10">
-                <div className="flex justify-between text-xs font-mono">
-                  <div>
-                    <span className="block text-xiphos-muted font-black mb-1 uppercase tracking-widest text-[9px]">ENTRY ZONE</span>
-                    <span className="text-white font-black text-sm">{rec.price.toFixed(5)}</span>
+              <div className="p-3 flex flex-col gap-3 relative z-10 font-mono">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-black/30 p-1.5 rounded border border-white/5">
+                    <span className="block text-[7px] text-xiphos-muted font-black uppercase tracking-widest mb-0.5">ENTRY</span>
+                    <span className="text-white font-black text-[11px]">{rec.price.toFixed(5)}</span>
                   </div>
-                  <div>
-                    <span className="block text-xiphos-muted font-black mb-1 uppercase tracking-widest text-[9px]">PROFIT TARGET</span>
-                    <span className="text-xiphos-emerald glow-emerald font-black text-sm">{rec.tp.toFixed(5)}</span>
+                  <div className="bg-black/30 p-1.5 rounded border border-white/5">
+                    <span className="block text-[7px] text-xiphos-muted font-black uppercase tracking-widest mb-0.5">TARGET</span>
+                    <span className="text-xiphos-emerald glow-emerald font-black text-[11px]">{rec.tp.toFixed(5)}</span>
                   </div>
-                  <div>
-                    <span className="block text-xiphos-muted font-black mb-1 uppercase tracking-widest text-[9px]">RISK SL</span>
-                    <span className="text-xiphos-crimson glow-crimson font-black text-sm">{rec.sl.toFixed(5)}</span>
+                  <div className="bg-black/30 p-1.5 rounded border border-white/5">
+                    <span className="block text-[7px] text-xiphos-muted font-black uppercase tracking-widest mb-0.5">STOP SL</span>
+                    <span className="text-xiphos-crimson glow-crimson font-black text-[11px]">{rec.sl.toFixed(5)}</span>
                   </div>
                 </div>
-                
                 <button
                   onClick={() => placeOrder(rec.symbol, rec.type, 0.01, rec.price, rec.sl, rec.tp)}
-                  className="w-full py-3 bg-xiphos-emerald/10 hover:bg-xiphos-emerald/20 border border-xiphos-emerald/50 text-xiphos-emerald text-xs font-black tracking-widest uppercase rounded-lg cursor-pointer transition-all flex items-center justify-center gap-2 hover:shadow-[0_0_20px_rgba(34,197,94,0.4)] glow-emerald group/btn"
+                  className="w-full py-2 bg-xiphos-emerald/10 hover:bg-xiphos-emerald border border-xiphos-emerald/40 hover:border-xiphos-emerald text-xiphos-emerald hover:text-black text-[10px] font-black tracking-widest uppercase rounded-sm cursor-pointer transition-all flex items-center justify-center gap-1 hover:shadow-[0_0_15px_rgba(34,197,94,0.3)] group-hover:bg-xiphos-emerald/20"
                 >
-                  <CheckCircle className="h-4 w-4 group-hover/btn:scale-110 transition-transform" /> APPROVE DIRECTIVE
+                  <CheckCircle className="h-3.5 w-3.5" /> APPROVE DIRECTIVE
                 </button>
               </div>
             </motion.div>

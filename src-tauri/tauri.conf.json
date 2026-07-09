@@ -6,8 +6,8 @@
   "build": {
     "frontendDist": "../web/out",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "cd ../web && npm run dev",
-    "beforeBuildCommand": "cd ../web && npm run build"
+    "beforeDevCommand": "cmd /c \"cd ../web && npm.cmd run dev\"",
+    "beforeBuildCommand": ""
   },
   "app": {
     "windows": [
@@ -43,8 +43,8 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../tools/redis": "resources/redis",
-      "../python-embed": "resources/python-embed"
+      "../backend/tools/redis": "resources/redis",
+      "../backend/python-embed": "resources/python-embed"
     }
   },
   "plugins": {

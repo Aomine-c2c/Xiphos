@@ -42,7 +42,7 @@ impl ProcessRegistry {
         } else {
             // Dev mode: use the project's .venv
             let root = Self::root_dir(app);
-            root.join(".venv").join("Scripts").join("python.exe")
+            root.join("backend").join(".venv").join("Scripts").join("python.exe")
         };
 
         // Bundled redis or dev tools/redis
@@ -52,7 +52,7 @@ impl ProcessRegistry {
                 bundled
             } else {
                 let root = Self::root_dir(app);
-                root.join("tools").join("redis").join("redis-server.exe")
+                root.join("backend").join("tools").join("redis").join("redis-server.exe")
             }
         };
 
@@ -85,12 +85,13 @@ impl ProcessRegistry {
         }
 
         let mut env: HashMap<String, String> = std::env::vars().collect();
-        env.insert("PYTHONPATH".into(), root.display().to_string());
+        let backend_dir = root.join("backend");
+        env.insert("PYTHONPATH".into(), backend_dir.display().to_string());
         env.insert("PYTHONUNBUFFERED".into(), "1".into());
         env.insert("XIPHOS_TUI".into(), "1".into());
 
         // ── 1. Redis ─────────────────────────────────────────────────────
-        self.spawn("Redis", &redis_exe, &[], &root, &env)?;
+        self.spawn("Redis", &redis_exe, &[], &backend_dir, &env)?;
         std::thread::sleep(Duration::from_millis(1500));
         self.check_alive("Redis")?;
 
@@ -99,7 +100,7 @@ impl ProcessRegistry {
             "Bridge",
             &python_exe,
             &["-m", "uvicorn", "bridge.server:app", "--port", "8000", "--no-access-log"],
-            &root,
+            &backend_dir,
             &env,
         )?;
         std::thread::sleep(Duration::from_millis(2000));
@@ -110,14 +111,14 @@ impl ProcessRegistry {
             "API Server",
             &python_exe,
             &["-m", "uvicorn", "api_server:app", "--port", "8001", "--no-access-log"],
-            &root,
+            &backend_dir,
             &env,
         )?;
         std::thread::sleep(Duration::from_millis(2000));
         self.check_alive("API Server")?;
 
         // ── 4. Worker Engine ─────────────────────────────────────────────
-        self.spawn_python("Worker", &python_exe, &["worker_engine.py"], &root, &env)?;
+        self.spawn_python("Worker", &python_exe, &["worker_engine.py"], &backend_dir, &env)?;
         std::thread::sleep(Duration::from_millis(2000));
         self.check_alive("Worker")?;
 

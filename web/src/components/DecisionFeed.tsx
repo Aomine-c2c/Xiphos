@@ -67,19 +67,25 @@ export default function DecisionFeed() {
                 animate={{ opacity: 1, x: 0 }} 
                 transition={{ duration: 0.2 }}
                 key={`${log.timestamp}-${i}`} 
-                className="flex flex-col gap-1 font-mono group/log transition-all hover:bg-white/5 p-3 rounded-lg -mx-2 border border-transparent hover:border-[rgba(255,255,255,0.02)] relative overflow-hidden"
+                className="flex flex-col gap-1 font-mono group/log transition-all hover:bg-white/5 py-2 px-2.5 rounded border border-white/5 hover:border-xiphos-emerald/30 relative overflow-hidden bg-black/40"
               >
+                {/* Tactical left glow stripe */}
+                <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-xiphos-emerald/30 group-hover:bg-xiphos-emerald" />
+
                 {/* Simulated metadata row */}
-                <div className="flex items-center gap-3 text-[8px] uppercase tracking-widest opacity-60 font-black mb-1">
+                <div className="flex items-center gap-3 text-[8px] uppercase tracking-widest opacity-70 font-black mb-1 pl-1">
                   <span className="text-xiphos-emerald glow-emerald">{log.timestamp}</span>
-                  <span className="text-xiphos-muted bg-white/5 px-1 rounded">LATENCY: {((i * 13) % 20) + 5}ms</span>
-                  <span className="text-xiphos-purple">SRC: {i % 2 === 0 ? "LLaMA-3" : "KRONOS-V4"}</span>
+                  <span className="text-xiphos-muted">LATENCY: {((i * 13) % 20) + 5}ms</span>
+                  <span className="text-xiphos-purple flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-xiphos-purple animate-pulse inline-block" />
+                    SRC: {i % 2 === 0 ? "LLaMA-3" : "KRONOS"}
+                  </span>
                   <span className="text-xiphos-cyan">CONF: {((i * 7) % 20) + 80}%</span>
                 </div>
                 
-                <div className="flex items-start gap-3">
-                  <span className={`break-all font-medium transition-colors ${getLineStyle(log.message)}`}>
-                    <span className="text-xiphos-emerald/30 mr-2">&gt;</span>{log.message}
+                <div className="flex items-start gap-2 pl-1">
+                  <span className={`break-all text-[11px] leading-relaxed font-medium transition-colors ${getLineStyle(log.message)}`}>
+                    <span className="text-xiphos-emerald/40 mr-1.5 font-bold">&gt;</span>{log.message}
                   </span>
                 </div>
               </motion.div>

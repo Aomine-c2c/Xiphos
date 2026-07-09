@@ -2,7 +2,7 @@
 # Run this from PowerShell in the Xiphos directory: .\launch.ps1
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Python = "$Root\.venv\Scripts\python.exe"
+$Python = "$Root\backend\.venv\Scripts\python.exe"
 
 # If the virtual environment is not set up, try global python
 if (!(Test-Path $Python)) {
@@ -16,7 +16,9 @@ Write-Host " =========================================" -ForegroundColor Cyan
 Write-Host ""
 
 try {
-    & $Python xiphos.py
+    Push-Location "$Root\backend"
+    & $Python worker_engine.py
+    Pop-Location
 } catch {
     Write-Host "Error launching Xiphos. Ensure dependencies are installed." -ForegroundColor Red
 }

@@ -26,6 +26,9 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Home() {
   const { connectWebSocket } = useTradingStore();
   const [activeTab, setActiveTab] = useState<TabType>("DASHBOARD");
+  const [portfolioSubTab, setPortfolioSubTab] = useState<"STATS" | "POSITIONS" | "ORDERS">("STATS");
+  const [reportsSubTab, setReportsSubTab] = useState<"CURVE" | "JOURNAL">("CURVE");
+  const [monitoringSubTab, setMonitoringSubTab] = useState<"HEALTH" | "ORACLE">("HEALTH");
 
   useEffect(() => {
     connectWebSocket();
@@ -85,21 +88,55 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="flex-1 min-h-0 p-6 overflow-y-auto custom-scrollbar w-full h-full"
+              className="flex-1 min-h-0 p-6 overflow-y-auto custom-scrollbar w-full h-full flex flex-col"
             >
               {activeTab === "RISK_MANAGER" && <RiskManagerView />}
               {activeTab === "TRADE_MANAGER" && <TradeManagerView />}
               {activeTab === "SETTINGS" && <SettingsView />}
               {activeTab === "ANALYTICS" && <AnalyticsView />}
               {activeTab === "MARKETS" && <MarketsView />}
-              {activeTab === "POSITIONS" && <PositionsView />}
-              {activeTab === "ORDERS" && <OrdersView />}
-              {activeTab === "REPORTS" && <ReportsView />}
-              {activeTab === "PORTFOLIO" && <PortfolioView />}
-              {activeTab === "JOURNAL" && <JournalView />}
               {activeTab === "ADAPTATION" && <AdaptationEngineView />}
-              {activeTab === "MONITORING" && <MonitoringView />}
-              {activeTab === "ORACLE" && <OracleView />}
+              
+              {activeTab === "PORTFOLIO" && (
+                <div className="flex flex-col h-full w-full gap-4">
+                  <div className="flex gap-2 border-b border-white/5 pb-2 shrink-0">
+                    <button onClick={() => setPortfolioSubTab("STATS")} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded border cursor-pointer transition-all ${portfolioSubTab === "STATS" ? "bg-xiphos-purple/20 text-white border-xiphos-purple glow-white shadow-[0_0_10px_rgba(139,92,246,0.2)]" : "bg-black/40 text-xiphos-muted border-transparent hover:text-white"}`}>Portfolio Stats</button>
+                    <button onClick={() => setPortfolioSubTab("POSITIONS")} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded border cursor-pointer transition-all ${portfolioSubTab === "POSITIONS" ? "bg-xiphos-purple/20 text-white border-xiphos-purple glow-white shadow-[0_0_10px_rgba(139,92,246,0.2)]" : "bg-black/40 text-xiphos-muted border-transparent hover:text-white"}`}>Active Positions</button>
+                    <button onClick={() => setPortfolioSubTab("ORDERS")} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded border cursor-pointer transition-all ${portfolioSubTab === "ORDERS" ? "bg-xiphos-purple/20 text-white border-xiphos-purple glow-white shadow-[0_0_10px_rgba(139,92,246,0.2)]" : "bg-black/40 text-xiphos-muted border-transparent hover:text-white"}`}>Pending Orders</button>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
+                    {portfolioSubTab === "STATS" && <PortfolioView />}
+                    {portfolioSubTab === "POSITIONS" && <PositionsView />}
+                    {portfolioSubTab === "ORDERS" && <OrdersView />}
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === "REPORTS" && (
+                <div className="flex flex-col h-full w-full gap-4">
+                  <div className="flex gap-2 border-b border-white/5 pb-2 shrink-0">
+                    <button onClick={() => setReportsSubTab("CURVE")} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded border cursor-pointer transition-all ${reportsSubTab === "CURVE" ? "bg-xiphos-purple/20 text-white border-xiphos-purple glow-white shadow-[0_0_10px_rgba(139,92,246,0.2)]" : "bg-black/40 text-xiphos-muted border-transparent hover:text-white"}`}>Equity Curve</button>
+                    <button onClick={() => setReportsSubTab("JOURNAL")} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded border cursor-pointer transition-all ${reportsSubTab === "JOURNAL" ? "bg-xiphos-purple/20 text-white border-xiphos-purple glow-white shadow-[0_0_10px_rgba(139,92,246,0.2)]" : "bg-black/40 text-xiphos-muted border-transparent hover:text-white"}`}>Trading Journal</button>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
+                    {reportsSubTab === "CURVE" && <ReportsView />}
+                    {reportsSubTab === "JOURNAL" && <JournalView />}
+                  </div>
+                </div>
+              )}
+              
+              {activeTab === "MONITORING" && (
+                <div className="flex flex-col h-full w-full gap-4">
+                  <div className="flex gap-2 border-b border-white/5 pb-2 shrink-0">
+                    <button onClick={() => setMonitoringSubTab("HEALTH")} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded border cursor-pointer transition-all ${monitoringSubTab === "HEALTH" ? "bg-xiphos-purple/20 text-white border-xiphos-purple glow-white shadow-[0_0_10px_rgba(139,92,246,0.2)]" : "bg-black/40 text-xiphos-muted border-transparent hover:text-white"}`}>System Monitor</button>
+                    <button onClick={() => setMonitoringSubTab("ORACLE")} className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded border cursor-pointer transition-all ${monitoringSubTab === "ORACLE" ? "bg-xiphos-purple/20 text-white border-xiphos-purple glow-white shadow-[0_0_10px_rgba(139,92,246,0.2)]" : "bg-black/40 text-xiphos-muted border-transparent hover:text-white"}`}>Oracle Engine</button>
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
+                    {monitoringSubTab === "HEALTH" && <MonitoringView />}
+                    {monitoringSubTab === "ORACLE" && <OracleView />}
+                  </div>
+                </div>
+              )}
             </motion.main>
           )}
         </AnimatePresence>

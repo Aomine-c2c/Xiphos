@@ -197,3 +197,39 @@ export const MOCK_CORRELATION: Record<string, Record<string, string>> = {
   XAUUSD: { EURUSD: "0.31",  GBPUSD: "0.27",  USDJPY: "-0.22" },
 };
 
+export const MOCK_MAHORAGA_STATE: Record<string, any> = {
+  EURUSD: {
+    trend_state: "TRENDING",
+    momentum_state: "NEUTRAL",
+    filter_strictness: "DYNAMIC",
+    confidence_score: 95.0,
+    adaptation_spins: 4,
+    fast_ema: 13,
+    medium_ema: 50,
+    slow_sma: 200,
+    lot_multiplier: 1.5,
+    sl_multiplier: 1.2,
+    phenomenon: "HIGH_VOL_TRENDING_NEUTRAL",
+    is_adapted: true,
+    trading_halted: false,
+    active_strategy: "TREND_FOLLOWING",
+    tp_multiplier: 1.0,
+  },
+  XAUUSD: {
+    trend_state: "SQUEEZE",
+    momentum_state: "OVERBOUGHT",
+    filter_strictness: "EXTREME_STRICT",
+    confidence_score: 45.0,
+    adaptation_spins: 2,
+    fast_ema: 9,
+    medium_ema: 50,
+    slow_sma: 200,
+    lot_multiplier: 0.5,
+    sl_multiplier: 1.5,
+    phenomenon: "MED_VOL_RANGING_OVERBOUGHT",
+    is_adapted: false,
+    trading_halted: true,
+    active_strategy: "MEAN_REVERSION",
+    tp_multiplier: 0.8,
+  }
+};
