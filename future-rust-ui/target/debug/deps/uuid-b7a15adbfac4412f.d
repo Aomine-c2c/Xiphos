@@ -1,0 +1,13 @@
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\uuid-b7a15adbfac4412f.d: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\macros.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\builder.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\error.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\non_nil.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\parser.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\fmt.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\timestamp.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\external.rs
+
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\libuuid-b7a15adbfac4412f.rmeta: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\macros.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\builder.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\error.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\non_nil.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\parser.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\fmt.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\timestamp.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\external.rs
+
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\lib.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\macros.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\builder.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\error.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\non_nil.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\parser.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\fmt.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\timestamp.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\uuid-1.23.4\src\external.rs:

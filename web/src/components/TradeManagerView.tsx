@@ -1,166 +1,224 @@
-/* eslint-disable react/forbid-dom-props */
 "use client";
 
-import React, { useState } from "react";
-import { Sliders, ShieldCheck, Terminal, Cpu } from "lucide-react";
-import { useTradingStore } from "../store/useTradingStore";
-import { motion } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Crosshair, ShieldCheck, AlertTriangle, Database, 
+  Zap, Activity, LogOut, Terminal, Cpu, Network, Server
+} from "lucide-react";
+
+// --- Types ---
+type PipelineStage = {
+  id: string;
+  name: string;
+  icon: React.ElementType;
+  durationMs: number; // Simulated processing time
+  message: string;
+};
+
+// --- Config ---
+const STAGES: PipelineStage[] = [
+  { id: "s-1", name: "Opportunity", icon: Crosshair, durationMs: 400, message: "Arbitrage gap detected on EUR/USD." },
+  { id: "s-2", name: "Validation", icon: ShieldCheck, durationMs: 300, message: "Signal verified against macro filter." },
+  { id: "s-3", name: "Risk Analysis", icon: AlertTriangle, durationMs: 500, message: "Drawdown tolerance verified. Max loss 0.1%." },
+  { id: "s-4", name: "Capital Allocation", icon: Database, durationMs: 300, message: "Allocated $50,000 from liquidity pool." },
+  { id: "s-5", name: "Execution", icon: Zap, durationMs: 200, message: "Order routed via FIX API. Filled at 1.0924." },
+  { id: "s-6", name: "Monitoring", icon: Activity, durationMs: 1500, message: "Tracking tick-level momentum..." },
+  { id: "s-7", name: "Exit", icon: LogOut, durationMs: 400, message: "Target hit. Closed position. Net +$124.50." },
+];
 
 export default function TradeManagerView() {
-  const { logs } = useTradingStore();
-  const [scalperActive, setScalperActive] = useState(true);
-  const [runnerActive, setRunnerActive] = useState(true);
+  const [activeStageIdx, setActiveStageIdx] = useState(-1);
+  const [logs, setLogs] = useState<{ id: number; text: string; time: string; type: "info" | "success" | "warning" }[]>([]);
+  const logCounter = useRef(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const bots = [
-    { id: "135001", name: "TRADE A — SCALPER", role: "Scalper", active: scalperActive, lastSignal: "08:24:11", symbol: "EURUSD M30", color: "#D4AF37", glow: "glow-gold" },
-    { id: "135002", name: "TRADE B — RUNNER", role: "Runner", active: runnerActive, lastSignal: "08:22:44", symbol: "XAUUSD M30", color: "#4CC9F0", glow: "glow-cyan" },
-  ];
+  const addLog = (text: string, type: "info" | "success" | "warning" = "info") => {
+    logCounter.current += 1;
+    const now = new Date();
+    const ms = now.getMilliseconds().toString().padStart(3, '0');
+    const time = `${now.toLocaleTimeString()}.${ms}`;
+    
+    setLogs(prev => {
+      const newLogs = [...prev, { id: logCounter.current, text, time, type }];
+      if (newLogs.length > 50) return newLogs.slice(newLogs.length - 50);
+      return newLogs;
+    });
+  };
 
-  const rules = [
-    { rule: "INITIAL STOP LOSS", scalper: "SMA200", runner: "SMA200" },
-    { rule: "TRAILING INHIBIT LEVEL", scalper: "EMA50", runner: "SMA200" },
-    { rule: "MOMENTUM TARGET", scalper: "EMA13 CROSS", runner: "MACRO TREND" },
-    { rule: "NO-WIDENING ENFORCE", scalper: "ENABLED", runner: "ENABLED" },
-    { rule: "BREAKEVEN TRIGGER", scalper: "1:1 RR", runner: "1:1 RR" },
-    { rule: "TIMEFRAME LOCK", scalper: "M30 ONLY", runner: "M30 ONLY" },
-    { rule: "PARTIAL CLOSE RULE", scalper: "50% AT BE+20", runner: "50% AT BE+20" },
-  ];
+  // Auto-scroll logs
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  // Main Pipeline Animation Loop
+  useEffect(() => {
+    let isActive = true;
+    
+    const runPipeline = async () => {
+      while (isActive) {
+        // Wait before starting a new trade cycle
+        setActiveStageIdx(-1);
+        addLog("System idle. Scanning for anomalies...", "info");
+        await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
+        if (!isActive) break;
+        
+        for (let i = 0; i < STAGES.length; i++) {
+          if (!isActive) break;
+          setActiveStageIdx(i);
+          const stage = STAGES[i];
+          
+          // Add log for this stage
+          const type = i === STAGES.length - 1 ? "success" : i === 2 ? "warning" : "info";
+          addLog(`[${stage.name.toUpperCase()}] ${stage.message}`, type);
+          
+          // Simulate processing time
+          await new Promise(r => setTimeout(r, stage.durationMs));
+        }
+      }
+    };
+
+    runPipeline();
+    
+    return () => { isActive = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300">
-      <div className="glass-panel flex flex-col overflow-hidden flex-1 min-h-0 relative">
-        
-        {/* Subtle Background Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-xiphos-gold opacity-5 blur-[150px] rounded-full pointer-events-none"></div>
-
-        {/* Header */}
-        <div className="p-4 border-b border-white/5 flex items-center bg-black/20 shrink-0 z-10">
-          <span className="text-2xl font-black text-xiphos-gold uppercase tracking-widest flex items-center gap-2 glow-gold">
-            <Sliders className="h-5 w-5" />
-            STRATEGY ROUTING POLICY CONFIGURATOR
-          </span>
+    <div className="flex flex-col w-full h-full bg-transparent font-mono select-none overflow-hidden animate-in fade-in">
+      
+      {/* Top Telemetry Header */}
+      <div className="flex items-center justify-between px-6 py-4 bg-[#09090e] border-b border-[#1e1e2e] shrink-0 z-10">
+        <div className="flex items-center gap-3">
+          <Cpu className="w-5 h-5 text-[#8b5cf6]" />
+          <h1 className="text-lg font-bold text-white uppercase tracking-widest">Autonomous Execution Engine</h1>
         </div>
-
-        {/* Split: 3 + 9 */}
-        <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden z-10">
-
-          {/* LEFT: Bot status cards */}
-          <div className="col-span-3 border-r border-white/5 p-5 flex flex-col gap-6 overflow-hidden bg-black/20">
-            <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider block border-b border-white/5 pb-2">
-              BOT RUNTIME STATUS
-            </span>
-
-            {bots.map(bot => (
-              <div key={bot.id}
-                className={`glass-card p-4 flex flex-col gap-4 transition-all ${
-                  bot.active ? "border-white/10" : "border-white/5 opacity-50 grayscale"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-sm font-black uppercase ${bot.active ? bot.glow : ""}`} style={{ color: bot.active ? bot.color : "#94A3B8" }}>
-                    {bot.name}
-                  </span>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${
-                    bot.active ? "bg-xiphos-emerald/20 text-xiphos-emerald border-xiphos-emerald/30" : "bg-white/10 text-xiphos-muted border-white/10"
-                  }`}>
-                    {bot.active ? "ACTIVE" : "BYPASSED"}
-                  </span>
-                </div>
-                
-                <div className="space-y-2 text-xs text-xiphos-muted">
-                  {[
-                    ["MAGIC NO.", bot.id],
-                    ["ROLE", bot.role],
-                    ["LAST SIGNAL", bot.lastSignal],
-                    ["ACTIVE SYMBOL", bot.symbol],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between border-b border-white/5 pb-1 last:border-none">
-                      <span className="font-black tracking-wider">{k}</span>
-                      <span className="text-white font-mono">{v}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => bot.id === "135001" ? setScalperActive(!scalperActive) : setRunnerActive(!runnerActive)}
-                  className={`w-full py-2 text-xs font-black tracking-widest uppercase rounded border cursor-pointer transition-all flex items-center justify-center gap-2 ${
-                    bot.active
-                      ? "border-xiphos-gold/40 text-xiphos-gold hover:bg-xiphos-gold hover:text-black"
-                      : "border-xiphos-emerald/40 text-xiphos-emerald hover:bg-xiphos-emerald hover:text-black"
-                  }`}
-                >
-                  <Cpu className="w-3 h-3" />
-                  {bot.active ? "BYPASS ROUTE" : "ENGAGE ROUTE"}
-                </button>
-              </div>
-            ))}
+        
+        <div className="flex items-center gap-8 text-xs font-bold tracking-widest uppercase">
+          <div className="flex flex-col gap-1">
+            <span className="text-[#52525b]">Execution Speed</span>
+            <span className="text-[#4ade80] flex items-center gap-1"><Zap className="w-3 h-3"/> &lt; 5ms</span>
           </div>
-
-          {/* RIGHT: Rules table + execution log */}
-          <div className="col-span-9 p-5 flex flex-col gap-6 overflow-hidden">
-
-            {/* Rules comparison table */}
-            <div className="flex-1 min-h-0 flex flex-col glass-card">
-              <div className="p-3 border-b border-white/5 bg-black/20 flex justify-between items-center">
-                <span className="text-sm text-xiphos-muted font-black uppercase tracking-wider">
-                  ACTIVE STRATEGY RULES COMPARISON
-                </span>
-                <span className="text-xs text-xiphos-emerald glow-emerald font-black tracking-widest flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" /> ENFORCED
-                </span>
-              </div>
-              <div className="overflow-hidden flex-1 min-h-0">
-                <table className="w-full text-left text-sm border-collapse">
-                  <thead className="bg-black/40">
-                    <tr className="text-xiphos-muted text-[11px] tracking-widest uppercase">
-                      <th className="p-3 pl-4 font-black">LOGIC PARAMETER</th>
-                      <th className="p-3 font-black text-xiphos-gold">SCALPER ROUTE (A)</th>
-                      <th className="p-3 font-black text-xiphos-cyan">RUNNER ROUTE (B)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rules.map((r, i) => (
-                      <motion.tr 
-                        key={r.rule} 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: i * 0.05 }}
-                        className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                      >
-                        <td className="p-3 pl-4 font-black text-white tracking-wider">{r.rule}</td>
-                        <td className="p-3 font-mono text-xiphos-gold">{r.scalper}</td>
-                        <td className="p-3 font-mono text-xiphos-cyan">{r.runner}</td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Mini Console Log */}
-            <div className="shrink-0 h-32 glass-card border border-white/5 bg-black/40 flex flex-col overflow-hidden relative">
-              <div className="absolute top-0 right-0 p-2">
-                <div className="w-2 h-2 rounded-full bg-xiphos-purple animate-pulse shadow-[0_0_8px_#8B5CF6]" />
-              </div>
-              <div className="text-[10px] text-xiphos-muted font-black tracking-widest uppercase p-2 border-b border-white/5 bg-black/40 flex items-center gap-1.5">
-                <Terminal className="w-3 h-3" />
-                EXECUTION LOGSTREAM
-              </div>
-              <div className="flex-1 p-2 overflow-y-auto text-xs font-mono leading-relaxed opacity-80 flex flex-col gap-1">
-                {logs.slice(-4).map((log, i) => (
-                  <div key={i} className="flex gap-2">
-                    <span className="text-xiphos-muted shrink-0">[{log.timestamp}]</span>
-                    <span className={log.level === 'CRITICAL' || log.level === 'ERROR' ? 'text-xiphos-crimson' : log.level === 'WARN' ? 'text-xiphos-gold' : 'text-xiphos-purple'}>
-                      {log.message}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
+          <div className="flex flex-col gap-1">
+            <span className="text-[#52525b]">Latency</span>
+            <span className="text-[#4cc9f0] flex items-center gap-1"><Network className="w-3 h-3"/> 12ms</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[#52525b]">Broker Status</span>
+            <span className="text-[#a78bfa] flex items-center gap-1"><Server className="w-3 h-3"/> Connected - IBKR</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[#52525b]">Health</span>
+            <span className="text-[#4ade80]">100%</span>
           </div>
         </div>
       </div>
+
+      {/* Main Pipeline Display */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
+        {/* Background Grid */}
+        <div className="absolute inset-0 bg-[url('https://transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
+        
+        <div className="w-full max-w-6xl relative z-10">
+          
+          {/* Connecting SVG Line */}
+          <div className="absolute top-1/2 left-0 right-0 h-1 bg-[#1e1e2e] -translate-y-1/2 z-0 rounded-full" />
+          
+          {/* Active Progress Line */}
+          <div 
+            className="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-[#8b5cf6] to-[#4ade80] -translate-y-1/2 z-0 transition-all duration-300 rounded-full shadow-[0_0_15px_rgba(74,222,128,0.5)]"
+            style={{ 
+              width: activeStageIdx === -1 ? "0%" : `${(activeStageIdx / (STAGES.length - 1)) * 100}%` 
+            }}
+          />
+
+          <div className="flex justify-between items-center relative z-10">
+            {STAGES.map((stage, idx) => {
+              const isActive = activeStageIdx === idx;
+              const isPast = activeStageIdx > idx;
+
+              return (
+                <div key={stage.id} className="flex flex-col items-center gap-4 relative">
+                  
+                  {/* Node Icon */}
+                  <motion.div 
+                    animate={{ 
+                      scale: isActive ? 1.2 : 1,
+                      backgroundColor: isActive ? "#0f0f1a" : isPast ? "#0f0f1a" : "#05050a",
+                      borderColor: isActive ? "#4ade80" : isPast ? "#8b5cf6" : "#1e1e2e",
+                      boxShadow: isActive ? "0 0 20px rgba(74,222,128,0.4)" : "none"
+                    }}
+                    className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all duration-300`}
+                  >
+                    <stage.icon 
+                      className={`w-6 h-6 transition-colors duration-300 ${
+                        isActive ? "text-[#4ade80]" : isPast ? "text-[#8b5cf6]" : "text-[#52525b]"
+                      }`} 
+                    />
+                  </motion.div>
+
+                  {/* Node Label */}
+                  <div className="flex flex-col items-center">
+                    <span className={`text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-colors ${
+                      isActive ? "text-white" : "text-[#52525b]"
+                    }`}>
+                      {stage.name}
+                    </span>
+                    
+                    {/* Active Message (Only visible when active) */}
+                    <AnimatePresence>
+                      {isActive && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute top-24 left-1/2 -translate-x-1/2 w-48 text-center"
+                        >
+                          <div className="text-[10px] text-[#4cc9f0] bg-[#4cc9f0]/10 border border-[#4cc9f0]/30 px-2 py-1 rounded backdrop-blur-sm">
+                            {stage.message}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Execution Terminal Logger */}
+      <div className="h-64 bg-[#09090e] border-t border-[#1e1e2e] flex flex-col shrink-0">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1e1e2e] bg-[#05050a]">
+          <Terminal className="w-4 h-4 text-[#52525b]" />
+          <span className="text-[10px] font-bold text-[#52525b] uppercase tracking-widest">Execution Micro-Log</span>
+        </div>
+        <div ref={scrollRef} className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-1">
+          {logs.map(log => {
+            let colorClass = "text-[#94a3b8]";
+            if (log.type === "success") colorClass = "text-[#4ade80]";
+            if (log.type === "warning") colorClass = "text-[#f59e0b]";
+
+            return (
+              <div key={log.id} className="flex gap-4 text-[11px] leading-relaxed">
+                <span className="text-[#52525b] shrink-0 w-24">[{log.time}]</span>
+                <span className={colorClass}>{log.text}</span>
+              </div>
+            );
+          })}
+          {activeStageIdx !== -1 && (
+            <div className="flex gap-4 text-[11px] leading-relaxed animate-pulse">
+              <span className="text-[#52525b] shrink-0 w-24">[{new Date().toLocaleTimeString()}]</span>
+              <span className="text-[#4cc9f0]">{'>'} _</span>
+            </div>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }

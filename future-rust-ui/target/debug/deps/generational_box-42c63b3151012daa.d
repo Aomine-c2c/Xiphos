@@ -1,0 +1,10 @@
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\generational_box-42c63b3151012daa.d: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\error.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\references.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\sync.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\unsync.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\../README.md
+
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\libgenerational_box-42c63b3151012daa.rmeta: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\error.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\references.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\sync.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\unsync.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\../README.md
+
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\lib.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\error.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\references.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\sync.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\unsync.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\generational-box-0.5.6\src\../README.md:

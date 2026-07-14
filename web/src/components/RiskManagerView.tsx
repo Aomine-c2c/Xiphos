@@ -1,319 +1,162 @@
-
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Shield, AlertTriangle, Activity, BrainCircuit, PlayCircle, Maximize2, XOctagon } from "lucide-react";
-import { useTradingStore } from "../store/useTradingStore";
-import { motion, AnimatePresence } from "framer-motion";
-import { GlassPanel } from "./ui/GlassPanel";
-import { GlassCard } from "./ui/GlassCard";
-import { PageHeader } from "./ui/PageHeader";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
+import React, { useState, useEffect } from "react";
+import { Shield, AlertTriangle, Activity, Lock, Target, Zap, ActivitySquare, Crosshair } from "lucide-react";
 
-const HoldButton = ({ label, onTrigger, colorClass, icon: Icon }: { label: string, onTrigger: () => void, colorClass: string, icon: React.ElementType }) => {
-  const [progress, setProgress] = useState(0);
-  const [isHolding, setIsHolding] = useState(false);
-
-  useEffect(() => {
-    if (!isHolding) {
-      return;
-    }
-
-    const startTime = Date.now();
-    const duration = 500; // 500ms required hold time
-    let frameId: number;
-
-    const tick = () => {
-      const elapsed = Date.now() - startTime;
-      const nextProgress = Math.min((elapsed / duration) * 100, 100);
-      setProgress(nextProgress);
-
-      if (nextProgress >= 100) {
-        setIsHolding(false);
-        onTrigger();
-      } else {
-        frameId = requestAnimationFrame(tick);
-      }
-    };
-
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
-  }, [isHolding, onTrigger]);
-
-  const handleStart = () => {
-    setProgress(0);
-    setIsHolding(true);
-  };
-
-  const handleStop = () => {
-    setIsHolding(false);
-    setProgress(0);
-  };
-
-  return (
-    <button 
-      className={`relative overflow-hidden w-full h-12 rounded flex items-center justify-center gap-2 font-black tracking-widest text-xs border transition-colors ${colorClass} ${isHolding ? 'scale-95' : 'scale-100'} select-none`}
-      onMouseDown={handleStart}
-      onMouseUp={handleStop}
-      onMouseLeave={handleStop}
-      onTouchStart={handleStart}
-      onTouchEnd={handleStop}
-    >
-      <Icon className="w-4 h-4 relative z-10" />
-      <span className="relative z-10">{label} {progress > 0 && progress < 100 && `(${progress}%)`}</span>
-      {/* eslint-disable-next-line react/forbid-dom-props */}
-      <div 
-        className="absolute left-0 top-0 bottom-0 opacity-20"
-        style={{ width: `${progress}%`, backgroundColor: "currentColor" }} 
-      />
-    </button>
-  );
+// --- Types ---
+type RiskMetric = {
+  id: string;
+  name: string;
+  value: number; // For gauge fill (0-100 normally)
+  displayValue: string;
+  maxLabel?: string;
+  color: string;
+  icon: React.ElementType;
+  angle: number; // Position on the circle (0-360)
 };
 
+// --- Mock Data ---
+const METRICS: RiskMetric[] = [
+  { id: "m-1", name: "Exposure", value: 68, displayValue: "68%", color: "#4cc9f0", icon: Activity, angle: 0 },
+  { id: "m-2", name: "Drawdown", value: 42, displayValue: "4.2%", maxLabel: "Max 10%", color: "#f87171", icon: AlertTriangle, angle: 45 },
+  { id: "m-3", name: "Leverage", value: 42, displayValue: "2.1x", maxLabel: "Max 5x", color: "#a78bfa", icon: Crosshair, angle: 90 },
+  { id: "m-4", name: "Correlation", value: 15, displayValue: "0.15", maxLabel: "Max 0.8", color: "#3b82f6", icon: ActivitySquare, angle: 135 },
+  { id: "m-5", name: "Portfolio Risk", value: 55, displayValue: "12.4%", maxLabel: "Target 10%", color: "#f59e0b", icon: Target, angle: 180 },
+  { id: "m-6", name: "Capital Protection", value: 94, displayValue: "94%", color: "#4ade80", icon: Lock, angle: 225 },
+  { id: "m-7", name: "Stress Level", value: 22, displayValue: "LOW", maxLabel: "22 / 100", color: "#fbbf24", icon: Zap, angle: 270 },
+  { id: "m-8", name: "Daily Limits", value: 45, displayValue: "45%", maxLabel: "Consumed", color: "#ec4899", icon: Shield, angle: 315 },
+];
+
 export default function RiskManagerView() {
-  const { account } = useTradingStore();
+  const [pulseScale, setPulseScale] = useState(1);
+  const systemStress = 22; // 0-100
+  const isHighStress = systemStress > 70;
 
-  const [aiSuggestions] = useState([
-    "WARNING: High GBP correlation detected across 3 open positions. Consider reducing GBPJPY longs.",
-    "VaR Exceedance Risk: Next FOMC meeting in 2 hours. Auto-hedging recommended.",
-    "Stress Test Alert: '2008 Flash Crash' scenario projects a 14% drawdown with current exposure."
-  ]);
+  // Simulate a living, breathing pulse
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPulseScale(prev => prev === 1 ? (isHighStress ? 1.05 : 1.02) : 1);
+    }, isHighStress ? 800 : 2000);
+    return () => clearInterval(interval);
+  }, [isHighStress]);
 
-  const [circuitTriggered, setCircuitTriggered] = useState<string | null>(null);
+  // Radius for the layout circle
+  const layoutRadius = 320; 
+  const centerOffset = 50; // CSS percentage
 
-  const handleTrigger = useCallback((action: string) => {
-    setCircuitTriggered(action);
-    setTimeout(() => setCircuitTriggered(null), 3000);
-  }, []);
-
-  const pseudoRandom = useCallback((seed: number) => {
-    const x = Math.sin(seed * 9999) * 10000;
-    return x - Math.floor(x);
-  }, []);
-
-  // Data for Monte Carlo Simulation
-  const monteCarloData = useMemo(() => {
-    const paths = [];
-    for (let path = 0; path < 5; path++) {
-      let currentVal = account.balance || 100000;
-      const dataPoints = [];
-      for (let day = 0; day <= 30; day++) {
-        dataPoints.push({ day, value: currentVal });
-        // Random walk
-        const drift = 0.0002;
-        const vol = 0.015;
-        const shock = (pseudoRandom(path * 100 + day) - 0.5) * 2; // -1 to 1
-        currentVal = currentVal * (1 + drift + shock * vol);
-      }
-      paths.push(dataPoints);
-    }
-    // Convert to recharts format
-    const chartData = [];
-    for (let day = 0; day <= 30; day++) {
-      const point: Record<string, string | number> = { day: `Day ${day}` };
-      paths.forEach((p, i) => {
-        point[`path${i}`] = p[day].value;
-      });
-      chartData.push(point);
-    }
-    return chartData;
-  }, [account.balance, pseudoRandom]);
-
-  const metrics = [
-    { label: "Daily Loss", value: "-$1,245.00", color: "text-xiphos-crimson glow-crimson" },
-    { label: "Weekly Loss", value: "+$4,120.00", color: "text-xiphos-emerald glow-emerald" },
-    { label: "Monthly Loss", value: "+$12,450.00", color: "text-xiphos-emerald glow-emerald" },
-    { label: "Current Exposure", value: "$450,000", color: "text-white" },
-    { label: "Correlation Risk", value: "85% (HIGH)", color: "text-xiphos-crimson glow-crimson" },
-    { label: "Open Risk", value: "2.4%", color: "text-xiphos-gold glow-gold" },
-    { label: "VaR (99%)", value: "$15,200", color: "text-white" },
-    { label: "Max Drawdown", value: "4.1%", color: "text-white" },
-  ];
+  const getCoordinates = (angle: number) => {
+    const rad = (angle - 90) * (Math.PI / 180);
+    return {
+      x: layoutRadius * Math.cos(rad),
+      y: layoutRadius * Math.sin(rad)
+    };
+  };
 
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-6 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
-      <GlassPanel glowColor="crimson" className="p-0 gap-2 flex flex-col h-full" noOverflowHidden>
-      {/* HEADER */}
-      <PageHeader 
-        title="INSTITUTIONAL RISK CENTER" 
-        icon={Shield} 
-        glowColor="purple" 
-        subtitle="Real-time exposure, VaR, and circuit breaker controls."
-        actions={
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] text-xiphos-muted uppercase tracking-widest mb-1">Global Risk Score</span>
-            <div className="px-4 py-2 border border-xiphos-gold/30 bg-xiphos-gold/10 rounded text-xiphos-gold font-black glow-gold flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" /> ELEVATED (7.4/10)
-            </div>
-          </div>
-        }
+    <div className="relative w-full h-full bg-[#05050a] overflow-hidden flex items-center justify-center animate-in fade-in select-none">
+      
+      {/* Background Pulse Overlays */}
+      <div 
+        className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(74,222,128,0.05)_0%,transparent_60%)] transition-all duration-[2000ms]`}
+        style={{ transform: `scale(${pulseScale * 1.5})` }}
+      />
+      <div 
+        className={`absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(74,222,128,0.02)_0%,transparent_80%)] transition-all duration-[2000ms]`}
+        style={{ transform: `scale(${pulseScale * 2})` }}
       />
 
-      {/* TOP METRICS GRID */}
-      <div className="grid grid-cols-4 xl:grid-cols-8 gap-2 shrink-0 px-4">
-        {metrics.map((m) => (
-          <GlassCard key={`metric-${m.label}`} className="p-2 flex flex-col justify-center">
-            <span className="text-[9px] text-xiphos-muted font-bold tracking-widest uppercase mb-2">
-              {m.label}
+      {/* Center Shield Container */}
+      <div 
+        className="absolute z-20 flex items-center justify-center transition-all duration-1000 ease-in-out"
+        style={{ transform: `scale(${pulseScale})` }}
+      >
+        {/* Shield Glow Rings */}
+        <div className="absolute w-[400px] h-[400px] rounded-full border border-[#4ade80]/20 animate-[spin_10s_linear_infinite]" />
+        <div className="absolute w-[350px] h-[350px] rounded-full border-2 border-dashed border-[#4ade80]/30 animate-[spin_15s_linear_infinite_reverse]" />
+        <div className="absolute w-[250px] h-[250px] rounded-full bg-[#4ade80]/10 blur-2xl" />
+
+        {/* Core Shield SVG */}
+        <div className="relative w-48 h-48 flex items-center justify-center">
+          <svg className="absolute inset-0 w-full h-full text-[#4ade80]/20 drop-shadow-[0_0_15px_rgba(74,222,128,0.8)]" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <Shield className="w-20 h-20 text-[#4ade80] z-10" strokeWidth={1.5} />
+          
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center mt-12 z-20">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-[#4ade80] bg-[#05050a] px-2 py-0.5 rounded border border-[#4ade80]/30 shadow-[0_0_10px_rgba(74,222,128,0.5)]">
+              Secure
             </span>
-            <span className={`text-lg font-black ${m.color}`}>{m.value}</span>
-          </GlassCard>
-        ))}
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col xl:flex-row gap-2 px-4 pb-4">
-        
-        {/* LEFT COLUMN */}
-        <div className="w-full xl:w-1/3 flex flex-col gap-2 shrink-0 min-h-0">
-          
-          {/* CIRCUIT BREAKERS */}
-          <GlassCard className="p-3 border-l-2 border-l-xiphos-crimson relative overflow-hidden shrink-0">
-            <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
-              <XOctagon className="w-3 h-3 text-xiphos-crimson" /> Circuit Breakers (Hold to Confirm)
-            </h3>
-            
-            <div className="space-y-2 relative z-10">
-              <HoldButton 
-                label="EMERGENCY STOP (FLATTEN ALL)" 
-                onTrigger={() => handleTrigger("Flattened all positions!")} 
-                colorClass="text-xiphos-crimson border-xiphos-crimson/50 hover:bg-xiphos-crimson/10" 
-                icon={AlertTriangle}
-              />
-              <HoldButton 
-                label="AUTO HEDGE (DELTA NEUTRAL)" 
-                onTrigger={() => handleTrigger("Auto hedging initiated.")} 
-                colorClass="text-xiphos-cyan border-xiphos-cyan/50 hover:bg-xiphos-cyan/10" 
-                icon={Shield}
-              />
-              <HoldButton 
-                label="AUTO REDUCE LOTS (50%)" 
-                onTrigger={() => handleTrigger("Reduced all lots by 50%.")} 
-                colorClass="text-xiphos-gold border-xiphos-gold/50 hover:bg-xiphos-gold/10" 
-                icon={Activity}
-              />
-            </div>
+      {/* Orbiting Gauges Container */}
+      <div className="absolute inset-0 z-30">
+        {METRICS.map(metric => {
+          const coords = getCoordinates(metric.angle);
+          const gaugeRadius = 45;
+          const circumference = 2 * Math.PI * gaugeRadius;
+          const strokeDashoffset = circumference - (metric.value / 100) * circumference;
 
-            <AnimatePresence>
-              {circuitTriggered && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-black/80 backdrop-blur-sm z-20 flex items-center justify-center p-4 text-center"
-                >
-                  <span className="text-xiphos-emerald font-black tracking-widest glow-emerald">
-                    {circuitTriggered}
+          return (
+            <div 
+              key={metric.id}
+              className="absolute flex flex-col items-center justify-center group"
+              style={{
+                left: `calc(${centerOffset}% + ${coords.x}px)`,
+                top: `calc(${centerOffset}% + ${coords.y}px)`,
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              {/* Circular Gauge SVG */}
+              <div className="relative w-[120px] h-[120px] flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-110">
+                <svg className="w-full h-full transform -rotate-90">
+                  {/* Track */}
+                  <circle
+                    cx="60" cy="60" r={gaugeRadius}
+                    fill="none"
+                    stroke="#1e1e2e"
+                    strokeWidth="6"
+                  />
+                  {/* Fill */}
+                  <circle
+                    cx="60" cy="60" r={gaugeRadius}
+                    fill="none"
+                    stroke={metric.color}
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    className="transition-all duration-1000 ease-out"
+                    style={{ filter: `drop-shadow(0 0 8px ${metric.color}80)` }}
+                  />
+                </svg>
+
+                {/* Inner Icon & Value */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#05050a]/50 rounded-full backdrop-blur-sm m-2 border border-white/5">
+                  <metric.icon className="w-4 h-4 mb-1" style={{ color: metric.color }} />
+                  <span className="text-[13px] font-bold font-mono text-white leading-none shadow-black drop-shadow-md">
+                    {metric.displayValue}
                   </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </GlassCard>
-
-          {/* AI RISK SUGGESTIONS */}
-          <GlassCard className="p-3 flex-1 flex flex-col min-h-0">
-            <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
-              <BrainCircuit className="w-3 h-3 text-xiphos-purple" /> AI Risk Suggestions
-            </h3>
-            <div className="flex-1 overflow-hidden space-y-1 flex flex-col">
-              {aiSuggestions.map((sug) => (
-                <div key={sug} className="p-2 bg-white/5 border-l-2 border-xiphos-gold/50 rounded-r text-[9px] text-gray-300 leading-tight">
-                  {sug}
-                </div>
-              ))}
-            </div>
-          </GlassCard>
-
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="flex-1 flex flex-col gap-2 min-h-0">
-          
-          {/* RISK HEAT MAP */}
-          <GlassCard className="p-3 shrink-0 flex flex-col min-h-0">
-            <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase mb-4 font-bold flex items-center gap-2">
-              <Maximize2 className="w-3 h-3" /> Portfolio Risk Heat Map (Sector/Asset Exposure)
-            </h3>
-            <div className="flex-1 grid grid-cols-5 gap-1">
-              {/* Heatmap blocks */}
-              {[
-                { symbol: "EURUSD", risk: 80, size: "col-span-2 row-span-2" },
-                { symbol: "GBPUSD", risk: 65, size: "col-span-1 row-span-2" },
-                { symbol: "XAUUSD", risk: 30, size: "col-span-1 row-span-1" },
-                { symbol: "BTCUSD", risk: 95, size: "col-span-1 row-span-1" },
-                { symbol: "US30", risk: 45, size: "col-span-2 row-span-1" },
-              ].map((block) => {
-                const isHigh = block.risk > 70;
-                const isMed = block.risk > 40 && block.risk <= 70;
-                let color = "bg-xiphos-emerald/80";
-                if (isHigh) {
-                  color = "bg-xiphos-crimson/80";
-                } else if (isMed) {
-                  color = "bg-xiphos-gold/80";
-                }
-                return (
-                  <div key={block.symbol} className={`${block.size} ${color} rounded-sm p-1 flex flex-col justify-between hover:opacity-80 transition-opacity cursor-pointer border border-white/10`}>
-                    <span className="text-white font-black text-[10px] tracking-wider">{block.symbol}</span>
-                    <span className="text-white/80 font-bold text-[8px]">{block.risk}% RISK</span>
-                  </div>
-                );
-              })}
-            </div>
-          </GlassCard>
-
-          {/* MONTE CARLO SIMULATION */}
-          <GlassCard className="p-3 flex-1 min-h-0 flex flex-col">
-            <div className="flex justify-between items-center mb-1">
-              <h3 className="text-xiphos-muted tracking-widest text-[10px] uppercase font-bold flex items-center gap-2">
-                <PlayCircle className="w-3 h-3 text-xiphos-cyan" /> Monte Carlo Stress Test (30 Days)
-              </h3>
-              <span className="text-[10px] text-xiphos-muted tracking-widest bg-white/5 px-2 py-1 rounded">
-                SIMULATING 10,000 PATHS
-              </span>
-            </div>
-            
-            <div className="flex-1 w-full h-full relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monteCarloData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="day" stroke="rgba(255,255,255,0.2)" fontSize={10} tickMargin={10} />
-                  <YAxis 
-                    stroke="rgba(255,255,255,0.2)" 
-                    fontSize={10} 
-                    tickFormatter={(val) => `$${(val / 1000).toFixed(0)}k`}
-                    domain={['auto', 'auto']}
-                  />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: "rgba(5, 8, 15, 0.9)", borderColor: "rgba(103, 232, 249, 0.2)", borderRadius: "8px" }}
-                    itemStyle={{ color: "#fff" }}
-                    formatter={(value) => [`$${Number(value).toFixed(2)}`, "Equity"]}
-                  />
-                  <Line type="monotone" dataKey="path0" stroke="rgba(139, 92, 246, 0.4)" strokeWidth={1} dot={false} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="path1" stroke="rgba(6, 182, 212, 0.4)" strokeWidth={1} dot={false} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="path2" stroke="rgba(234, 179, 8, 0.4)" strokeWidth={1} dot={false} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="path3" stroke="rgba(239, 68, 68, 0.4)" strokeWidth={1} dot={false} isAnimationActive={false} />
-                  {/* Mean Path */}
-                  <Line type="monotone" dataKey="path4" stroke="#fff" strokeWidth={2} dot={false} isAnimationActive={false} />
-                </LineChart>
-              </ResponsiveContainer>
-              
-              {/* Overlay stats */}
-              <div className="absolute top-2 right-2 flex flex-col gap-1">
-                <div className="bg-black/40 backdrop-blur-md border border-white/5 p-1 rounded text-right">
-                  <div className="text-[9px] text-xiphos-muted tracking-widest mb-1">PROJECTED MEAN</div>
-                  <div className="text-white font-black">$102,450</div>
-                </div>
-                <div className="bg-black/40 backdrop-blur-md border border-xiphos-crimson/30 p-1 rounded text-right">
-                  <div className="text-[9px] text-xiphos-muted tracking-widest mb-1">WORST CASE (5th %ile)</div>
-                  <div className="text-xiphos-crimson font-black">$86,200</div>
                 </div>
               </div>
+
+              {/* Labels */}
+              <div className="flex flex-col items-center text-center">
+                <span className="text-xs font-bold text-white tracking-wider uppercase mb-0.5" style={{ textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}>
+                  {metric.name}
+                </span>
+                {metric.maxLabel && (
+                  <span className="text-[10px] text-[#94a3b8] font-mono tracking-wide px-1.5 py-0.5 bg-[#0f0f1a]/80 border border-[#1e1e2e] rounded">
+                    {metric.maxLabel}
+                  </span>
+                )}
+              </div>
             </div>
-
-          </GlassCard>
-
-        </div>
+          );
+        })}
       </div>
-      </GlassPanel>
+
     </div>
   );
 }

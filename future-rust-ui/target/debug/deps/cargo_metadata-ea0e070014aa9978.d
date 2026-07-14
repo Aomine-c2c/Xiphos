@@ -1,0 +1,9 @@
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\cargo_metadata-ea0e070014aa9978.d: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\dependency.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\diagnostic.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\errors.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\messages.rs
+
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\libcargo_metadata-ea0e070014aa9978.rmeta: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\dependency.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\diagnostic.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\errors.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\messages.rs
+
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\lib.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\dependency.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\diagnostic.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\errors.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\cargo_metadata-0.18.1\src\messages.rs:

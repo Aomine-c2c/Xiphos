@@ -1,0 +1,23 @@
+[application]
+name = "future-rust-ui"
+default_platform = "desktop"
+asset_dir = "public"
+
+[web.app]
+title = "Xiphos Trading System"
+
+[web.watcher]
+watch_path = ["src"]
+
+[web.resource]
+style = []
+script = []
+dev = { style = [], script = [] }
+
+[bundle]
+identifier = "com.xiphos.trading"
+publisher = "Xiphos"
+
+[tailwind]
+input = "input.css"
+config = "tailwind.config.js"

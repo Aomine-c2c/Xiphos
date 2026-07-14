@@ -38,8 +38,12 @@ if (-not $SkipPython) {
 Write-Step 2 4 "Building Next.js frontend (static export)..."
 Push-Location "$Root\web"
 try {
-    cmd /c "npm run build" 2>&1 | Write-Host
-    if ($LASTEXITCODE -ne 0) { throw "Next.js build failed (exit $LASTEXITCODE)" }
+    $tempPref = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    cmd /c "npm run build"
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $tempPref
+    if ($exitCode -ne 0) { throw "Next.js build failed (exit $exitCode)" }
     if (-not (Test-Path "$Root\web\out")) {
         throw "Next.js build succeeded but 'out/' directory is missing. Check next.config.ts."
     }

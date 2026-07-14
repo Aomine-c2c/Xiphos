@@ -26,7 +26,7 @@ describe("TradingChart", () => {
   });
 
   it("renders without crashing and initializes chart", () => {
-    const { container } = render(<TradingChart symbol="EURUSD" />);
+    const { container } = render(<TradingChart symbol="EURUSD" timeframe="1M" />);
     
     // The container div should be present
     expect(container.firstChild).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("TradingChart", () => {
   });
   
   it("cleans up chart on unmount", () => {
-    const { unmount } = render(<TradingChart symbol="EURUSD" />);
+    const { unmount } = render(<TradingChart symbol="EURUSD" timeframe="1M" />);
     
     // Unmount the component
     unmount();

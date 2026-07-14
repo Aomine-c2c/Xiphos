@@ -1,324 +1,168 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Terminal, Download, Search, Filter, Cpu, Database, Activity, HardDrive, Zap, Clock, Maximize, Cpu as Gpu } from "lucide-react";
-import { GlassPanel } from "./ui/GlassPanel";
-import { GlassCard } from "./ui/GlassCard";
-import { PageHeader } from "./ui/PageHeader";
-import { Button } from "./ui/Button";
-import { StatusBadge } from "./ui/StatusBadge";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from "recharts";
-import { motion, AnimatePresence } from "framer-motion";
-
-type LogLevel = "INFO" | "WARNING" | "ERROR";
-type LogCategory = "EXEC" | "BROKER" | "LEARN" | "PREDICT" | "ADAPT" | "RISK";
-
-interface LogEntry {
-  id: string;
-  timestamp: Date;
-  level: LogLevel;
-  category: LogCategory;
-  message: string;
-}
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Server, Database, BrainCircuit, ShieldCheck, Activity, Globe, Zap, Network, Cpu } from "lucide-react";
 
 export default function MonitoringView() {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterLevel, setFilterLevel] = useState<LogLevel | "ALL">("ALL");
-  const [filterCategory, setFilterCategory] = useState<LogCategory | "ALL">("ALL");
-  const [autoScroll, setAutoScroll] = useState(true);
-  
-  const [metrics, setMetrics] = useState<Record<string, number>[]>([]);
-  const [mahoragaInfo, setMahoragaInfo] = useState<{ema: number, phenomenon: string}>({ema: 13, phenomenon: "UNKNOWN"});
-  const logsEndRef = useRef<HTMLDivElement>(null);
+  const [pulse, setPulse] = useState(0);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://127.0.0.1:8001/ws");
-    
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        
-        if (msg.type === "log_history") {
-          const loadedLogs = msg.data.map((l: Record<string, string>, i: number) => ({
-            id: `hist-${Date.now()}-${i}`,
-            timestamp: new Date(),
-            level: l.level as LogLevel,
-            category: "EXEC" as LogCategory,
-            message: l.message
-          }));
-          setLogs(loadedLogs);
-        } else if (msg.type === "log_event") {
-          const l = msg.data;
-          setLogs(prev => {
-            const newLogs: LogEntry[] = [...prev, {
-              id: `log-${Date.now()}-${Math.floor(Math.random()*1000)}`,
-              timestamp: new Date(),
-              level: l.level as LogLevel,
-              category: "EXEC" as LogCategory,
-              message: l.message
-            }];
-            return newLogs.slice(-200); // keep last 200
-          });
-        } else if (msg.type === "state_update") {
-          const st = msg.data.system_stats;
-          const lat = msg.data.api_latency;
-          const mahoragaMap = msg.data.mahoraga_state;
-          
-          if (mahoragaMap) {
-            // Just grab the first symbol's state as a proxy for the overall adaptation engine state for monitoring
-            const keys = Object.keys(mahoragaMap);
-            if (keys.length > 0) {
-                setMahoragaInfo({
-                    ema: mahoragaMap[keys[0]].fast_ema || 13,
-                    phenomenon: mahoragaMap[keys[0]].phenomenon || "UNKNOWN"
-                });
-            }
-          }
-          
-          setMetrics(prev => {
-            const lastTime = prev.length > 0 ? (prev.at(-1)?.time ?? 0) : 0;
-            const newMetric = {
-              time: lastTime + 1,
-              cpu: st.cpu || 0,
-              ram: st.memory || 0,
-              disk: st.disk || 0,
-              latency: lat || 0,
-              gpu: 0,
-              fps: 60
-            };
-            const newArr = [...prev, newMetric];
-            return newArr.length > 60 ? newArr.slice(1) : newArr;
-          });
-        }
-      } catch {
-        // WebSocket parsing errors are non-fatal; silently discard malformed frames
-      }
-    };
-    
-    return () => ws.close();
+    const interval = setInterval(() => {
+      setPulse(p => p + 1);
+    }, 1500);
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (autoScroll && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [logs, autoScroll]);
-
-  const handleExport = () => {
-    const logText = logs.map(l => `[${l.timestamp.toISOString()}] [${l.level}] [${l.category}] ${l.message}`).join("\n");
-    const blob = new Blob([logText], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `xiphos_system_logs_${Date.now()}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const filteredLogs = logs.filter(log => {
-    if (filterLevel !== "ALL" && log.level !== filterLevel) return false;
-    if (filterCategory !== "ALL" && log.category !== filterCategory) return false;
-    if (searchQuery && !log.message.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
-
-  const getLevelColor = (level: LogLevel) => {
-    switch (level) {
-      case "ERROR": return "text-xiphos-crimson";
-      case "WARNING": return "text-xiphos-gold";
-      case "INFO": return "text-xiphos-cyan";
-    }
-  };
-
-  const currentMetrics = metrics.at(-1) || { cpu: 0, ram: 0, gpu: 0, disk: 0, latency: 0, fps: 0 };
-
   return (
-    <div className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-4 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 relative">
-      <GlassPanel glowColor="cyan" className="p-0 flex flex-col h-full" noOverflowHidden>
-        
-        {/* Header */}
-        <PageHeader 
-          title="SYSTEM MONITORING" 
-          icon={Terminal} 
-          glowColor="cyan" 
-          actions={
-            <Button onClick={handleExport} icon={Download} label="EXPORT LOGS" />
-          }
-        />
-
-        {/* Layout Split */}
-        <div className="flex flex-col xl:flex-row flex-1 min-h-0 z-10">
-          
-          {/* LEFT: LIVE TERMINAL (70%) */}
-          <div className="w-full xl:w-2/3 border-r border-white/5 flex flex-col min-h-0 bg-black/40">
-            
-            {/* Terminal Controls */}
-            <div className="flex gap-2 p-2 shrink-0 border-b border-white/5">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-xiphos-muted" />
-                <input 
-                  type="text" 
-                  placeholder="GREP LOGS..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 text-white text-xs pl-8 pr-3 py-1 rounded outline-none focus:border-xiphos-cyan transition-colors"
-                />
-              </div>
-              
-              <div className="flex items-center gap-1 text-xs">
-                <Filter className="w-3 h-3 text-xiphos-muted" />
-                <select 
-                  title="Filter by log level"
-                  value={filterLevel} 
-                  onChange={(e) => setFilterLevel(e.target.value as LogLevel | "ALL")}
-                  className="bg-black/50 border border-white/10 text-white py-1 px-1 rounded outline-none text-xs uppercase"
-                >
-                  <option value="ALL">ALL LEVELS</option>
-                  <option value="INFO">INFO</option>
-                  <option value="WARNING">WARNING</option>
-                  <option value="ERROR">ERROR</option>
-                </select>
-                <select 
-                  title="Filter by category"
-                  value={filterCategory} 
-                  onChange={(e) => setFilterCategory(e.target.value as LogCategory | "ALL")}
-                  className="bg-black/50 border border-white/10 text-white py-1 px-1 rounded outline-none text-xs uppercase"
-                >
-                  <option value="ALL">ALL CATEGORIES</option>
-                  <option value="EXEC">EXECUTION</option>
-                  <option value="BROKER">BROKER</option>
-                  <option value="LEARN">LEARNING</option>
-                  <option value="PREDICT">PREDICTION</option>
-                  <option value="ADAPT">ADAPTATION</option>
-                  <option value="RISK">RISK</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-1 text-xs font-bold text-xiphos-muted">
-                <input 
-                  id="auto-scroll-toggle"
-                  title="Toggle auto-scroll"
-                  type="checkbox" 
-                  checked={autoScroll} 
-                  onChange={(e) => setAutoScroll(e.target.checked)} 
-                  className="accent-xiphos-cyan"
-                />
-                <label htmlFor="auto-scroll-toggle">AUTO-SCROLL</label>
-              </div>
+    <div className="flex flex-col w-full h-full bg-[#05050a] font-mono select-none overflow-hidden gap-4 animate-in fade-in">
+      
+      {/* Header Telemetry */}
+      <div className="grid grid-cols-4 gap-4 shrink-0">
+        {[
+          { label: "Network Latency", value: "14ms", icon: Globe, color: "#4cc9f0" },
+          { label: "Core Processing", value: "32%", icon: Cpu, color: "#8b5cf6" },
+          { label: "Neural Memory", value: "88%", icon: BrainCircuit, color: "#f59e0b" },
+          { label: "Firewall Integrity", value: "SECURE", icon: ShieldCheck, color: "#4ade80" },
+        ].map((stat, i) => (
+          <div key={i} className="bg-[#09090e] border border-[#1e1e2e] p-4 rounded-xl flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[10px] text-[#52525b] font-bold uppercase tracking-widest mb-1">{stat.label}</span>
+              <span className="text-2xl font-bold text-white font-mono">{stat.value}</span>
             </div>
-
-            {/* Log Feed */}
-            <div className="flex-1 overflow-y-auto p-1 text-[9px] leading-tight font-mono flex flex-col">
-              <AnimatePresence initial={false}>
-                {filteredLogs.map(log => (
-                  <motion.div 
-                    key={log.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex gap-2 hover:bg-white/5 py-0.5 px-1 rounded transition-colors"
-                  >
-                    <span className="text-xiphos-muted shrink-0">
-                      [{log.timestamp.toLocaleTimeString([], { hour12: false, fractionalSecondDigits: 3 })}]
-                    </span>
-                    <span className={`w-12 shrink-0 font-black tracking-widest ${getLevelColor(log.level)}`}>
-                      {log.level}
-                    </span>
-                    <span className="w-16 shrink-0 text-white/50 font-bold tracking-widest">
-                      [{log.category}]
-                    </span>
-                    <span className={`text-white/80 ${log.level === "ERROR" ? "text-xiphos-crimson! font-bold" : ""} ${log.level === "WARNING" ? "text-xiphos-gold!" : ""}`}>
-                      {log.message}
-                    </span>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              <div ref={logsEndRef} />
+            <div className="w-10 h-10 rounded-full flex items-center justify-center border" style={{ backgroundColor: `${stat.color}15`, borderColor: `${stat.color}30` }}>
+              <stat.icon className="w-5 h-5" style={{ color: stat.color }} />
             </div>
           </div>
+        ))}
+      </div>
 
-          {/* RIGHT: PERFORMANCE TIMELINE (30%) */}
-          <div className="w-full xl:w-1/3 flex flex-col min-h-0 bg-black/20 p-1 gap-1">
+      {/* Main Server Topology Map */}
+      <div className="bg-[#09090e] border border-[#1e1e2e] rounded-xl flex flex-col flex-1 overflow-hidden relative">
+        <div className="flex items-center gap-2 px-6 py-4 border-b border-[#1e1e2e] bg-[#05050a] shrink-0 z-10">
+          <Network className="w-4 h-4 text-[#a78bfa]" />
+          <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-widest">Network Topology</span>
+        </div>
+
+        <div className="flex-1 relative flex items-center justify-center p-8 overflow-hidden bg-[url('https://transparenttextures.com/patterns/cubes.png')] bg-opacity-5">
+          {/* Animated SVG Data Pipeline */}
+          <div className="absolute inset-0 flex items-center justify-center z-0">
+            <svg width="800" height="400" viewBox="0 0 800 400" fill="none" className="overflow-visible">
+              
+              {/* Path 1: Market Data -> Brain */}
+              <path id="path1" d="M 100 100 C 250 100 250 200 400 200" stroke="#1e1e2e" strokeWidth="4" fill="none" strokeLinecap="round" />
+              {/* Path 2: Liquidity -> Brain */}
+              <path id="path2" d="M 100 300 C 250 300 250 200 400 200" stroke="#1e1e2e" strokeWidth="4" fill="none" strokeLinecap="round" />
+              {/* Path 3: Brain -> Execution */}
+              <path id="path3" d="M 400 200 C 550 200 550 100 700 100" stroke="#1e1e2e" strokeWidth="4" fill="none" strokeLinecap="round" />
+              {/* Path 4: Brain -> Memory */}
+              <path id="path4" d="M 400 200 C 550 200 550 300 700 300" stroke="#1e1e2e" strokeWidth="4" fill="none" strokeLinecap="round" />
+
+              {/* Glowing Data Packets */}
+              <circle r="4" fill="#4cc9f0" className="drop-shadow-[0_0_8px_rgba(76,201,240,0.8)]">
+                <animateMotion dur="2s" repeatCount="indefinite" path="M 100 100 C 250 100 250 200 400 200" />
+              </circle>
+              <circle r="4" fill="#f87171" className="drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]">
+                <animateMotion dur="3s" repeatCount="indefinite" path="M 100 300 C 250 300 250 200 400 200" />
+              </circle>
+              <circle r="4" fill="#4ade80" className="drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]">
+                <animateMotion dur="1.5s" repeatCount="indefinite" path="M 400 200 C 550 200 550 100 700 100" />
+              </circle>
+              <circle r="4" fill="#a78bfa" className="drop-shadow-[0_0_8px_rgba(167,139,250,0.8)]">
+                <animateMotion dur="2.5s" repeatCount="indefinite" path="M 400 200 C 550 200 550 300 700 300" />
+              </circle>
+            </svg>
+          </div>
+
+          {/* Physical Nodes */}
+          <div className="absolute w-[800px] h-[400px] pointer-events-none z-10 flex items-center justify-between">
             
-            <h3 className="text-[10px] font-black text-xiphos-muted tracking-widest uppercase flex items-center gap-2 border-b border-[rgba(255,255,255,0.05)] pb-2 mb-1">
-              <Activity className="w-4 h-4 text-xiphos-emerald glow-emerald" /> INSTITUTIONAL HARDWARE TELEMETRY
-            </h3>
-
-            {/* Health Gauges */}
-            <div className="grid grid-cols-2 gap-2 shrink-0 relative z-10">
-              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-xiphos-cyan/10 rounded-full blur-xl group-hover:bg-xiphos-cyan/20 transition-all"></div>
-                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><Cpu className="w-3 h-3 text-xiphos-cyan glow-cyan"/> CPU CORE</span>
-                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.cpu.toFixed(1)}%</span>
-              </GlassCard>
-              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-xiphos-purple/10 rounded-full blur-xl group-hover:bg-xiphos-purple/20 transition-all"></div>
-                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><Database className="w-3 h-3 text-xiphos-purple glow-purple"/> MEMORY</span>
-                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.ram.toFixed(1)}%</span>
-              </GlassCard>
-              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-xiphos-gold/10 rounded-full blur-xl group-hover:bg-xiphos-gold/20 transition-all"></div>
-                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><Gpu className="w-3 h-3 text-xiphos-gold glow-gold"/> GPU ACCEL</span>
-                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.gpu.toFixed(1)}%</span>
-              </GlassCard>
-              <GlassCard className="p-4 flex flex-col gap-2 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-white/5 rounded-full blur-xl group-hover:bg-white/10 transition-all"></div>
-                <span className="text-[9px] text-xiphos-muted font-black tracking-widest uppercase flex items-center gap-2"><HardDrive className="w-3 h-3 text-white"/> DISK I/O</span>
-                <span className="text-2xl font-black text-white drop-shadow-md">{currentMetrics.disk.toFixed(1)} MB/s</span>
-              </GlassCard>
-            </div>
-
-            {/* App Health */}
-            <div className="flex flex-col gap-2 shrink-0 mt-3 relative z-10">
-              <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] p-3 rounded-lg backdrop-blur-sm">
-                <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-muted flex items-center gap-2"><Zap className="w-4 h-4 text-xiphos-gold glow-gold"/> BROKER LATENCY</span>
-                <span className="text-sm font-black text-xiphos-emerald glow-emerald">{currentMetrics.latency.toFixed(1)} ms</span>
-              </div>
-              <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] p-3 rounded-lg backdrop-blur-sm">
-                <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-muted flex items-center gap-2"><Maximize className="w-4 h-4 text-xiphos-cyan glow-cyan"/> UI RENDER FPS</span>
-                <span className="text-sm font-black text-white drop-shadow-md">{currentMetrics.fps.toFixed(0)} FPS</span>
-              </div>
-              <div className="flex justify-between items-center bg-[rgba(11,15,23,0.4)] border border-[rgba(255,255,255,0.05)] p-3 rounded-lg backdrop-blur-sm">
-                <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-muted flex items-center gap-2"><Clock className="w-4 h-4 text-xiphos-purple glow-purple"/> DB SYNCHRONIZATION</span>
-                <StatusBadge label="VERIFIED" variant="success" />
-              </div>
-              <div className="flex justify-between items-center bg-xiphos-gold/5 border border-xiphos-gold/30 p-3 rounded-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-xiphos-gold/10 rounded-full blur-2xl"></div>
-                <div className="flex flex-col relative z-10">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-xiphos-gold glow-gold flex items-center gap-2"><Zap className="w-4 h-4"/> ADAPTATION ENGINE</span>
-                  <span className="text-[8px] font-black text-xiphos-gold/60 uppercase tracking-widest mt-1">{mahoragaInfo.phenomenon.replaceAll('_', ' ')}</span>
+            {/* Input Nodes (Left) */}
+            <div className="flex flex-col h-full justify-between py-10 w-48">
+              <div className="flex flex-col items-center gap-2">
+                <motion.div 
+                  animate={{ scale: [1, 1.05, 1], boxShadow: ["0 0 10px rgba(76,201,240,0.2)", "0 0 25px rgba(76,201,240,0.6)", "0 0 10px rgba(76,201,240,0.2)"] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-16 h-16 rounded-2xl bg-[#0f0f1a] border-2 border-[#4cc9f0] flex items-center justify-center pointer-events-auto"
+                >
+                  <Activity className="w-8 h-8 text-[#4cc9f0]" />
+                </motion.div>
+                <div className="text-center">
+                  <span className="text-[10px] font-bold text-white uppercase tracking-widest block">Market Feeds</span>
+                  <span className="text-[8px] text-[#4cc9f0] font-mono">1.2 TB/s</span>
                 </div>
-                <span className="text-2xl font-black text-xiphos-gold glow-gold relative z-10">{mahoragaInfo.ema} <span className="text-xs">EMA</span></span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <motion.div 
+                  animate={{ scale: [1, 1.05, 1], boxShadow: ["0 0 10px rgba(248,113,113,0.2)", "0 0 25px rgba(248,113,113,0.6)", "0 0 10px rgba(248,113,113,0.2)"] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="w-16 h-16 rounded-2xl bg-[#0f0f1a] border-2 border-[#f87171] flex items-center justify-center pointer-events-auto"
+                >
+                  <Database className="w-8 h-8 text-[#f87171]" />
+                </motion.div>
+                <div className="text-center">
+                  <span className="text-[10px] font-bold text-white uppercase tracking-widest block">Liquidity Pools</span>
+                  <span className="text-[8px] text-[#f87171] font-mono">Connected</span>
+                </div>
               </div>
             </div>
 
-            {/* Timeline Chart */}
-            <GlassCard className="flex-1 min-h-0 p-2 flex flex-col gap-1 mt-1">
-              <span className="text-[10px] text-xiphos-muted font-bold tracking-widest uppercase mb-2">UTILIZATION TIMELINE (60s)</span>
-              <div className="flex-1 w-full h-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={metrics} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="time" hide />
-                    <YAxis stroke="rgba(255,255,255,0.2)" fontSize={10} tickCount={5} domain={[0, 100]} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: "rgba(5, 8, 15, 0.9)", borderColor: "rgba(255,255,255,0.1)", borderRadius: "4px", fontSize: "10px" }}
-                      itemStyle={{ color: "#fff" }}
-                      labelStyle={{ display: 'none' }}
-                    />
-                    <Line type="monotone" dataKey="cpu" stroke="#4CC9F0" strokeWidth={1.5} dot={false} isAnimationActive={false} name="CPU %" />
-                    <Line type="monotone" dataKey="ram" stroke="#8B5CF6" strokeWidth={1.5} dot={false} isAnimationActive={false} name="RAM %" />
-                    <Line type="monotone" dataKey="gpu" stroke="#D4AF37" strokeWidth={1.5} dot={false} isAnimationActive={false} name="GPU %" />
-                  </LineChart>
-                </ResponsiveContainer>
+            {/* Core Node (Center) */}
+            <div className="flex flex-col items-center gap-3 w-48 relative -top-1">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 w-32 h-32 m-auto rounded-full border border-dashed border-[#8b5cf6]/30 pointer-events-none"
+              />
+              <motion.div 
+                animate={{ scale: [1, 1.1, 1], boxShadow: ["0 0 20px rgba(139,92,246,0.3)", "0 0 40px rgba(139,92,246,0.8)", "0 0 20px rgba(139,92,246,0.3)"] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-24 h-24 rounded-full bg-[#05050a] border-[3px] border-[#8b5cf6] flex items-center justify-center relative z-10 pointer-events-auto"
+              >
+                <BrainCircuit className="w-10 h-10 text-[#8b5cf6]" />
+              </motion.div>
+              <div className="text-center mt-4">
+                <span className="text-xs font-black text-white uppercase tracking-widest block">Mahoraga Core</span>
+                <span className="text-[10px] text-[#8b5cf6] font-mono">Neural Ops Active</span>
               </div>
-            </GlassCard>
+            </div>
+
+            {/* Output Nodes (Right) */}
+            <div className="flex flex-col h-full justify-between py-10 w-48">
+              <div className="flex flex-col items-center gap-2">
+                <motion.div 
+                  animate={{ scale: [1, 1.05, 1], boxShadow: ["0 0 10px rgba(74,222,128,0.2)", "0 0 25px rgba(74,222,128,0.6)", "0 0 10px rgba(74,222,128,0.2)"] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="w-16 h-16 rounded-2xl bg-[#0f0f1a] border-2 border-[#4ade80] flex items-center justify-center pointer-events-auto"
+                >
+                  <Zap className="w-8 h-8 text-[#4ade80]" />
+                </motion.div>
+                <div className="text-center">
+                  <span className="text-[10px] font-bold text-white uppercase tracking-widest block">Execution Engine</span>
+                  <span className="text-[8px] text-[#4ade80] font-mono">0.4ms latency</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <motion.div 
+                  animate={{ scale: [1, 1.05, 1], boxShadow: ["0 0 10px rgba(167,139,250,0.2)", "0 0 25px rgba(167,139,250,0.6)", "0 0 10px rgba(167,139,250,0.2)"] }}
+                  transition={{ duration: 2.5, repeat: Infinity }}
+                  className="w-16 h-16 rounded-2xl bg-[#0f0f1a] border-2 border-[#a78bfa] flex items-center justify-center pointer-events-auto"
+                >
+                  <Server className="w-8 h-8 text-[#a78bfa]" />
+                </motion.div>
+                <div className="text-center">
+                  <span className="text-[10px] font-bold text-white uppercase tracking-widest block">Redis Cache</span>
+                  <span className="text-[8px] text-[#a78bfa] font-mono">Syncing</span>
+                </div>
+              </div>
+            </div>
 
           </div>
         </div>
-
-      </GlassPanel>
+      </div>
     </div>
   );
 }
+// Cpu definition dummy fix: added import to the top

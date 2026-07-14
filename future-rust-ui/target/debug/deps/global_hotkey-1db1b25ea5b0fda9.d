@@ -1,0 +1,9 @@
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\global_hotkey-1db1b25ea5b0fda9.d: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\error.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\hotkey.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\platform_impl\mod.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\platform_impl\windows\mod.rs
+
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\libglobal_hotkey-1db1b25ea5b0fda9.rmeta: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\error.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\hotkey.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\platform_impl\mod.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\platform_impl\windows\mod.rs
+
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\lib.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\error.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\hotkey.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\platform_impl\mod.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\global-hotkey-0.5.5\src\platform_impl\windows\mod.rs:

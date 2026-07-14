@@ -1,245 +1,340 @@
-/* eslint-disable react/forbid-dom-props */
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
-import { AreaChart, Area, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { motion } from "framer-motion";
+import { BarChart3, Activity, Zap, Network, Target, Workflow, TreePine } from "lucide-react";
 import { GlassPanel } from "./ui/GlassPanel";
 import { GlassCard } from "./ui/GlassCard";
 import { PageHeader } from "./ui/PageHeader";
-import { StatusBadge } from "./ui/StatusBadge";
 
-interface TradeRecord {
-  ticket: number;
-  symbol: string;
-  type: string;
-  volume: number;
-  profit: number;
-  close_time: string;
-}
+// 1. Performance DNA (Heat Map)
+const PerformanceDNA = () => {
+  const sequence = Array.from({ length: 144 }, () => Math.random());
+  return (
+    <div className="flex flex-col h-full w-full">
+      <div className="flex items-center gap-2 mb-4">
+        <Activity className="w-4 h-4 text-[#a78bfa]" />
+        <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Performance DNA</span>
+      </div>
+      <div className="flex-1 grid grid-cols-12 gap-1 content-start">
+        {sequence.map((val, i) => {
+          const isWin = val > 0.3;
+          const color = isWin ? "bg-[#4ade80]" : "bg-[#f87171]";
+          const opacity = isWin ? val : (1 - val) * 0.8;
+          return (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity, scale: 1 }}
+              transition={{ delay: i * 0.01, duration: 0.5 }}
+              className={`aspect-square rounded-[2px] ${color} shadow-[0_0_8px_currentColor]`}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
-export default function AnalyticsView() {
-  const [history, setHistory] = useState<TradeRecord[]>([
-    { ticket: 108422, symbol: "EURUSD", type: "SELL", volume: 0.01, profit: 1.2, close_time: "14:20:12" },
-    { ticket: 240715, symbol: "XAUUSD", type: "BUY", volume: 0.01, profit: 3.5, close_time: "14:15:00" },
-    { ticket: 108399, symbol: "EURUSD", type: "BUY", volume: 0.01, profit: -0.5, close_time: "14:10:45" },
-    { ticket: 31590, symbol: "XAGUSD", type: "BUY", volume: 0.01, profit: 0.95, close_time: "13:58:32" },
-    { ticket: 108340, symbol: "EURUSD", type: "BUY", volume: 0.01, profit: 2.1, close_time: "13:45:10" },
-    { ticket: 240650, symbol: "XAUUSD", type: "BUY", volume: 0.01, profit: 5.2, close_time: "13:20:00" },
-  ]);
-
-  const [metrics, setMetrics] = useState({ sharpe: 2.84, profitFactor: 3.45, winRate: 83.3, expectancy: 1.19, scalperProfit: 17.65, runnerProfit: 9.8 });
-
-  const [page, setPage] = useState(0);
-  const itemsPerPage = 12;
-  const totalPages = Math.max(1, Math.ceil(history.length / itemsPerPage));
-  const paginatedHistory = history.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
-
-  useEffect(() => {
-    (async () => {
-      const host = typeof window !== "undefined" ? window.location.host : "127.0.0.1:8001";
-      const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${protocol}//${host}`;
-
-      try {
-        const r1 = await fetch(`${apiUrl}/api/history?limit=10`);
-        if (r1.ok) {
-          const d = await r1.json();
-          if (d && d.length > 0) {
-            setHistory(d.map((x: Record<string, unknown>) => ({
-              ticket: Number(x.ticket), symbol: String(x.symbol),
-              type: x.type === 0 ? "BUY" : "SELL",
-              volume: Number(x.volume), profit: Number(x.profit),
-              close_time: typeof x.close_time === 'string' ? x.close_time.split(" ")[1] || x.close_time : "—",
-            })));
-          }
-        }
-        const r2 = await fetch(`${apiUrl}/api/performance`);
-        if (r2.ok) {
-          const d = await r2.json();
-          if (d?.global) {
-            setMetrics(prev => ({ ...prev, sharpe: d.global.sharpe_ratio || prev.sharpe, expectancy: d.global.expectancy || prev.expectancy }));
-          }
-        }
-      } catch {}
-    })();
-  }, []);
-
-  // Equity curve data
-  const balanceHistory = [100, 100, 102.1, 102.1, 104.85, 104.85, 114.3, 114.3, 117.3, 117.3, 127.45];
-  const equityHistory =  [100, 102.1, 101.6, 104.85, 103.9, 109.1, 114.3, 113.8, 117.3, 122.5, 127.45];
-
-  const drawEquityChart = () => {
-    const data = balanceHistory.map((bal, i) => ({
-      index: i,
-      balance: bal,
-      equity: equityHistory[i]
-    }));
-
-    return (
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+// 2. Capital Flow (Animated pathways)
+const CapitalFlow = () => {
+  return (
+    <div className="flex flex-col h-full w-full">
+      <div className="flex items-center gap-2 mb-4">
+        <Workflow className="w-4 h-4 text-[#4cc9f0]" />
+        <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Capital Flow</span>
+      </div>
+      <div className="flex-1 relative flex items-center justify-center">
+        <svg className="w-full h-full" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
           <defs>
-            <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#D4AF37" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#D4AF37" stopOpacity={0}/>
+            <linearGradient id="flowGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#4cc9f0" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="1" />
             </linearGradient>
-            <linearGradient id="colorEquity" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4CC9F0" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#4CC9F0" stopOpacity={0}/>
-            </linearGradient>
+            <filter id="glowFlow">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-          <Tooltip 
-            contentStyle={{ backgroundColor: "rgba(11,15,23,0.9)", borderColor: "rgba(255,255,255,0.1)", color: "#fff", fontSize: "10px", fontFamily: "monospace", borderRadius: "8px", backdropFilter: "blur(10px)" }} 
-            itemStyle={{ fontWeight: "bold" }}
+
+          {/* Paths */}
+          {[
+            { d: "M 50 100 Q 150 50 250 40", label: "SCALPING", y: 40 },
+            { d: "M 50 100 Q 150 100 250 100", label: "TREND", y: 100 },
+            { d: "M 50 100 Q 150 150 250 160", label: "HEDGING", y: 160 }
+          ].map((path, i) => (
+            <g key={i}>
+              <path d={path.d} fill="none" stroke="#1e1e2e" strokeWidth="4" />
+              <motion.path
+                d={path.d}
+                fill="none"
+                stroke="url(#flowGrad)"
+                strokeWidth="2"
+                strokeDasharray="10 10"
+                filter="url(#glowFlow)"
+                animate={{ strokeDashoffset: [20, 0] }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
+              <circle cx="250" cy={path.y} r="6" fill="#09090e" stroke="#8b5cf6" strokeWidth="2" />
+              <text x="265" y={path.y + 3} fill="#94a3b8" fontSize="8" fontFamily="monospace" fontWeight="bold">{path.label}</text>
+            </g>
+          ))}
+
+          {/* Central Node */}
+          <circle cx="50" cy="100" r="16" fill="#09090e" stroke="#4cc9f0" strokeWidth="3" filter="url(#glowFlow)" />
+          <motion.circle 
+            cx="50" cy="100" r="24" fill="none" stroke="#4cc9f0" strokeWidth="1"
+            animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
           />
-          <Area type="step" dataKey="balance" stroke="#D4AF37" fillOpacity={1} fill="url(#colorBalance)" isAnimationActive={true} animationDuration={1000} />
-          <Area type="monotone" dataKey="equity" stroke="#4CC9F0" fillOpacity={1} fill="url(#colorEquity)" strokeWidth={2} isAnimationActive={true} animationDuration={1000} />
-        </AreaChart>
-      </ResponsiveContainer>
-    );
-  };
+          <text x="50" y="103" fill="#fff" fontSize="8" textAnchor="middle" fontWeight="bold">POOL</text>
+        </svg>
+      </div>
+    </div>
+  );
+};
 
-  const totalSubProfit = metrics.scalperProfit + metrics.runnerProfit || 1;
-  const scalperPct = Math.round((metrics.scalperProfit / totalSubProfit) * 100);
-
-  const kpis = [
-    { label: "WIN RATE", value: `${metrics.winRate.toFixed(1)}%`, colorClass: "text-xiphos-emerald glow-emerald" },
-    { label: "PROFIT FACTOR", value: metrics.profitFactor.toFixed(2), colorClass: "text-xiphos-cyan glow-cyan" },
-    { label: "SHARPE RATIO", value: metrics.sharpe.toFixed(2), colorClass: "text-xiphos-gold glow-gold" },
+// 3. Circular Charts (Concentric HUD)
+const CircularCharts = () => {
+  const circles = [
+    { label: "WIN RATE", value: 83.4, radius: 60, color: "#4ade80", stroke: 6 },
+    { label: "PROFIT FACTOR", value: 65.0, radius: 45, color: "#f59e0b", stroke: 6 },
+    { label: "EDGE CONFIDENCE", value: 92.1, radius: 30, color: "#8b5cf6", stroke: 6 }
   ];
 
   return (
-    <GlassPanel glowColor="purple" className="flex flex-col w-full h-full font-mono select-none overflow-hidden gap-2 p-0 transition-all duration-300" noOverflowHidden>
-        
-      {/* Header */}
+    <div className="flex flex-col h-full w-full">
+      <div className="flex items-center gap-2 mb-4">
+        <Target className="w-4 h-4 text-[#f59e0b]" />
+        <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">System Telemetry</span>
+      </div>
+      <div className="flex-1 relative flex items-center justify-center">
+        <svg className="w-full h-full" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+          <filter id="glowCircle">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          
+          {circles.map((c, i) => {
+            const circumference = 2 * Math.PI * c.radius;
+            const dashoffset = circumference - (c.value / 100) * circumference;
+            return (
+              <g key={i}>
+                {/* Background track */}
+                <circle cx="100" cy="100" r={c.radius} fill="none" stroke="#1e1e2e" strokeWidth={c.stroke} />
+                
+                {/* Progress arc */}
+                <motion.circle
+                  cx="100" cy="100" r={c.radius}
+                  fill="none" stroke={c.color} strokeWidth={c.stroke}
+                  strokeDasharray={circumference}
+                  strokeLinecap="round"
+                  filter="url(#glowCircle)"
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: dashoffset }}
+                  transition={{ duration: 1.5, delay: i * 0.2, ease: "easeOut" }}
+                  transform="rotate(-90 100 100)"
+                />
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Legend */}
+        <div className="absolute right-0 bottom-0 flex flex-col gap-2">
+          {circles.map((c, i) => (
+            <div key={i} className="flex items-center gap-2 text-[9px] font-mono font-bold tracking-widest text-[#94a3b8]">
+              <div className="w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: c.color, color: c.color }}></div>
+              {c.label}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 4. Strategy Relationships (Neural Graph)
+const NeuralGraph = () => {
+  const [nodes, setNodes] = useState<{id: number, x: number, y: number}[]>([]);
+  
+  useEffect(() => {
+    // Generate random nodes
+    const newNodes = Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      x: 20 + Math.random() * 260,
+      y: 20 + Math.random() * 160
+    }));
+    setNodes(newNodes);
+  }, []);
+
+  return (
+    <div className="flex flex-col h-full w-full">
+      <div className="flex items-center gap-2 mb-4">
+        <Network className="w-4 h-4 text-[#8b5cf6]" />
+        <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Neural Relationships</span>
+      </div>
+      <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+        <svg className="w-full h-full" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
+          <filter id="glowNode">
+            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          
+          {/* Lines */}
+          {nodes.map((node, i) => {
+            // Connect to 2 nearest neighbors
+            const others = nodes.filter(n => n.id !== node.id);
+            others.sort((a,b) => Math.hypot(a.x-node.x, a.y-node.y) - Math.hypot(b.x-node.x, b.y-node.y));
+            const targets = others.slice(0, 2);
+            
+            return targets.map(t => (
+              <motion.line
+                key={`${node.id}-${t.id}`}
+                x1={node.x} y1={node.y} x2={t.x} y2={t.y}
+                stroke="#a78bfa" strokeWidth="1" opacity="0.3"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2, delay: i * 0.1 }}
+              />
+            ));
+          })}
+
+          {/* Nodes */}
+          {nodes.map((node, i) => (
+            <motion.circle
+              key={node.id}
+              cx={node.x} cy={node.y} r={4}
+              fill="#09090e" stroke="#8b5cf6" strokeWidth="2"
+              filter="url(#glowNode)"
+              animate={{ 
+                cx: node.x + (Math.random() * 10 - 5),
+                cy: node.y + (Math.random() * 10 - 5)
+              }}
+              transition={{ duration: 4, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }}
+            />
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+// 5. Growth Trees (Trend Networks)
+const GrowthTree = () => {
+  return (
+    <div className="flex flex-col h-full w-full">
+      <div className="flex items-center gap-2 mb-4">
+        <TreePine className="w-4 h-4 text-[#4ade80]" />
+        <span className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-widest">Trend Growth Tree</span>
+      </div>
+      <div className="flex-1 relative flex items-center justify-center">
+        <svg className="w-full h-full" viewBox="0 0 300 200" preserveAspectRatio="xMidYMid meet">
+          <filter id="glowTree">
+            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <g transform="translate(150, 180)">
+            {/* Trunk */}
+            <motion.path 
+              d="M 0 0 L 0 -40" fill="none" stroke="#4ade80" strokeWidth="4" strokeLinecap="round" filter="url(#glowTree)"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1 }}
+            />
+            {/* Branches Left */}
+            <motion.path 
+              d="M 0 -40 Q -30 -60 -40 -90" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" filter="url(#glowTree)"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.5 }}
+            />
+            <motion.path 
+              d="M -40 -90 Q -70 -100 -80 -130" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" filter="url(#glowTree)"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 1 }}
+            />
+            <motion.path 
+              d="M -40 -90 Q -10 -110 0 -140" fill="none" stroke="#86efac" strokeWidth="2" strokeLinecap="round" filter="url(#glowTree)"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 1.2 }}
+            />
+
+            {/* Branches Right */}
+            <motion.path 
+              d="M 0 -40 Q 40 -60 50 -90" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" filter="url(#glowTree)"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.7 }}
+            />
+            <motion.path 
+              d="M 50 -90 Q 80 -110 90 -140" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" filter="url(#glowTree)"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 1.4 }}
+            />
+            <motion.path 
+              d="M 50 -90 Q 20 -120 30 -150" fill="none" stroke="#86efac" strokeWidth="2" strokeLinecap="round" filter="url(#glowTree)"
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, delay: 1.6 }}
+            />
+          </g>
+
+          {/* Node pulses at tips */}
+          {[
+            {x: 70, y: 50, color: "#4ade80"}, {x: 150, y: 40, color: "#86efac"}, 
+            {x: 240, y: 40, color: "#4ade80"}, {x: 180, y: 30, color: "#86efac"}
+          ].map((pt, i) => (
+            <motion.circle 
+              key={i} cx={pt.x} cy={pt.y} r="3" fill={pt.color} filter="url(#glowTree)"
+              initial={{ opacity: 0, scale: 0 }} animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.5, 1] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 2 + i * 0.3 }}
+            />
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+};
+
+
+export default function AnalyticsView() {
+  return (
+    <GlassPanel className="flex flex-col w-full h-full font-sans select-none overflow-hidden p-0 transition-all duration-300 animate-in fade-in" noOverflowHidden>
+      
       <PageHeader
-        title="PERFORMANCE ANALYTICS"
+        title="AI VISUAL ANALYTICS"
         icon={BarChart3}
-        glowColor="purple"
       />
 
-      {/* Split: 3 + 9 */}
-      <div className="flex-1 min-h-0 grid grid-cols-12 overflow-hidden px-4 pb-4 gap-2 pt-0">
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-[300px]">
+          
+          <GlassCard className="p-6 col-span-1 border border-[#1e1e2e] shadow-2xl flex flex-col bg-[#05050a]/80 backdrop-blur-md">
+            <CircularCharts />
+          </GlassCard>
 
-          {/* LEFT: KPI cards */}
-          <div className="col-span-3 flex flex-col gap-2 overflow-hidden">
-            <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block border-b border-[rgba(255,255,255,0.05)] pb-1">
-              PERFORMANCE KPIs
-            </span>
+          <GlassCard className="p-6 col-span-1 border border-[#1e1e2e] shadow-2xl flex flex-col bg-[#05050a]/80 backdrop-blur-md">
+            <CapitalFlow />
+          </GlassCard>
 
-            {kpis.map(kpi => (
-              <GlassCard key={kpi.label} className="p-3 shrink-0 flex items-center justify-between">
-                <div>
-                  <div className="text-[9px] text-xiphos-muted font-bold uppercase tracking-widest mb-1">{kpi.label}</div>
-                  <div className={`text-2xl font-black leading-none ${kpi.colorClass}`}>{kpi.value}</div>
-                </div>
-              </GlassCard>
-            ))}
+          <GlassCard className="p-6 col-span-1 border border-[#1e1e2e] shadow-2xl flex flex-col bg-[#05050a]/80 backdrop-blur-md">
+            <PerformanceDNA />
+          </GlassCard>
 
-            {/* Strategy profit split */}
-            <div className="border-t border-[rgba(255,255,255,0.05)] pt-2 mt-1 shrink-0">
-              <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest block mb-2">STRATEGY SPLIT</span>
-              <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-bold text-xiphos-muted">
-                  <span>SCALPER (A)</span>
-                  <span className="text-xiphos-cyan glow-cyan font-black">{scalperPct}%</span>
-                </div>
-                <div className="flex justify-between text-[10px] font-bold text-xiphos-muted">
-                  <span>RUNNER (B)</span>
-                  <div className="text-[9px] text-xiphos-muted font-bold uppercase tracking-wider mb-1 flex items-center gap-2">
-                    WIN RATE
-                    <div className="h-1.5 w-16 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-xiphos-cyan glow-cyan" style={{ width: `${metrics.winRate}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="h-full bg-xiphos-purple glow-purple flex-1" />
-                </div>
-              </div>
-            </div>
+          <GlassCard className="p-6 col-span-1 lg:col-span-2 border border-[#1e1e2e] shadow-2xl flex flex-col bg-[#05050a]/80 backdrop-blur-md">
+            <NeuralGraph />
+          </GlassCard>
 
-            <div className="border-t border-[rgba(255,255,255,0.05)] pt-2 mt-1 shrink-0">
-              <div className="space-y-1 text-[10px] text-xiphos-muted font-bold tracking-widest">
-                <div className="flex justify-between">
-                  <span>EXPECTANCY</span>
-                  <span className="text-white">${metrics.expectancy.toFixed(2)}/trade</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>TOTAL TRADES</span>
-                  <span className="text-white">{history.length}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: History Log (7/12) */}
-          <div className="col-span-9 flex flex-col min-h-0 shrink-0 gap-2">
-            {/* Table Header */}
-            <GlassCard className="p-3 shrink-0 h-[140px] flex flex-col">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest">HISTORICAL EQUITY GROWTH CURVE</span>
-                <span className="text-xiphos-emerald glow-emerald font-black text-sm">$127.45 USD</span>
-              </div>
-              <div className="flex-1 min-h-0">
-                {drawEquityChart()}
-              </div>
-            </GlassCard>
-
-            {/* Trade history table */}
-            <GlassCard className="flex-1 min-h-0 flex flex-col">
-              <div className="flex items-center justify-between p-2 border-b border-[rgba(255,255,255,0.05)] shrink-0">
-                <span className="text-[10px] text-xiphos-muted font-bold uppercase tracking-widest">
-                  TRADE HISTORY LOG
-                </span>
-                <div className="flex items-center gap-2">
-                  <button title="Previous Page" onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0} className="text-xiphos-muted hover:text-white disabled:opacity-30 disabled:hover:text-xiphos-muted transition-colors">
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-white font-bold text-[10px] tracking-widest">{page + 1} / {totalPages}</span>
-                  <button title="Next Page" onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} className="text-xiphos-muted hover:text-white disabled:opacity-30 disabled:hover:text-xiphos-muted transition-colors">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="overflow-hidden flex-1 min-h-0 p-1 flex flex-col">
-                <table className="w-full text-left text-[9px] border-collapse font-bold">
-                  <thead>
-                    <tr className="text-xiphos-muted uppercase tracking-widest text-[9px]">
-                      <th className="p-2 font-bold">TICKET</th>
-                      <th className="p-2 font-bold">SYMBOL</th>
-                      <th className="p-2 font-bold">DIR</th>
-                      <th className="p-2 font-bold text-right">LOTS</th>
-                      <th className="p-2 font-bold text-right">PROFIT</th>
-                      <th className="p-2 font-bold text-right">CLOSE TIME</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedHistory.map((t) => (
-                        <tr key={t.ticket} className="border-b border-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors">
-                          <td className="p-1.5 px-2 text-xiphos-muted">#{t.ticket}</td>
-                          <td className="p-1.5 px-2 text-white">{t.symbol}</td>
-                          <td className="p-1.5 px-2">
-                            <StatusBadge
-                              label={t.type}
-                              variant={t.type === "BUY" ? "success" : "danger"}
-                            />
-                          </td>
-                          <td className="p-1.5 px-2 text-white text-right">{t.volume.toFixed(2)}</td>
-                          <td className={`p-1.5 px-2 text-right ${t.profit >= 0 ? "text-xiphos-emerald glow-emerald" : "text-xiphos-crimson glow-crimson"}`}>
-                          {t.profit >= 0 ? "+" : ""}${t.profit.toFixed(2)}
-                        </td>
-                        <td className="p-1.5 px-2 text-right text-xiphos-muted">{t.close_time}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </GlassCard>
-            
-          </div>
+          <GlassCard className="p-6 col-span-1 border border-[#1e1e2e] shadow-2xl flex flex-col bg-[#05050a]/80 backdrop-blur-md">
+            <GrowthTree />
+          </GlassCard>
 
         </div>
+      </div>
+
     </GlassPanel>
   );
 }

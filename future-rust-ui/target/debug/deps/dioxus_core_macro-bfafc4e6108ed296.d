@@ -1,0 +1,9 @@
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\dioxus_core_macro-bfafc4e6108ed296.d: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\component.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\props\mod.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\utils.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\../README.md
+
+C:\Users\armut\404\Xiphos\future-rust-ui\target\debug\deps\dioxus_core_macro-bfafc4e6108ed296.dll: C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\lib.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\component.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\props\mod.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\utils.rs C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\../README.md
+
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\lib.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\component.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\props\mod.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\utils.rs:
+C:\Users\armut\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\dioxus-core-macro-0.5.6\src\../README.md:
